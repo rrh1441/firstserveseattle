@@ -21,8 +21,10 @@ import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
 
-// Initialize Supabase client
-const supabase = createClient('https://aofswsgeyintjhqfgsdv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZnN3c2dleWludGpocWZnc2R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjg3NjMyNTMsImV4cCI6MjA0NDMzOTI1M30.la7n9IlealsrjMpK-5yZfXbVIhBxyu7aDdt2ti9mv_o')
+// Initialize Supabase client with your credentials
+const supabaseUrl = 'https://mqoqdddzrwvonklsprgb.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xb3FkZGR6cnd2b25rbHNwcmdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI2NjIyNDEsImV4cCI6MjA0ODIzODI0MX0.18AdLB9xAb8rN2-G9YIiyjoH-u7uaReXqbelkzZXGPI'
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 const styles = {
   primaryBg: 'bg-[#6C935C]',
@@ -40,6 +42,8 @@ export default function Component() {
 
   useEffect(() => {
     fetchCourts()
+    // Optionally, track a user session here if you have a way to get the IP:
+    // logUserSession('192.168.1.1')  // Replace with actual IP or logic.
   }, [])
 
   async function fetchCourts() {
@@ -54,8 +58,20 @@ export default function Component() {
     }
   }
 
+  // Example function to log a user session (if desired)
+  async function logUserSession(ipAddress) {
+    const { data, error } = await supabase
+      .from('user_sessions')
+      .insert({ ip_address: ipAddress, views: 1 })
+    if (error) {
+      console.error('Error logging session:', error)
+    } else {
+      console.log('User session logged:', data)
+    }
+  }
+
   const filteredCourts = courts.filter(court => 
-    court.name.toLowerCase().includes(searchTerm.toLowerCase())
+    court.title && court.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -71,7 +87,7 @@ export default function Component() {
               aria-expanded={openAutocomplete}
               className={`w-[300px] justify-between border-[#3C638E] ${styles.secondaryText}`}
             >
-              {selectedCourt ? selectedCourt.name : "Search courts"}
+              {selectedCourt ? selectedCourt.title : "Search courts"}
               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -88,7 +104,7 @@ export default function Component() {
                       setOpenAutocomplete(false)
                     }}
                   >
-                    {court.name}
+                    {court.title}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -100,30 +116,31 @@ export default function Component() {
       {selectedCourt && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>{selectedCourt.name}</CardTitle>
+            <CardTitle>{selectedCourt.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="flex items-center text-sm text-muted-foreground mb-4">
               <MapPin className="mr-2 h-4 w-4" />
-              {selectedCourt.location}
+              {selectedCourt.address}
             </p>
             <h3 className="text-lg font-semibold mb-2">Available Times</h3>
-            <div className="grid grid-cols-6 gap-2">
-              {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => {
-                const time = `${hour.toString().padStart(2, '0')}:00`
-                const isAvailable = selectedCourt.available_times.includes(time)
-                return (
-                  <div
-                    key={hour}
-                    className={`p-2 text-center rounded ${
-                      isAvailable ? `${styles.primaryBg} text-white` : 'bg-gray-100 text-gray-400'
-                    }`}
-                  >
-                    {time}
-                  </div>
-                )
-              })}
-            </div>
+            {selectedCourt.available_dates ? (
+              <div className="grid grid-cols-6 gap-2">
+                {selectedCourt.available_dates.split(',').map((timeSlot, index) => {
+                  const trimmedTime = timeSlot.trim()
+                  return (
+                    <div
+                      key={index}
+                      className={`${styles.primaryBg} text-white p-2 text-center rounded`}
+                    >
+                      {trimmedTime}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No available times listed.</p>
+            )}
           </CardContent>
         </Card>
       )}
@@ -133,16 +150,16 @@ export default function Component() {
           <Card key={court.id} className="cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => setSelectedCourt(court)}>
             <CardHeader className={styles.primaryBg}>
-              <CardTitle className="text-white">{court.name}</CardTitle>
+              <CardTitle className="text-white">{court.title}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className={`flex items-center text-sm ${styles.secondaryText} mt-2`}>
                 <MapPin className="mr-2 h-4 w-4" />
-                {court.location}
+                {court.address}
               </p>
               <p className={`flex items-center text-sm ${styles.secondaryText} mt-2`}>
                 <Clock className="mr-2 h-4 w-4" />
-                {court.available_times.length} time slots available
+                {court.available_dates ? court.available_dates.split(',').length : 0} time slots available
               </p>
             </CardContent>
           </Card>
