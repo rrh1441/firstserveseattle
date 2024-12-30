@@ -64,10 +64,13 @@ export default function TennisCourtsPage() {
         </div>
         <Button variant="outline">Sign In</Button>
       </header>
+
       <TennisCourtSearch />
+
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
         <TennisCourtList />
       </Suspense>
+
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
           <a
@@ -80,6 +83,7 @@ export default function TennisCourtsPage() {
           </a>
         </Button>
       </div>
+
       <footer className="mt-12 border-t pt-6 text-center text-sm text-muted-foreground">
         <div className="flex justify-center gap-4">
           <a href="/privacy" className="hover:text-foreground transition-colors">
