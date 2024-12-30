@@ -6,12 +6,16 @@ import { ExternalLink } from "lucide-react"
 import Image from "next/image"
 
 // Paywall logic + component
-import Paywall from "./components/paywall"
+// Make sure this path points to src/app/tennis-courts/components/paywall.tsx
+import Paywall from "./tennis-courts/components/paywall"
+
+// The function to increment user views
+// (assuming you created updateUserSession in src/lib or similar)
 import { updateUserSession } from "@/lib/updateUserSessions"
 
 // Existing tennis court components
-import TennisCourtSearch from "./components/TennisCourtSearch"
-import TennisCourtList from "./components/TennisCourtList"
+// Make sure this path points to src/app/tennis-courts/components/TennisCourtList.tsx
+import TennisCourtList from "./tennis-courts/components/TennisCourtList"
 
 export default function TennisCourtsPage() {
   const [showPaywall, setShowPaywall] = useState(false)
@@ -65,7 +69,7 @@ export default function TennisCourtsPage() {
         <Button variant="outline">Sign In</Button>
       </header>
 
-      <TennisCourtSearch />
+      {/* If you have a TennisCourtSearch component somewhere, import & place it here. */}
 
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
         <TennisCourtList />
