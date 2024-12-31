@@ -1,169 +1,152 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Star } from 'lucide-react'
+import { Star } from "lucide-react"
 import { getTennisCourts } from "@/lib/getTennisCourts"
 
-interface CourtAvailability {
-  time: string
-  availableCourts: number[]
+// Helper to convert time strings to minutes for range checks
+function timeToMinutes(str: string): number {
+  if (!str) return -1
+  const [time, ampm] = str.toUpperCase().split(" ")
+  if (!time || !ampm) return -1
+
+  const [hhStr, mmStr] = time.split(":")
+  let hh = parseInt(hhStr, 10) || 0
+  let mm = parseInt(mmStr, 10) || 0
+  if (ampm === "PM" && hh < 12) hh += 12
+  if (ampm === "AM" && hh === 12) hh = 0
+  return hh * 60 + mm
 }
 
-interface CourtData {
-  id: number
-  title: string
-  address: string
-  facility_type: string
-  available_dates: {
-    availability: CourtAvailability[]
-    totalCourts: number
-  }
-  last_updated: string
-}
-
+// Component
 export default function TennisCourtList() {
-  const [courts, setCourts] = useState<CourtData[]>([])
-  const [selectedCourt, setSelectedCourt] = useState<CourtData | null>(null)
-  const [selectedTime, setSelectedTime] = useState('')
+  const [courts, setCourts] = useState<any[]>([])
   const [favoriteCourts, setFavoriteCourts] = useState<number[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const timesInOneHour = [
+    "6:00 AM",
+    "7:00 AM",
+    "8:00 AM",
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
+    "7:00 PM",
+    "8:00 PM",
+    "9:00 PM",
+    "10:00 PM",
+  ]
 
   useEffect(() => {
-    async function fetchData() {
-      const data = await getTennisCourts()
+    getTennisCourts().then((data) => {
+      console.log("[TennisCourtList] Fetched courts:", data)
       setCourts(data)
-    }
-    fetchData()
+    })
   }, [])
 
   useEffect(() => {
-    const storedFavorites = localStorage.getItem('favoriteCourts')
+    const storedFavorites = localStorage.getItem("favoriteCourts")
     if (storedFavorites) {
       setFavoriteCourts(JSON.parse(storedFavorites))
     }
   }, [])
 
   const toggleFavorite = (courtId: number) => {
-    const newFavorites = favoriteCourts.includes(courtId)
-      ? favoriteCourts.filter(id => id !== courtId)
+    const updated = favoriteCourts.includes(courtId)
+      ? favoriteCourts.filter((id) => id !== courtId)
       : [...favoriteCourts, courtId]
-    setFavoriteCourts(newFavorites)
-    localStorage.setItem('favoriteCourts', JSON.stringify(newFavorites))
+    setFavoriteCourts(updated)
+    localStorage.setItem("favoriteCourts", JSON.stringify(updated))
   }
 
-  // Sort so that favorited courts appear first
-  const sortedCourts = [...courts].sort((a, b) => {
-    const aFavorite = favoriteCourts.includes(a.id)
-    const bFavorite = favoriteCourts.includes(b.id)
-    if (aFavorite === bFavorite) return 0
-    return aFavorite ? -1 : 1
-  })
+  const filtered = courts.filter((court) =>
+    court.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const sorted = [...filtered].sort((a, b) =>
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+  )
+
+  function isAvailableAtTime(court: any, timeSlot: string): boolean {
+    if (!Array.isArray(court.parsed_intervals)) return false
+    const timeMinutes = timeToMinutes(timeSlot)
+    return court.parsed_intervals.some((interval: any) => {
+      const startM = timeToMinutes(interval.start)
+      const endM = timeToMinutes(interval.end)
+      return timeMinutes >= startM && timeMinutes < endM
+    })
+  }
 
   return (
-    <div className="space-y-6 mt-6">
-      {sortedCourts.map((court) => {
-        // Safely destructure availability
-        const { availability = [], totalCourts = 0 } = court.available_dates || {}
+    <div className="bg-white text-black min-h-screen p-4 space-y-6 mt-6">
+      {/* Search bar */}
+      <div className="flex mb-4">
+        <input
+          type="text"
+          placeholder="Search courts by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border border-gray-300 p-2 rounded-md w-full max-w-md"
+        />
+      </div>
 
-        return (
-          <Card key={court.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span className="text-lg">{court.title}</span>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="w-fit">
-                    {totalCourts} Courts
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleFavorite(court.id)}
-                    aria-label={
-                      favoriteCourts.includes(court.id)
-                        ? "Remove from favorites"
-                        : "Add to favorites"
-                    }
+      {sorted.map((court) => (
+        <Card key={court.id}>
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              <span className="text-lg">{court.title}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleFavorite(court.id)}
+                aria-label={
+                  favoriteCourts.includes(court.id)
+                    ? "Remove from favorites"
+                    : "Add to favorites"
+                }
+              >
+                <Star
+                  className={
+                    favoriteCourts.includes(court.id)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-400"
+                  }
+                />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {timesInOneHour.map((timeSlot, index) => {
+                const available = isAvailableAtTime(court, timeSlot)
+                return (
+                  <Badge
+                    key={index}
+                    className={`text-center py-2 md:py-1 cursor-default transition-none ${
+                      available
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
                   >
-                    <Star
-                      className={
-                        favoriteCourts.includes(court.id)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-400"
-                      }
-                    />
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {availability.map((slot, index) => (
-                  <Dialog key={index}>
-                    <DialogTrigger asChild>
-                      <Badge
-                        variant={
-                          slot.availableCourts.length > 0
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={`text-center py-2 md:py-1 cursor-pointer transition-colors
-                          ${
-                            slot.availableCourts.length > 0
-                              ? "bg-green-500 hover:bg-green-600"
-                              : "hover:bg-secondary-foreground hover:text-secondary"
-                          }`}
-                        onClick={() => {
-                          setSelectedCourt(court)
-                          setSelectedTime(slot.time)
-                        }}
-                      >
-                        {slot.time}
-                      </Badge>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle className="text-lg">
-                          {court.title} - {slot.time}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="mt-4">
-                        {slot.availableCourts.length > 0 ? (
-                          <>
-                            <p className="text-sm md:text-base">
-                              Available Courts:
-                            </p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                              {slot.availableCourts.map(
-                                (courtNumber) => (
-                                  <Badge
-                                    key={courtNumber}
-                                    variant="outline"
-                                    className="py-2 md:py-1"
-                                  >
-                                    Court {courtNumber}
-                                  </Badge>
-                                )
-                              )}
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-sm md:text-base">
-                            No courts available at this time.
-                          </p>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })}
+                    {timeSlot}
+                  </Badge>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
-

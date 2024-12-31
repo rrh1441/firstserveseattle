@@ -1,33 +1,29 @@
-import { supabase } from "@/src/app/supabaseClient"
+// src/app/api/check-paywall/route.ts
+
+import { supabase } from "@/app/supabaseClient"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
-  // 1. Extract the userId from query params
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get("userId")
 
   if (!userId) {
-    // If no userId provided, return error
     return NextResponse.json({ error: "Missing userId" }, { status: 400 })
   }
 
-  // 2. Look up the user's session in Supabase
   const { data, error } = await supabase
-    .from("user_sessions")
+    .from("user_sessions")         // Must be exactly user_sessions
     .select("views_count")
     .eq("user_id", userId)
     .single()
 
-  // 3. Handle errors from Supabase
   if (error) {
-    console.error(error)
+    console.error("Supabase error in check-paywall:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 4. If no session or views_count <= 2, do NOT show paywall
-  const showPaywall = data?.views_count > 2
+  const viewsCount = data?.views_count ?? 0
+  const showPaywall = viewsCount > 2
 
-  // 5. Return a JSON response indicating if paywall is needed
   return NextResponse.json({ showPaywall })
 }
-

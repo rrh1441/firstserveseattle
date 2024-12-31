@@ -1,6 +1,8 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
-export default {
+// FULL REWRITE:
+const config: Config = {
+  // Make sure we include "src/app/**/*" so that Tailwind picks up classes in src/app/components/ui
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -15,4 +17,7 @@ export default {
     },
   },
   plugins: [],
-} satisfies Config;
+}
+
+// Export default for Next.js ESM usage
+export default config

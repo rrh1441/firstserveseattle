@@ -1,52 +1,65 @@
+// src/app/page.tsx
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState, Suspense } from "react"
 import { ExternalLink } from "lucide-react"
 import Image from "next/image"
 
-// Paywall logic + component
-// Make sure this path points to src/app/tennis-courts/components/paywall.tsx
+import { Button } from "@/components/ui/button"
+
+// We'll assume Paywall is at "src/app/tennis-courts/components/paywall.tsx"
 import Paywall from "./tennis-courts/components/paywall"
 
-// The function to increment user views
-// (assuming you created updateUserSession in src/lib or similar)
+// For updating session counts
 import { updateUserSession } from "@/lib/updateUserSessions"
 
-// Existing tennis court components
-// Make sure this path points to src/app/tennis-courts/components/TennisCourtList.tsx
+// The tennis court list
 import TennisCourtList from "./tennis-courts/components/TennisCourtList"
 
-export default function TennisCourtsPage() {
+export default function HomePage() {
   const [showPaywall, setShowPaywall] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     // Generate or retrieve userId from localStorage
-    let userId = localStorage.getItem("userId")
-    if (!userId) {
-      userId = crypto.randomUUID()
-      localStorage.setItem("userId", userId)
+    let storedId = localStorage.getItem("userId")
+    if (!storedId) {
+      storedId = crypto.randomUUID()
+      localStorage.setItem("userId", storedId)
+      console.log("[page.tsx] New userId created:", storedId)
+    } else {
+      console.log("[page.tsx] Existing userId found:", storedId)
     }
-
-    // Increment session count in Supabase
-    updateUserSession(userId).then(async () => {
-      // Check if we should show the paywall
-      const res = await fetch(`/api/check-paywall?userId=${userId}`)
-      const data = await res.json()
-      if (data?.showPaywall) {
-        setShowPaywall(true)
-      }
-    })
+    setUserId(storedId)
   }, [])
 
-  // If user has exceeded free limit, show paywall
+  useEffect(() => {
+    // Once userId is known, increment session
+    if (!userId) return
+    console.log("[page.tsx] Calling updateUserSession with userId:", userId)
+
+    updateUserSession(userId)
+      .then(async () => {
+        // Check if we should show paywall
+        console.log("[page.tsx] updateUserSession done, checking paywall")
+        const res = await fetch(`/api/check-paywall?userId=${userId}`)
+        const data = await res.json()
+        console.log("[page.tsx] /api/check-paywall response:", data)
+        if (data?.showPaywall) {
+          setShowPaywall(true)
+        }
+      })
+      .catch((err) => {
+        console.error("[page.tsx] updateUserSession error:", err)
+      })
+  }, [userId])
+
   if (showPaywall) {
     return <Paywall />
   }
 
-  // Otherwise, show normal UI
   return (
-    <div className="container mx-auto px-4 py-6 md:p-4 max-w-4xl">
+    <div className="container mx-auto px-4 py-6 md:p-4 max-w-4xl bg-white text-black">
       <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-6">
           <Image
@@ -57,19 +70,17 @@ export default function TennisCourtsPage() {
             className="w-20 h-20"
           />
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-1">
-              <span className="text-[#0c372b]">First Serve</span>{" "}
-              <span className="text-[#0c372b]">Seattle</span>
+            <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
+              <span>First Serve</span>{" "}
+              <span>Seattle</span>
             </h1>
-            <p className="text-base md:text-lg text-muted-foreground font-semibold">
-              Today's Open Tennis and Pickleball Courts
+            <p className="text-base md:text-lg font-semibold">
+              Today&#39;s Open Tennis and Pickleball Courts
             </p>
           </div>
         </div>
         <Button variant="outline">Sign In</Button>
       </header>
-
-      {/* If you have a TennisCourtSearch component somewhere, import & place it here. */}
 
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
         <TennisCourtList />
@@ -88,12 +99,12 @@ export default function TennisCourtsPage() {
         </Button>
       </div>
 
-      <footer className="mt-12 border-t pt-6 text-center text-sm text-muted-foreground">
+      <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex justify-center gap-4">
-          <a href="/privacy" className="hover:text-foreground transition-colors">
+          <a href="/privacy" className="hover:text-black transition-colors">
             Privacy Policy
           </a>
-          <a href="/terms" className="hover:text-foreground transition-colors">
+          <a href="/terms" className="hover:text-black transition-colors">
             Terms of Service
           </a>
         </div>
