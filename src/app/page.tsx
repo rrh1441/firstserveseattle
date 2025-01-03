@@ -59,7 +59,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 md:p-4 max-w-4xl bg-white text-black">
+    <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
       <header className="flex items-center mb-8">
         <div className="flex items-center gap-6">
           <Image
