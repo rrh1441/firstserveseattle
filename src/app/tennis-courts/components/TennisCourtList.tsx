@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 
@@ -180,42 +180,42 @@ export default function TennisCourtList() {
             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Always Visible Filter Buttons */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-2 px-2">
+          {/* Filter Buttons */}
+          <div className="grid grid-cols-3 gap-2">
             <Button
               onClick={() => toggleFilter("lights")}
-              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+              className={`flex items-center justify-center gap-1 px-2 h-9 ${
                 filters.lights
                   ? "bg-green-100 text-green-700 hover:bg-green-200"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <Image src="/icons/lighticon.png" alt="Lights" width={16} height={16} />
-              <span>Lights</span>
+              <Image src="/icons/lighticon.png" alt="Lights" width={14} height={14} />
+              <span className="text-sm">Lights</span>
             </Button>
 
             <Button
               onClick={() => toggleFilter("pickleball_lined")}
-              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+              className={`flex items-center justify-center gap-1 px-2 h-9 ${
                 filters.pickleball_lined
                   ? "bg-green-100 text-green-700 hover:bg-green-200"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <Image src="/icons/pickleballicon.png" alt="Pickleball" width={16} height={16} />
-              <span>Pickleball</span>
+              <Image src="/icons/pickleballicon.png" alt="Pickleball" width={14} height={14} />
+              <span className="text-sm">Pickle</span>
             </Button>
 
             <Button
               onClick={() => toggleFilter("hitting_wall")}
-              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+              className={`flex items-center justify-center gap-1 px-2 h-9 ${
                 filters.hitting_wall
                   ? "bg-green-100 text-green-700 hover:bg-green-200"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <Image src="/icons/wallicon.png" alt="Hitting Wall" width={16} height={16} />
-              <span>Wall</span>
+              <Image src="/icons/wallicon.png" alt="Hitting Wall" width={14} height={14} />
+              <span className="text-sm">Wall</span>
             </Button>
           </div>
         </div>
