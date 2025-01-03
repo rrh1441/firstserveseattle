@@ -260,7 +260,7 @@ export default function TennisCourtList() {
                 </span>
 
                 {/* Amenities Icons Next to Title */}
-                <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                <div className="flex flex-wrap items-center gap-1 mt-2 md:mt-0">
                   {court.lights && (
                     <div className="flex items-center gap-1">
                       <Image
