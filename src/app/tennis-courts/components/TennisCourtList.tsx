@@ -209,19 +209,6 @@ export default function TennisCourtList() {
             <span>Lights</span>
           </button>
 
-          {/* Hitting Wall Filter */}
-          <button
-            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap ${
-              filters.hitting_wall
-                ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200"
-                : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => toggleFilter("hitting_wall")}
-          >
-            <Image src="/icons/wallicon.png" alt="Hitting Wall" width={16} height={16} />
-            <span>Hitting Wall</span>
-          </button>
-
           {/* Pickleball Lined Filter */}
           <button
             className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap ${
@@ -238,6 +225,19 @@ export default function TennisCourtList() {
               height={16}
             />
             <span>Pickleball</span>
+          </button>
+
+          {/* Hitting Wall Filter */}
+          <button
+            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap ${
+              filters.hitting_wall
+                ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200"
+                : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+            }`}
+            onClick={() => toggleFilter("hitting_wall")}
+          >
+            <Image src="/icons/wallicon.png" alt="Hitting Wall" width={16} height={16} />
+            <span>Hitting Wall</span>
           </button>
         </div>
       </div>
@@ -272,17 +272,6 @@ export default function TennisCourtList() {
                       <span className="text-sm">Lights</span>
                     </div>
                   )}
-                  {court.hitting_wall && (
-                    <div className="flex items-center gap-1">
-                      <Image
-                        src="/icons/wallicon.png"
-                        alt="Hitting Wall"
-                        width={16}
-                        height={16}
-                      />
-                      <span className="text-sm">Hitting Wall</span>
-                    </div>
-                  )}
                   {court.pickleball_lined && (
                     <div className="flex items-center gap-1">
                       <Image
@@ -292,6 +281,17 @@ export default function TennisCourtList() {
                         height={16}
                       />
                       <span className="text-sm">Pickleball</span>
+                    </div>
+                  )}
+                  {court.hitting_wall && (
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/icons/wallicon.png"
+                        alt="Hitting Wall"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-sm">Hitting Wall</span>
                     </div>
                   )}
                 </div>
