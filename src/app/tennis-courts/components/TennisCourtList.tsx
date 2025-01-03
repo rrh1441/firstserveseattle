@@ -195,10 +195,10 @@ export default function TennisCourtList() {
         />
 
         {/* Amenity Filter Buttons */}
-        <div className="flex space-x-2 overflow-x-auto flex-nowrap">
+        <div className="flex flex-wrap md:flex-nowrap space-x-2 overflow-x-auto">
           {/* Lights Filter */}
           <button
-            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap mb-2 md:mb-0 ${
               filters.lights
                 ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200"
                 : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
@@ -211,7 +211,7 @@ export default function TennisCourtList() {
 
           {/* Pickleball Lined Filter */}
           <button
-            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 py-2 border rounded-md transition-colors duration-200 text-sm whitespace-nowrap mb-2 md:mb-0 ${
               filters.pickleball_lined
                 ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200"
                 : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
@@ -251,16 +251,16 @@ export default function TennisCourtList() {
         sorted.map((court) => (
           <Card key={court.id} className="shadow-md">
             {/* Custom Card Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 py-3 border-b">
               {/* Left Section: Title and Amenities */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full">
                 {/* Court Title */}
-                <span className="text-lg font-semibold truncate max-w-xs">
+                <span className="text-lg font-semibold truncate w-full md:w-auto">
                   {court.title}
                 </span>
 
                 {/* Amenities Icons Next to Title */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
                   {court.lights && (
                     <div className="flex items-center gap-1">
                       <Image
@@ -307,7 +307,7 @@ export default function TennisCourtList() {
                     ? "Remove from favorites"
                     : "Add to favorites"
                 }
-                className="hover:bg-gray-200 transition-colors duration-200 flex-shrink-0"
+                className="mt-2 md:mt-0 hover:bg-gray-200 transition-colors duration-200 flex-shrink-0"
               >
                 <Star
                   className={
