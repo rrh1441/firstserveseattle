@@ -7,6 +7,7 @@ import { Star } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 
+// Utility function to convert time strings to minutes
 function timeToMinutes(str: string): number {
   if (!str) return -1;
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -20,6 +21,7 @@ function timeToMinutes(str: string): number {
   return adjustedHh * 60 + mm;
 }
 
+// Interfaces for data structures
 interface ParsedInterval {
   date: string;
   start: string;
@@ -71,6 +73,7 @@ export default function TennisCourtList() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch tennis courts data
   useEffect(() => {
     getTennisCourts()
       .then((data) => {
@@ -84,6 +87,7 @@ export default function TennisCourtList() {
       });
   }, []);
 
+  // Retrieve favorite courts from localStorage
   useEffect(() => {
     const storedFavorites = localStorage.getItem("favoriteCourts");
     if (storedFavorites) {
@@ -91,6 +95,7 @@ export default function TennisCourtList() {
     }
   }, []);
 
+  // Toggle favorite status for a court
   const toggleFavorite = (courtId: number) => {
     const updated = favoriteCourts.includes(courtId)
       ? favoriteCourts.filter((id) => id !== courtId)
@@ -99,6 +104,7 @@ export default function TennisCourtList() {
     localStorage.setItem("favoriteCourts", JSON.stringify(updated));
   };
 
+  // Toggle filter states
   const toggleFilter = (filter: keyof typeof filters) => {
     setFilters((prev) => ({
       ...prev,
@@ -106,6 +112,7 @@ export default function TennisCourtList() {
     }));
   };
 
+  // Filter courts based on search term and selected filters
   const filtered = courts.filter((court) => {
     const matchesSearch = court.title
       ?.toLowerCase()
@@ -117,10 +124,12 @@ export default function TennisCourtList() {
     return matchesSearch && matchesFilters;
   });
 
+  // Sort courts alphabetically
   const sorted = [...filtered].sort((a, b) =>
     a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
   );
 
+  // Display today's date
   const todayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -128,6 +137,7 @@ export default function TennisCourtList() {
     year: "numeric",
   });
 
+  // Check if a court is available at a given time
   function isAvailableAtTime(court: Court, timeSlot: string): boolean {
     if (!Array.isArray(court.parsed_intervals)) return false;
     const timeMinutes = timeToMinutes(timeSlot);
@@ -148,6 +158,7 @@ export default function TennisCourtList() {
     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   };
 
+  // Render loading state
   if (isLoading) {
     return (
       <div className="bg-white text-black min-h-screen flex items-center justify-center">
@@ -156,6 +167,7 @@ export default function TennisCourtList() {
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <div className="bg-white text-black min-h-screen flex items-center justify-center">
@@ -287,7 +299,7 @@ export default function TennisCourtList() {
 
               {/* Favorite Button */}
               <Button
-                variant="ghost"
+                variant="ghost" // Changed from "primary" to "ghost" (a supported variant)
                 size="sm"
                 onClick={() => toggleFavorite(court.id)}
                 aria-label={
@@ -330,7 +342,7 @@ export default function TennisCourtList() {
               {/* Open in Maps Button */}
               <div className="mt-6">
                 <Button
-                  variant="primary"
+                  variant="ghost" // Changed from "primary" to "ghost" (a supported variant)
                   onClick={() =>
                     window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")
                   }
