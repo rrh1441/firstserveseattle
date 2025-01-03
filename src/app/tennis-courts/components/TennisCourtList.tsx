@@ -251,25 +251,25 @@ export default function TennisCourtList() {
         sorted.map((court) => (
           <Card key={court.id} className="shadow-md">
             {/* Custom Card Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 py-3 border-b">
+            <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 border-b">
               {/* Left Section: Title and Amenities */}
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full">
+              <div className="flex flex-col md:flex-row items-center flex-grow min-w-0 gap-2">
                 {/* Court Title */}
-                <span className="text-lg font-semibold truncate w-full md:w-auto">
+                <span className="text-lg font-semibold truncate flex-1 min-w-0">
                   {court.title}
                 </span>
 
                 {/* Amenities Icons Next to Title */}
-                <div className="flex flex-wrap items-center gap-1 mt-2 md:mt-0">
+                <div className="flex flex-row flex-wrap items-center gap-1">
                   {court.lights && (
                     <div className="flex items-center gap-1">
                       <Image
                         src="/icons/lighticon.png"
                         alt="Lights"
-                        width={16}
-                        height={16}
+                        width={14}
+                        height={14}
                       />
-                      <span className="text-sm">Lights</span>
+                      <span className="text-xs md:text-sm">Lights</span>
                     </div>
                   )}
                   {court.pickleball_lined && (
@@ -277,10 +277,10 @@ export default function TennisCourtList() {
                       <Image
                         src="/icons/pickleballicon.png"
                         alt="Pickleball"
-                        width={16}
-                        height={16}
+                        width={14}
+                        height={14}
                       />
-                      <span className="text-sm">Pickleball</span>
+                      <span className="text-xs md:text-sm">Pickleball</span>
                     </div>
                   )}
                   {court.hitting_wall && (
@@ -288,10 +288,10 @@ export default function TennisCourtList() {
                       <Image
                         src="/icons/wallicon.png"
                         alt="Hitting Wall"
-                        width={16}
-                        height={16}
+                        width={14}
+                        height={14}
                       />
-                      <span className="text-sm">Hitting Wall</span>
+                      <span className="text-xs md:text-sm">Hitting Wall</span>
                     </div>
                   )}
                 </div>
@@ -299,7 +299,7 @@ export default function TennisCourtList() {
 
               {/* Favorite Button */}
               <Button
-                variant="ghost" // Changed from "primary" to "ghost" (a supported variant)
+                variant="ghost"
                 size="sm"
                 onClick={() => toggleFavorite(court.id)}
                 aria-label={
@@ -342,7 +342,7 @@ export default function TennisCourtList() {
               {/* Open in Maps Button */}
               <div className="mt-6">
                 <Button
-                  variant="ghost" // Changed from "primary" to "ghost" (a supported variant)
+                  variant="ghost"
                   onClick={() =>
                     window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")
                   }
