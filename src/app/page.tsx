@@ -60,7 +60,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-6 md:p-4 max-w-4xl bg-white text-black">
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex items-center mb-8">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -79,7 +79,6 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-        <Button variant="outline">Sign In</Button>
       </header>
 
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
