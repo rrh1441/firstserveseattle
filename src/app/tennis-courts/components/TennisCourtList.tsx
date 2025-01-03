@@ -49,7 +49,7 @@ export default function TennisCourtList() {
     pickleball_lined: false,
   });
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
-  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  // Removed isFiltersVisible state since filters are always shown
 
   const timesInOneHour = [
     "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
@@ -170,8 +170,8 @@ export default function TennisCourtList() {
           {todayDate}
         </div>
 
-        {/* Search Input */}
-        <div className="flex flex-col gap-2">
+        {/* Search and Filter Bar */}
+        <div className="space-y-2">
           <input
             type="text"
             placeholder="Search courts by name..."
@@ -180,55 +180,44 @@ export default function TennisCourtList() {
             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Filters Toggle Button */}
-          <Button
-            onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-            className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200"
-          >
-            Filters
-            {isFiltersVisible ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </Button>
+          {/* Always Visible Filter Buttons */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-2 px-2">
+            <Button
+              onClick={() => toggleFilter("lights")}
+              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+                filters.lights
+                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <Image src="/icons/lighticon.png" alt="Lights" width={16} height={16} />
+              <span>Lights</span>
+            </Button>
 
-          {/* Collapsible Filters */}
-          {isFiltersVisible && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => toggleFilter("lights")}
-                className={`flex-1 flex items-center justify-center gap-2 ${
-                  filters.lights
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <Image src="/icons/lighticon.png" alt="Lights" width={16} height={16} />
-                <span>Lights</span>
-              </Button>
+            <Button
+              onClick={() => toggleFilter("pickleball_lined")}
+              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+                filters.pickleball_lined
+                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <Image src="/icons/pickleballicon.png" alt="Pickleball" width={16} height={16} />
+              <span>Pickleball</span>
+            </Button>
 
-              <Button
-                onClick={() => toggleFilter("pickleball_lined")}
-                className={`flex-1 flex items-center justify-center gap-2 ${
-                  filters.pickleball_lined
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <Image src="/icons/pickleballicon.png" alt="Pickleball" width={16} height={16} />
-                <span>Pickleball</span>
-              </Button>
-
-              <Button
-                onClick={() => toggleFilter("hitting_wall")}
-                className={`flex-1 flex items-center justify-center gap-2 ${
-                  filters.hitting_wall
-                    ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <Image src="/icons/wallicon.png" alt="Hitting Wall" width={16} height={16} />
-                <span>Wall</span>
-              </Button>
-            </div>
-          )}
+            <Button
+              onClick={() => toggleFilter("hitting_wall")}
+              className={`flex items-center justify-center gap-1 shrink-0 px-3 ${
+                filters.hitting_wall
+                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <Image src="/icons/wallicon.png" alt="Hitting Wall" width={16} height={16} />
+              <span>Wall</span>
+            </Button>
+          </div>
         </div>
       </div>
 
