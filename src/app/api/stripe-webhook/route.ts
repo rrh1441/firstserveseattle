@@ -15,7 +15,8 @@ export const config = {
 export async function POST(req: NextRequest) {
   // 1. Initialize Stripe with your secret key
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2024-12-18.acacia", // Updated API version
+    // Use your preferred API version:
+    apiVersion: "2024-12-18.acacia",
   });
 
   // 2. Retrieve the Stripe webhook signing secret from your .env
@@ -33,9 +34,16 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, signingSecret);
-  } catch (err: any) {
-    console.error("Webhook signature verification failed:", err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (unknownError: unknown) {
+    // Type-narrow to see if it's an Error instance
+    let message = "Webhook signature verification failed.";
+    if (unknownError instanceof Error) {
+      message = `Webhook signature verification failed: ${unknownError.message}`;
+    } else {
+      console.error("Unknown error type thrown:", unknownError);
+    }
+
+    return new NextResponse(message, { status: 400 });
   }
 
   // 4. Initialize Supabase with the SERVICE ROLE KEY (server use only!)
@@ -70,12 +78,14 @@ export async function POST(req: NextRequest) {
             .upsert(
               {
                 user_id: userId,
-                plan: plan,
+                plan,
                 stripe_subscription_id: subscriptionId,
                 stripe_payment_intent_id: paymentIntentId,
-                status: "active", // Define your own logic for statuses.
+                status: "active", // define your own logic for statuses
               },
-              { onConflict: ["user_id", "plan"] } // Prevent duplicate inserts.
+              {
+                onConflict: ["user_id", "plan"], // prevent duplicates
+              }
             );
 
           if (error) {
@@ -93,10 +103,17 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    // Return a 200 to Stripe to indicate the webhook was handled successfully
+    // Return a 200 to Stripe to indicate successful handling
     return new NextResponse("Event received", { status: 200 });
-  } catch (error: any) {
-    console.error("Webhook handler error:", error.message);
-    return new NextResponse(error.message, { status: 500 });
+  } catch (unknownError: unknown) {
+    let message = "Webhook handler error.";
+    if (unknownError instanceof Error) {
+      message = unknownError.message;
+      console.error("Webhook handler error:", message);
+    } else {
+      console.error("Unknown error type thrown:", unknownError);
+    }
+
+    return new NextResponse(message, { status: 500 });
   }
 }
