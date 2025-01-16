@@ -1,3 +1,5 @@
+// src/app/api/stripe-webhook/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
@@ -13,7 +15,7 @@ export const config = {
 export async function POST(req: NextRequest) {
   // 1. Initialize Stripe with your secret key
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    // Cast to avoid TS literal type error:
+    // If you must cast your version to avoid TS error:
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
@@ -80,7 +82,8 @@ export async function POST(req: NextRequest) {
                 status: "active",
               },
               {
-                onConflict: ["user_id", "plan"], // prevent duplicates
+                // Use a single comma-separated string for multi-column conflict
+                onConflict: "user_id,plan",
               }
             );
 
