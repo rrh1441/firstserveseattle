@@ -1,5 +1,3 @@
-// src/app/api/create-checkout-session/route.ts
-
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -14,12 +12,12 @@ export async function POST(request: Request) {
     const stripeMonthlyPriceId = process.env.STRIPE_MONTHLY_PRICE_ID as string;
     const stripeAnnualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID as string;
 
-    // Initialize Stripe (with your preferred API version)
+    // 3. Initialize Stripe with your desired API version (cast to avoid TS error)
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2023-08-16",
+      apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
     });
 
-    // 3. Determine which Price ID to use
+    // 4. Determine which Price ID to use
     let priceId: string;
     switch (plan) {
       case "monthly":
@@ -32,7 +30,7 @@ export async function POST(request: Request) {
         throw new Error("Invalid plan");
     }
 
-    // 4. Create a Checkout Session
+    // 5. Create a Checkout Session
     // Both monthly and annual are recurring, so mode: "subscription"
     const session = await stripe.checkout.sessions.create({
       line_items: [
@@ -50,10 +48,10 @@ export async function POST(request: Request) {
       },
     });
 
-    // 5. Return the session URL to the client
+    // 6. Return the session URL to the client
     return NextResponse.json({ url: session.url });
   } catch (unknownError: unknown) {
-    // Type-narrow the error to retrieve a message if it's an Error object
+    // Narrow the error to retrieve a message if it's an Error object
     let message = "Error creating checkout session.";
     if (unknownError instanceof Error) {
       message = unknownError.message;
