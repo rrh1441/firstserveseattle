@@ -6,9 +6,9 @@ const TermsOfService = () => {
       <h1>Terms of Service</h1>
       <p><strong>Effective Date:</strong> January 19, 2025</p>
       <p>
-        These Terms of Service ("Terms") govern your use of the First Serve Seattle app ("the App"), owned and operated
-        by Simple Apps, LLC ("we," "our," or "us"). By accessing or using the App, you agree to these Terms. If you do not
-        agree, please refrain from using the App.
+        These Terms of Service (&quot;Terms&quot;) govern your use of the First Serve Seattle app (&quot;the App&quot;),
+        owned and operated by Simple Apps, LLC (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). By accessing or using the App,
+        you agree to these Terms. If you do not agree, please refrain from using the App.
       </p>
       <h2>1. Account Registration</h2>
       <ul>
@@ -18,7 +18,7 @@ const TermsOfService = () => {
       <h2>2. Use of the App</h2>
       <ul>
         <li>You may use the App only for lawful purposes.</li>
-        <li>You agree not to engage in any activity that disrupts or interferes with the App’s functionality.</li>
+        <li>You agree not to engage in any activity that disrupts or interferes with the App&apos;s functionality.</li>
       </ul>
       <h2>3. Payments and Subscriptions</h2>
       <ul>
@@ -29,7 +29,7 @@ const TermsOfService = () => {
       <h2>4. Intellectual Property</h2>
       <p>All content, features, and functionality of the App are owned by Simple Apps, LLC and protected by intellectual property laws.</p>
       <h2>5. Limitation of Liability</h2>
-      <p>The App is provided "as is" without warranties of any kind. We are not liable for any damages resulting from your use of the App, to the fullest extent permitted by law.</p>
+      <p>The App is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages resulting from your use of the App, to the fullest extent permitted by law.</p>
       <h2>6. Termination</h2>
       <ul>
         <li>We may suspend or terminate your account if you violate these Terms.</li>
