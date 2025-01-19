@@ -100,10 +100,10 @@ export default function HomePage() {
 
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex justify-center gap-4">
-          <a href="/privacy" className="hover:text-black transition-colors">
+          <a href="/privacy-policy" className="hover:text-black transition-colors">
             Privacy Policy
           </a>
-          <a href="/terms" className="hover:text-black transition-colors">
+          <a href="/terms-of-service" className="hover:text-black transition-colors">
             Terms of Service
           </a>
         </div>
