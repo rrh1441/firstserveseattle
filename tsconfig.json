@@ -7,7 +7,7 @@
       "esnext"
     ],
     "allowJs": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true, // <--- Added
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -17,24 +17,18 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+
     // Important: The "baseUrl" is ".", so the "paths" are relative to your project root.
     "baseUrl": ".",
     "paths": {
       // Existing aliases:
-      "@/components/*": [
-        "src/app/components/*"
-      ],
-      "@/lib/*": [
-        "src/lib/*"
-      ],
-      "@/hooks/*": [
-        "src/hooks/*"
-      ],
+      "@/components/*": ["src/app/components/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/hooks/*": ["src/hooks/*"],
       // NEW alias: So you can import from "@/app/supabaseClient"
-      "@/app/*": [
-        "src/app/*"
-      ]
+      "@/app/*": ["src/app/*"]
     },
+
     "plugins": [
       {
         "name": "next"
