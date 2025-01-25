@@ -69,28 +69,28 @@ export async function POST(req: NextRequest) {
           : null;
 
         if (!email || !plan) {
-          // Without an email or plan, we can’t proceed
+          // Without an email or plan, we can't proceed
           console.error("Missing email or plan in checkout session.");
           break;
         }
 
         // --- 5a) Create or retrieve the user by email ---
 
-        // 1. Check if user already exists via Admin API
-        //    Use 'filter' instead of 'email' to find by email
-        const { data: userList, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
-          filter: `email.eq.${email}`,
-        });
+        // 1. Check if a user already exists with that email
+        const {
+          data: existingUser,
+          error: getEmailErr,
+        } = await supabaseAdmin.auth.admin.getUserByEmail(email);
 
-        if (listErr) {
-          console.error("Error listing users:", listErr.message);
-          return new NextResponse(`Error listing users: ${listErr.message}`, { status: 500 });
+        if (getEmailErr) {
+          console.error("Error retrieving user by email:", getEmailErr.message);
+          return new NextResponse(`Error retrieving user: ${getEmailErr.message}`, { status: 500 });
         }
 
         let userId: string | null = null;
-        if (userList?.users?.length) {
+        if (existingUser) {
           // Found an existing user with this email
-          userId = userList.users[0].id;
+          userId = existingUser.id;
         } else {
           // 2. Create a new user
           const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
                 status: "active",
               },
               {
-                onConflict: "user_id,plan", // or just "user_id" if you only have one plan
+                onConflict: "user_id,plan",
               }
             );
           if (error) {
@@ -146,7 +146,6 @@ export async function POST(req: NextRequest) {
           }
         } else {
           // Alternatively, store by email if you prefer
-          // (Though user_id is more robust once the user is created.)
           // e.g.:
           // const { error } = await supabaseAdmin
           //   .from("subscriptions")
