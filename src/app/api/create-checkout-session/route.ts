@@ -3,9 +3,8 @@ import Stripe from "stripe";
 
 export async function POST(request: Request) {
   try {
-    // 1. Parse data from request body
-    // e.g., plan = 'monthly' or 'annual', user_id = 'uuid-from-supabase'
-    const { plan, user_id } = await request.json();
+    // 1. Parse data from request body (only plan now, no user_id)
+    const { plan } = await request.json();
 
     // 2. Load environment variables
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY as string;
@@ -32,6 +31,8 @@ export async function POST(request: Request) {
 
     // 5. Create a Checkout Session
     // Both monthly and annual are recurring, so mode: "subscription"
+    // customer_creation: "always" ensures Stripe creates a Customer record for every session,
+    // capturing the user's email at checkout.
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -42,8 +43,8 @@ export async function POST(request: Request) {
       mode: "subscription",
       success_url: `https://firstserveseattle.com/tennis-courts?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://firstserveseattle.com/tennis-courts?canceled=true`,
+      customer_creation: "always",
       metadata: {
-        user_id,
         plan,
       },
     });
@@ -51,7 +52,6 @@ export async function POST(request: Request) {
     // 6. Return the session URL to the client
     return NextResponse.json({ url: session.url });
   } catch (unknownError: unknown) {
-    // Narrow the error to retrieve a message if it's an Error object
     let message = "Error creating checkout session.";
     if (unknownError instanceof Error) {
       message = unknownError.message;

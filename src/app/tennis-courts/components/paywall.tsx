@@ -6,10 +6,7 @@ import React, { useState } from "react"
 import { Check, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-// If you need user info from Supabase:
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-
-const supabase = createClientComponentClient()
+import Link from "next/link" // for client-side routing with Next.js
 
 const features = [
   "Unlimited court searches",
@@ -31,33 +28,19 @@ export default function Paywall() {
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly")
   const [loading, setLoading] = useState(false)
 
+  // If you do NOT require them to be logged in before paying:
+  // We remove the session/user check. We just create a checkout session with plan only.
   const handleSubscribe = async () => {
     setLoading(true)
     try {
-      // (Optional) If you need the user ID from Supabase Auth:
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session?.user) {
-        // If no user is logged in, you can redirect to login or show a message
-        alert("You must be logged in to subscribe.")
-        return
-      }
-
-      // Call the create-checkout-session endpoint
+      // Call your /api/create-checkout-session route
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan,
-          user_id: session.user.id, // from Supabase session
-        }),
+        body: JSON.stringify({ plan }), // only sending plan
       })
-
       const data = await response.json()
       if (data.url) {
-        // Redirect to Stripe Checkout
         window.location.href = data.url
       } else {
         console.error("No checkout URL returned:", data)
@@ -65,6 +48,7 @@ export default function Paywall() {
       }
     } catch (error) {
       console.error("Error subscribing:", error)
+      alert("Error subscribing.")
     } finally {
       setLoading(false)
     }
@@ -80,7 +64,7 @@ export default function Paywall() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Toggle group for plan selection */}
+          {/* Plan selection */}
           <div className="flex justify-center space-x-2">
             <button
               onClick={() => setPlan("monthly")}
@@ -115,7 +99,7 @@ export default function Paywall() {
             <p className="text-sm text-gray-600">{valueProp[plan]}</p>
           </div>
 
-          {/* Feature list */}
+          {/* Features */}
           <div className="space-y-2 rounded-lg bg-gray-50 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Sparkles className="h-4 w-4 text-yellow-400" />
@@ -143,6 +127,19 @@ export default function Paywall() {
           <p className="text-xs text-center text-gray-500 mt-4">
             Secure payment powered by Stripe. Cancel anytime.
           </p>
+
+          {/* Already subscribed? Sign in */}
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              Already subscribed?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
