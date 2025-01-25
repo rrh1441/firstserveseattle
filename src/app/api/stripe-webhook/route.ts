@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// We need this so Next.js doesn't parse the body automatically.
+// We need this to ensure Next.js doesn't parse the body automatically.
 // Stripe requires the raw body to validate the webhook signature.
 export const config = {
   api: {
@@ -11,16 +11,15 @@ export const config = {
 };
 
 export async function POST(req: NextRequest) {
-  // 1. Initialize Stripe with your secret key
+  // Initialize Stripe with your secret key
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    // If you must cast your version to avoid TS literal mismatch:
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
-  // 2. Retrieve the Stripe webhook signing secret
+  // Retrieve the Stripe webhook signing secret
   const signingSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
-  // 3. Get the raw body + signature for Stripe's verification
+  // Get the raw body + signature for Stripe's verification
   const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -32,105 +31,83 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, signingSecret);
-  } catch (unknownError: unknown) {
-    let message = "Webhook signature verification failed.";
-    if (unknownError instanceof Error) {
-      message = `Webhook signature verification failed: ${unknownError.message}`;
-    } else {
-      console.error("Unknown error type thrown:", unknownError);
-    }
-    return new NextResponse(message, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error
+        ? `Webhook signature verification failed: ${error.message}`
+        : "Unknown error during signature verification.";
+    console.error(errorMessage);
+    return new NextResponse(errorMessage, { status: 400 });
   }
 
-  // 4. Initialize Supabase with the service role key (server use only)
+  // Initialize Supabase client with the service role key
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-  // 5. Handle the Stripe event
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Stripe email from checkout
-        const email = session.customer_details?.email ?? null;
-        // Plan from metadata (e.g. 'monthly' or 'annual')
-        const plan = session.metadata?.plan ?? null;
-
-        // subscription/payment IDs
-        const subscriptionId = session.subscription
-          ? (session.subscription as string)
-          : null;
-        const paymentIntentId = session.payment_intent
-          ? (session.payment_intent as string)
-          : null;
+        const email = session.customer_details?.email;
+        const plan = session.metadata?.plan;
+        const subscriptionId = session.subscription as string | null;
+        const paymentIntentId = session.payment_intent as string | null;
 
         if (!email || !plan) {
-          // Without an email or plan, we can't proceed
-          console.error("Missing email or plan in checkout session.");
+          console.error("Missing email or plan in the checkout session.");
           break;
         }
 
-        // --- 5a) Create or retrieve the user by email ---
-
-        // 1. Check if a user already exists with that email
+        // Check if a user already exists by email
         const {
           data: { users },
-          error: getEmailErr,
-        } = await supabaseAdmin.auth.admin.listUsers({
-          page: 1,
-          perPage: 1,
-          emailFilter: email
-        });
+          error: listError,
+        } = await supabaseAdmin.auth.admin.listUsers({ filter: `email.eq.${email}` });
 
-        if (getEmailErr) {
-          console.error("Error retrieving user by email:", getEmailErr.message);
-          return new NextResponse(`Error retrieving user: ${getEmailErr.message}`, { status: 500 });
+        if (listError) {
+          console.error("Error retrieving user:", listError.message);
+          return new NextResponse(`Error retrieving user: ${listError.message}`, { status: 500 });
         }
 
         let userId: string | null = null;
-        const existingUser = users[0];
-        
-        if (existingUser) {
-          // Found an existing user with this email
-          userId = existingUser.id;
+
+        if (users && users.length > 0) {
+          userId = users[0].id;
         } else {
-          // 2. Create a new user
-          const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          // Create a new user with the email if none exists
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
-            // They won't have a password set yet
             email_confirm: false,
           });
-          if (createErr) {
-            console.error("Error creating user:", createErr.message);
-            return new NextResponse(createErr.message, { status: 500 });
-          }
-          userId = newUser?.user?.id ?? null;
 
-          // 3. Generate a Magic Link for them to finish account setup
-          if (userId) {
-            const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
-              type: "magiclink",
-              email,
-              options: {
-                // Where should they go after clicking the magic link?
-                redirectTo: "https://firstserveseattle.com/members/welcome",
-              },
-            });
-            if (linkErr) {
-              console.error("Error generating magic link:", linkErr.message);
-              // Not a showstopper for storing subscription, so we continue
-            } else {
-              console.log("Magic link generated and email sent:", linkData);
-            }
+          if (createError) {
+            console.error("Error creating user:", createError.message);
+            return new NextResponse(createError.message, { status: 500 });
+          }
+
+          userId = newUser?.user?.id;
+
+          // Generate and send a Magic Link for account setup
+          const { data: magicLink, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: "magiclink",
+            email,
+            options: {
+              redirectTo: "https://firstserveseattle.com/members/welcome",
+            },
+          });
+
+          if (magicLinkError) {
+            console.error("Error generating magic link:", magicLinkError.message);
+          } else {
+            console.log("Magic link sent:", magicLink);
           }
         }
 
-        // --- 5b) Upsert the subscription in your own table ---
         if (userId) {
-          // If you have a user_id column in 'subscriptions'
-          const { error } = await supabaseAdmin
+          // Upsert subscription information into your database
+          const { error: upsertError } = await supabaseAdmin
             .from("subscriptions")
             .upsert(
               {
@@ -141,49 +118,30 @@ export async function POST(req: NextRequest) {
                 status: "active",
               },
               {
-                onConflict: "user_id,plan",
+                onConflict: ["user_id", "plan"],
               }
             );
-          if (error) {
-            console.error("Supabase upsert error:", error.message);
-            return new NextResponse(error.message, { status: 500 });
+
+          if (upsertError) {
+            console.error("Supabase upsert error:", upsertError.message);
+            return new NextResponse(upsertError.message, { status: 500 });
           }
-        } else {
-          // Alternatively, store by email if you prefer
-          // e.g.:
-          // const { error } = await supabaseAdmin
-          //   .from("subscriptions")
-          //   .upsert(
-          //     {
-          //       email,
-          //       plan,
-          //       stripe_subscription_id: subscriptionId,
-          //       stripe_payment_intent_id: paymentIntentId,
-          //       status: "active",
-          //     },
-          //     { onConflict: "email,plan" }
-          //   );
         }
 
         break;
       }
 
-      // Handle other event types as needed
+      // Handle other Stripe events as needed
       default:
         console.log(`Unhandled event type: ${event.type}`);
         break;
     }
 
-    // Return 200 to indicate successful handling
-    return new NextResponse("Event received", { status: 200 });
-  } catch (unknownError: unknown) {
-    let message = "Webhook handler error.";
-    if (unknownError instanceof Error) {
-      message = unknownError.message;
-      console.error("Webhook handler error:", message);
-    } else {
-      console.error("Unknown error type thrown:", unknownError);
-    }
-    return new NextResponse(message, { status: 500 });
+    return new NextResponse("Event processed", { status: 200 });
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error during webhook handling.";
+    console.error("Webhook handler error:", errorMessage);
+    return new NextResponse(errorMessage, { status: 500 });
   }
 }
