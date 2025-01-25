@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// We need this to prevent Next.js from parsing the body automatically
-// Stripe requires the raw body to validate the webhook signature
+// We need this so Next.js doesn't parse the body automatically.
+// Stripe requires the raw body to validate the webhook signature.
 export const config = {
   api: {
     bodyParser: false,
@@ -13,7 +13,8 @@ export const config = {
 export async function POST(req: NextRequest) {
   // 1. Initialize Stripe with your secret key
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2023-10-16" as Stripe.LatestApiVersion,
+    // If you must cast your version to avoid TS literal mismatch:
+    apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
   // 2. Retrieve the Stripe webhook signing secret
@@ -52,11 +53,12 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // Get email and plan from the session
+        // Stripe email from checkout
         const email = session.customer_details?.email ?? null;
+        // Plan from metadata (e.g. 'monthly' or 'annual')
         const plan = session.metadata?.plan ?? null;
 
-        // Get subscription/payment IDs
+        // subscription/payment IDs
         const subscriptionId = session.subscription
           ? (session.subscription as string)
           : null;
@@ -65,17 +67,21 @@ export async function POST(req: NextRequest) {
           : null;
 
         if (!email || !plan) {
+          // Without an email or plan, we can't proceed
           console.error("Missing email or plan in checkout session.");
           break;
         }
 
         // --- 5a) Create or retrieve the user by email ---
-        
+
         // 1. Check if a user already exists with that email
-        const { data: users, error: getEmailErr } = await supabaseAdmin.auth.admin.listUsers({
-          filter: {
-            email: email
-          }
+        const {
+          data: { users },
+          error: getEmailErr,
+        } = await supabaseAdmin.auth.admin.listUsers({
+          page: 1,
+          perPage: 1,
+          query: email
         });
 
         if (getEmailErr) {
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
         }
 
         let userId: string | null = null;
-        const existingUser = users?.users[0];
+        const existingUser = users[0];
         
         if (existingUser) {
           // Found an existing user with this email
@@ -93,38 +99,38 @@ export async function POST(req: NextRequest) {
           // 2. Create a new user
           const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
             email,
-            email_confirm: true, // Changed to true since we're auto-confirming
-            user_metadata: {
-              has_completed_onboarding: false
-            }
+            // They won't have a password set yet
+            email_confirm: false,
           });
-
           if (createErr) {
             console.error("Error creating user:", createErr.message);
             return new NextResponse(createErr.message, { status: 500 });
           }
           userId = newUser?.user?.id ?? null;
 
-          // 3. Generate a password reset link instead of magic link for better UX
+          // 3. Generate a Magic Link for them to finish account setup
           if (userId) {
-            const { error: resetErr } = await supabaseAdmin.auth.admin.generateLink({
-              type: "recovery",
+            const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+              type: "magiclink",
               email,
               options: {
-                redirectTo: "https://firstserveseattle.com/members/welcome"
-              }
+                // Where should they go after clicking the magic link?
+                redirectTo: "https://firstserveseattle.com/members/welcome",
+              },
             });
-
-            if (resetErr) {
-              console.error("Error generating password reset link:", resetErr.message);
+            if (linkErr) {
+              console.error("Error generating magic link:", linkErr.message);
               // Not a showstopper for storing subscription, so we continue
+            } else {
+              console.log("Magic link generated and email sent:", linkData);
             }
           }
         }
 
-        // --- 5b) Upsert the subscription in your subscriptions table ---
+        // --- 5b) Upsert the subscription in your own table ---
         if (userId) {
-          const { error: subErr } = await supabaseAdmin
+          // If you have a user_id column in 'subscriptions'
+          const { error } = await supabaseAdmin
             .from("subscriptions")
             .upsert(
               {
@@ -133,40 +139,32 @@ export async function POST(req: NextRequest) {
                 stripe_subscription_id: subscriptionId,
                 stripe_payment_intent_id: paymentIntentId,
                 status: "active",
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
               },
               {
-                onConflict: "user_id,plan"
+                onConflict: "user_id,plan",
               }
             );
-
-          if (subErr) {
-            console.error("Supabase subscription upsert error:", subErr.message);
-            return new NextResponse(subErr.message, { status: 500 });
+          if (error) {
+            console.error("Supabase upsert error:", error.message);
+            return new NextResponse(error.message, { status: 500 });
           }
+        } else {
+          // Alternatively, store by email if you prefer
+          // e.g.:
+          // const { error } = await supabaseAdmin
+          //   .from("subscriptions")
+          //   .upsert(
+          //     {
+          //       email,
+          //       plan,
+          //       stripe_subscription_id: subscriptionId,
+          //       stripe_payment_intent_id: paymentIntentId,
+          //       status: "active",
+          //     },
+          //     { onConflict: "email,plan" }
+          //   );
         }
 
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        // Update subscription status to cancelled
-        const { error: updateErr } = await supabaseAdmin
-          .from("subscriptions")
-          .update({ 
-            status: "cancelled",
-            updated_at: new Date().toISOString()
-          })
-          .eq("stripe_subscription_id", subscription.id);
-
-        if (updateErr) {
-          console.error("Error updating cancelled subscription:", updateErr.message);
-          return new NextResponse(updateErr.message, { status: 500 });
-        }
-        
         break;
       }
 
@@ -176,7 +174,8 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    return new NextResponse("Event processed successfully", { status: 200 });
+    // Return 200 to indicate successful handling
+    return new NextResponse("Event received", { status: 200 });
   } catch (unknownError: unknown) {
     let message = "Webhook handler error.";
     if (unknownError instanceof Error) {
