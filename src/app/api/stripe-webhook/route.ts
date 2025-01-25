@@ -75,9 +75,11 @@ export async function POST(req: NextRequest) {
         }
 
         // --- 5a) Create or retrieve the user by email ---
+
         // 1. Check if user already exists via Admin API
+        //    Use 'filter' instead of 'email' to find by email
         const { data: userList, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
-          email: email,
+          filter: `email.eq.${email}`,
         });
 
         if (listErr) {
