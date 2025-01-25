@@ -1,79 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
-export default function SignUp() {
+export default function SignupPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = async () => {
-    setLoading(true);
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error: signupError } = await supabase.auth.signUp({
         email,
         password,
       });
-      if (error) {
-        throw new Error(error.message);
+
+      if (signupError) {
+        setError(signupError.message);
+        return;
       }
-      router.push("/checkout"); // Redirect to the checkout page after successful sign-up
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+
+      router.push(`/api/create-checkout-session?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred.");
+      }
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-6 bg-white rounded-md shadow-md">
-        <h2 className="text-xl font-semibold text-center text-gray-700">
-          Create an Account
-        </h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleSignup}
+        className="w-full max-w-md bg-white p-6 rounded-lg shadow-md"
+      >
+        <h1 className="text-2xl font-bold text-center mb-4">Create Account</h1>
         {error && (
-          <p className="mt-2 text-sm text-red-600 text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center mb-4">{error}</p>
         )}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
+        <div className="mb-4">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200"
-            placeholder="Enter your email"
+            className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
+            required
           />
         </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
+        <div className="mb-6">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200"
-            placeholder="Create a password"
+            className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
+            required
           />
         </div>
-        <Button
-          className="w-full mt-6 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700"
-          onClick={handleSignUp}
-          disabled={loading}
+        <button
+          type="submit"
+          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
         >
-          {loading ? "Creating Account..." : "Create Account"}
-        </Button>
-      </div>
+          Create Account and Subscribe
+        </button>
+      </form>
     </div>
   );
 }
