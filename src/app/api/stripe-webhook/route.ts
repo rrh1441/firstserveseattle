@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         } = await supabaseAdmin.auth.admin.listUsers({
           page: 1,
           perPage: 1,
-          query: email
+          emailFilter: email
         });
 
         if (getEmailErr) {
