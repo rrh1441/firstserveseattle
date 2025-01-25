@@ -1,64 +1,34 @@
-// src/app/tennis-courts/components/paywall.tsx
+"use client";
 
-"use client"
-
-import React, { useState } from "react"
-import { Check, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link" // for client-side routing with Next.js
+import React, { useState } from "react";
+import { Check, Sparkles } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 const features = [
   "Unlimited court searches",
   "Favorite court tracking",
   "Priority customer support",
-]
+];
 
 const prices = {
   monthly: 8,
   annual: 64,
-}
+};
 
 const valueProp = {
   monthly: "Less than the cost of one court reservation",
   annual: "Find free courts for a year",
-}
+};
 
 export default function Paywall() {
-  const [plan, setPlan] = useState<"monthly" | "annual">("monthly")
-  const [loading, setLoading] = useState(false)
-
-  // If you do NOT require them to be logged in before paying:
-  // We remove the session/user check. We just create a checkout session with plan only.
-  const handleSubscribe = async () => {
-    setLoading(true)
-    try {
-      // Call your /api/create-checkout-session route
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }), // only sending plan
-      })
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        console.error("No checkout URL returned:", data)
-        alert("Failed to create checkout session.")
-      }
-    } catch (error) {
-      console.error("Error subscribing:", error)
-      alert("Error subscribing.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white">
       <Card className="w-full max-w-md border border-gray-200 shadow-lg">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold">You&#39;ve reached your free limit</CardTitle>
+          <CardTitle className="text-2xl font-bold">You’ve reached your free limit</CardTitle>
           <CardDescription className="text-base text-gray-600">
             Get unlimited access to all courts and features
           </CardDescription>
@@ -115,14 +85,13 @@ export default function Paywall() {
             </ul>
           </div>
 
-          {/* Subscribe button */}
-          <Button
-            className="w-full bg-black text-white py-2 text-lg rounded-md hover:bg-gray-800"
-            onClick={handleSubscribe}
-            disabled={loading}
+          {/* CTA: Redirect to Sign Up */}
+          <Link
+            href={`/signup?plan=${plan}`}
+            className="w-full block text-center bg-black text-white py-2 text-lg rounded-md hover:bg-gray-800"
           >
-            {loading ? "Processing..." : "Get Started Now"}
-          </Button>
+            Create Account and Subscribe
+          </Link>
 
           <p className="text-xs text-center text-gray-500 mt-4">
             Secure payment powered by Stripe. Cancel anytime.
@@ -143,5 +112,5 @@ export default function Paywall() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
