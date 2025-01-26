@@ -13,7 +13,7 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    // Use your desired Stripe API version here:
+    // Use your desired Stripe API version here
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
@@ -54,20 +54,22 @@ export async function POST(req: NextRequest) {
         return new NextResponse("Missing email or plan.", { status: 400 });
       }
 
-      // --- Step 1: Fetch the user by email ---
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+      // --- Step 1: Fetch the user by email using the 'filter' parameter ---
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
+        filter: `email.eq.${email}`, // PostgREST syntax to match email
+      });
 
       if (userError) {
         console.error("Error fetching user:", userError.message);
         return new NextResponse(`Error fetching user: ${userError.message}`, { status: 500 });
       }
 
-      if (!userData?.user) {
+      if (!userData?.users?.length) {
         console.error("User not found.");
         return new NextResponse("User not found.", { status: 404 });
       }
 
-      const userId = userData.user.id;
+      const userId = userData.users[0].id;
 
       // --- Step 2: Upsert subscription to the "subscribers" table ---
       const { error: upsertError } = await supabaseAdmin
