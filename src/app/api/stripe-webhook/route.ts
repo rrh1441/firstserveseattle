@@ -13,6 +13,7 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+    // Use your desired Stripe API version here:
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
@@ -33,11 +34,13 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Webhook signature verification failed.", { status: 400 });
   }
 
+  // Initialize your Supabase admin client
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
+    // Handle only checkout.session.completed events
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
@@ -52,23 +55,21 @@ export async function POST(req: NextRequest) {
       }
 
       // --- Step 1: Fetch the user by email ---
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
-        emailFilter: email,
-      });
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
 
       if (userError) {
         console.error("Error fetching user:", userError.message);
         return new NextResponse(`Error fetching user: ${userError.message}`, { status: 500 });
       }
 
-      if (!userData?.users?.length) {
+      if (!userData?.user) {
         console.error("User not found.");
         return new NextResponse("User not found.", { status: 404 });
       }
 
-      const userId = userData.users[0].id;
+      const userId = userData.user.id;
 
-      // --- Step 2: Upsert subscription to the subscribers table ---
+      // --- Step 2: Upsert subscription to the "subscribers" table ---
       const { error: upsertError } = await supabaseAdmin
         .from("subscribers")
         .upsert(
