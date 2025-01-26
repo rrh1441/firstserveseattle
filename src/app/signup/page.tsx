@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // For programmatic navigation
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const supabase = createClientComponentClient();
-
 export default function SignupPage() {
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -17,81 +17,61 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // Step 1: Sign up the user in Supabase Auth
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) {
-        alert("Error creating account: " + error.message);
-        return;
-      }
-
-      // Step 2: Call the API to create a checkout session
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }), // Send email to the API
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+      if (signUpError) {
+        setError(signUpError.message);
       } else {
-        alert("Failed to create checkout session.");
+        router.push("/login");
       }
-    } catch (error) {
-      console.error("Error during signup:", error);
-      alert("Error during signup. Please try again.");
+    } catch (err) {
+      console.error("Error signing up:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSignup}
-        className="p-6 bg-white rounded-md shadow-md w-full max-w-sm space-y-4"
-      >
-        <h1 className="text-xl font-semibold text-center">Create Account</h1>
-        <div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <form className="bg-white p-6 rounded shadow-md w-full max-w-sm" onSubmit={handleSignup}>
+        <h1 className="text-xl font-bold mb-4">Sign Up</h1>
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+        <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
           <input
-            id="email"
             type="email"
-            required
+            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            required
           />
         </div>
-        <div>
+        <div className="mb-4">
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
-            id="password"
             type="password"
-            required
+            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            required
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
-          {loading ? "Processing..." : "Create Account and Subscribe"}
+          {loading ? "Signing up..." : "Sign Up"}
         </button>
       </form>
     </div>
