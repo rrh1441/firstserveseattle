@@ -1,77 +1,103 @@
+// app/signup/page.tsx
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 
-export default function SignupPage() {
-  const supabase = createClientComponentClient();
+export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [plan, setPlan] = useState("basic"); // or "pro" or whatever
+
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    // 1. Sign up using Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      // If you want, you can pass name, etc. in user_metadata here
+      // options: { data: { full_name: ... } },
+    });
+
+    if (error) {
+      alert("Error signing up: " + error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data.user) {
+      alert("Sign-up failed; no user returned.");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Create a Stripe Checkout session on the server
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
+      const response = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }), // pass the chosen plan
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
-      } else {
-        router.push("/login");
+      if (!response.ok) {
+        const errMsg = await response.text();
+        throw new Error(`Failed to create checkout session: ${errMsg}`);
       }
-    } catch (err) {
-      console.error("Error signing up:", err);
-      setError("Something went wrong. Please try again.");
-    } finally {
+
+      const { url } = await response.json();
+      if (!url) {
+        throw new Error("No session URL returned.");
+      }
+
+      // 3. Redirect user to Stripe Checkout
+      window.location.href = url; // or router.push(url)
+    } catch (err: any) {
+      alert("Error creating checkout session: " + err.message);
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <form className="bg-white p-6 rounded shadow-md w-full max-w-sm" onSubmit={handleSignup}>
-        <h1 className="text-xl font-bold mb-4">Sign Up</h1>
-        {error && <p className="text-red-600 mb-4">{error}</p>}
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
+    <div style={{ maxWidth: 400, margin: "0 auto" }}>
+      <h1>Sign Up</h1>
+      <form onSubmit={handleSignUp}>
+        <label>
+          Email:
           <input
             type="email"
-            id="email"
-            value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            value={email}
             required
           />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
+        </label>
+        <br />
+        <label>
+          Password:
           <input
             type="password"
-            id="password"
-            value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            value={password}
             required
           />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          {loading ? "Signing up..." : "Sign Up"}
+        </label>
+        <br />
+        <label>
+          Plan:
+          <select onChange={(e) => setPlan(e.target.value)} value={plan}>
+            <option value="basic">Basic</option>
+            <option value="pro">Pro</option>
+          </select>
+        </label>
+        <br />
+        <button type="submit" disabled={loading}>
+          {loading ? "Processing..." : "Sign Up & Checkout"}
         </button>
       </form>
     </div>
