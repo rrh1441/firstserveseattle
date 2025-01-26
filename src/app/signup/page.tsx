@@ -1,37 +1,55 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // For programmatic navigation
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+
+const supabase = createClientComponentClient();
 
 export default function SignupPage() {
-  const supabase = createClientComponentClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setLoading(true);
+
     try {
-      const { error: signupError } = await supabase.auth.signUp({
+      // Step 1: Sign up the user in Supabase Auth
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (signupError) {
-        setError(signupError.message);
+      if (error) {
+        alert("Error creating account: " + error.message);
         return;
       }
 
-      router.push(`/api/create-checkout-session?email=${encodeURIComponent(email)}`);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      // Step 2: Call the API to create a checkout session
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }), // Send email to the API
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
       } else {
-        setError("An unexpected error occurred.");
+        alert("Failed to create checkout session.");
       }
+    } catch (error) {
+      console.error("Error during signup:", error);
+      alert("Error during signup. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,49 +57,41 @@ export default function SignupPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form
         onSubmit={handleSignup}
-        className="w-full max-w-md bg-white p-6 rounded-lg shadow-md"
+        className="p-6 bg-white rounded-md shadow-md w-full max-w-sm space-y-4"
       >
-        <h1 className="text-2xl font-bold text-center mb-4">Create Account</h1>
-        {error && (
-          <p className="text-red-500 text-sm text-center mb-4">{error}</p>
-        )}
-        <div className="mb-4">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <h1 className="text-xl font-semibold text-center">Create Account</h1>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
           <input
             id="email"
             type="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
-            required
+            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
           />
         </div>
-        <div className="mb-6">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
             id="password"
             type="password"
+            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
-            required
+            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
+          disabled={loading}
+          className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300"
         >
-          Create Account and Subscribe
+          {loading ? "Processing..." : "Create Account and Subscribe"}
         </button>
       </form>
     </div>

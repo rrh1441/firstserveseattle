@@ -1,63 +1,40 @@
 // src/app/api/create-checkout-session/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    console.log("Received request to create checkout session."); // Log initial request
+    const { email } = await request.json();
 
-    // Parse the request body
-    const { plan } = await req.json();
-    console.log("Plan received:", plan); // Log the plan for debugging
-
-    // Validate the plan type
-    if (!["monthly", "annual"].includes(plan)) {
-      console.error("Invalid plan type:", plan);
-      throw new Error("Invalid plan type provided.");
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
-
-    // Load environment variables
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    const stripeMonthlyPriceId = process.env.STRIPE_MONTHLY_PRICE_ID;
-    const stripeAnnualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID;
-
-    if (!stripeSecretKey || !stripeMonthlyPriceId || !stripeAnnualPriceId) {
-      console.error("Missing Stripe environment variables."); // Log missing env variables
-      throw new Error("Missing Stripe environment variables.");
-    }
-
-    console.log("Stripe environment variables loaded successfully.");
 
     // Initialize Stripe
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+      apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
     });
 
-    // Determine the price ID
-    const priceId = plan === "monthly" ? stripeMonthlyPriceId : stripeAnnualPriceId;
-    console.log("Using price ID:", priceId);
-
-    // Create a Stripe Checkout Session
+    // Create a new Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "subscription",
       line_items: [
         {
-          price: priceId,
+          price: process.env.STRIPE_MONTHLY_PRICE_ID, // Default to monthly
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `https://firstserveseattle.com/tennis-courts?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://firstserveseattle.com/tennis-courts?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/signup`,
+      metadata: { email }, // Save email in metadata for webhook
     });
 
-    console.log("Stripe checkout session created successfully:", session.id); // Log session ID
-
-    // Respond with the session URL
     return NextResponse.json({ url: session.url });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred.";
-    console.error("Error creating checkout session:", errorMessage); // Log the error
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  } catch (error) {
+    console.error("Error creating checkout session:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
