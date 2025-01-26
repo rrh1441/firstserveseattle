@@ -1,21 +1,24 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+// This ensures Next.js doesn't try to statically generate the page
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
-// If you're actually using Supabase:
+import { useSearchParams } from "next/navigation";
+
+// If using Supabase for actual sign-up:
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function SignUpPage() {
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const plan = planParam === "annual" ? "annual" : "monthly"; // fallback to "monthly"
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Grab plan from the URL, e.g. /signup?plan=monthly
-  const searchParams = useSearchParams();
-  const planFromUrl = searchParams.get("plan");
-  const plan = planFromUrl === "annual" ? "annual" : "monthly";
-
-  // If you want to sign up with Supabase:
+  // If you want to sign up the user in Supabase:
   const supabase = createClientComponentClient();
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
@@ -23,37 +26,35 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      // 1. Sign up the user
+      // 1. Sign up with Supabase (if needed)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-
       if (error) {
         throw new Error(`Sign-up error: ${error.message}`);
       }
       if (!data.user) {
-        throw new Error("No user was returned after sign-up.");
+        throw new Error("No user returned after sign-up.");
       }
 
-      // 2. Create a checkout session for monthly or annual
-      const res = await fetch("/api/create-checkout-session", {
+      // 2. Create a checkout session
+      const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`Failed to create checkout session: ${errText}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText);
       }
 
-      const json = (await res.json()) as { url?: string; error?: string };
+      const json = (await response.json()) as { url?: string; error?: string };
       if (!json.url) {
-        throw new Error(json.error || "No session URL returned from API.");
+        throw new Error(json.error || "No URL returned from checkout session.");
       }
 
-      // 3. Redirect the user to Stripe Checkout
+      // 3. Redirect to Stripe Checkout
       window.location.href = json.url;
     } catch (err: unknown) {
       let message = "Unknown error occurred.";
@@ -68,7 +69,7 @@ export default function SignUpPage() {
   return (
     <div style={{ maxWidth: 400, margin: "0 auto" }}>
       <h1>Sign Up</h1>
-      <p>Chosen plan: {plan}</p>
+      <p>You chose the <strong>{plan}</strong> plan</p>
 
       <form onSubmit={handleSignUp} style={{ marginTop: 20 }}>
         <label style={{ display: "block", marginBottom: 8 }}>
