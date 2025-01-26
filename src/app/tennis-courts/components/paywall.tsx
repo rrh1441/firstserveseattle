@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const features = [
   "Unlimited court searches",
@@ -21,7 +27,7 @@ const valueProp = {
   annual: "Find free courts for a year",
 };
 
-export default function Paywall() {
+export default function PaywallPage() {
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
 
   return (

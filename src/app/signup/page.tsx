@@ -1,49 +1,64 @@
-// ============================
-// src/app/signup/page.tsx
-// ============================
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+// If you're actually using Supabase:
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function SignUpPage() {
-  const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If you have an actual sign-up process (e.g., with Supabase), do it before
-  // calling /api/create-checkout-session. For now, this example just focuses
-  // on picking a plan and generating the Stripe Checkout session.
+  // Grab plan from the URL, e.g. /signup?plan=monthly
+  const searchParams = useSearchParams();
+  const planFromUrl = searchParams.get("plan");
+  const plan = planFromUrl === "annual" ? "annual" : "monthly";
 
-  async function handlePurchase(e: React.FormEvent<HTMLFormElement>) {
+  // If you want to sign up with Supabase:
+  const supabase = createClientComponentClient();
+
+  async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("/api/create-checkout-session", {
+      // 1. Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw new Error(`Sign-up error: ${error.message}`);
+      }
+      if (!data.user) {
+        throw new Error("No user was returned after sign-up.");
+      }
+
+      // 2. Create a checkout session for monthly or annual
+      const res = await fetch("/api/create-checkout-session", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Failed to create checkout session: ${errText}`);
       }
 
-      // This is the URL to redirect to Stripe Checkout
-      const data = (await response.json()) as { url?: string; error?: string };
-
-      if (!data.url) {
-        throw new Error(data.error || "No checkout URL returned.");
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!json.url) {
+        throw new Error(json.error || "No session URL returned from API.");
       }
 
-      // Redirect user to Stripe
-      window.location.href = data.url;
-    } catch (error: unknown) {
-      let message = "Unknown error.";
-      if (error instanceof Error) {
-        message = error.message;
+      // 3. Redirect the user to Stripe Checkout
+      window.location.href = json.url;
+    } catch (err: unknown) {
+      let message = "Unknown error occurred.";
+      if (err instanceof Error) {
+        message = err.message;
       }
       alert(message);
       setLoading(false);
@@ -52,29 +67,34 @@ export default function SignUpPage() {
 
   return (
     <div style={{ maxWidth: 400, margin: "0 auto" }}>
-      <h1>Select a Plan</h1>
+      <h1>Sign Up</h1>
+      <p>Chosen plan: {plan}</p>
 
-      <form onSubmit={handlePurchase}>
-        <label htmlFor="plan-select">
-          Plan:
-          <select
-            id="plan-select"
-            value={plan}
-            onChange={(e) => setPlan(e.target.value as "monthly" | "annual")}
-            style={{ marginLeft: 8 }}
-          >
-            <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
-          </select>
+      <form onSubmit={handleSignUp} style={{ marginTop: 20 }}>
+        <label style={{ display: "block", marginBottom: 8 }}>
+          Email:
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ display: "block", marginTop: 4 }}
+          />
         </label>
 
-        <br />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ marginTop: 12, padding: "6px 12px" }}
-        >
-          {loading ? "Redirecting..." : "Proceed to Checkout"}
+        <label style={{ display: "block", marginBottom: 8 }}>
+          Password:
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ display: "block", marginTop: 4 }}
+          />
+        </label>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Signing up..." : "Sign Up & Pay"}
         </button>
       </form>
     </div>
