@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Prevent Next.js from parsing the body automatically
 export const config = {
   api: {
     bodyParser: false,
@@ -13,7 +12,6 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    // Use your desired Stripe API version here
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
@@ -22,25 +20,23 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    console.error("Missing Stripe signature header.");
-    return new NextResponse("Missing Stripe signature header.", { status: 400 });
+    return NextResponse.json({ error: "Missing Stripe signature header." }, { status: 400 });
   }
 
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, signingSecret);
-  } catch (error) {
-    console.error("Webhook signature verification failed:", error);
-    return new NextResponse("Webhook signature verification failed.", { status: 400 });
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err);
+    return NextResponse.json({ error: "Webhook signature verification failed." }, { status: 400 });
   }
 
-  // Initialize your Supabase admin client
+  // Initialize Supabase Admin
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // Handle only checkout.session.completed events
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
@@ -50,56 +46,54 @@ export async function POST(req: NextRequest) {
       const paymentIntentId = session.payment_intent as string | null;
 
       if (!email || !plan) {
-        console.error("Missing email or plan in checkout session.");
-        return new NextResponse("Missing email or plan.", { status: 400 });
+        return NextResponse.json({ error: "Missing email or plan." }, { status: 400 });
       }
 
-      // --- Step 1: Fetch the user by email using the 'filter' parameter ---
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
-        filter: `email.eq.${email}`, // PostgREST syntax to match email
-      });
+      // --- Step 1: Look up the user in auth.users by email ---
+      // We need the "id" field from auth.users to link to your custom 'subscribers' table.
+      const { data: foundUser, error: userError } = await supabaseAdmin
+        .from("auth.users")
+        .select("id")
+        .eq("email", email)
+        .single();
 
       if (userError) {
-        console.error("Error fetching user:", userError.message);
-        return new NextResponse(`Error fetching user: ${userError.message}`, { status: 500 });
+        console.error("Error fetching user:", userError);
+        return NextResponse.json({ error: userError.message }, { status: 500 });
       }
 
-      if (!userData?.users?.length) {
-        console.error("User not found.");
-        return new NextResponse("User not found.", { status: 404 });
+      if (!foundUser) {
+        console.error("User not found for email:", email);
+        return NextResponse.json({ error: "User not found." }, { status: 404 });
       }
 
-      const userId = userData.users[0].id;
+      const userId = foundUser.id;
 
-      // --- Step 2: Upsert subscription to the "subscribers" table ---
+      // --- Step 2: Upsert to your "subscribers" table ---
       const { error: upsertError } = await supabaseAdmin
         .from("subscribers")
-        .upsert(
-          {
-            user_id: userId,
-            email,
-            plan,
-            stripe_subscription_id: subscriptionId,
-            stripe_payment_intent_id: paymentIntentId,
-            status: "active",
-          },
-          { onConflict: "user_id,plan" }
-        );
+        .upsert({
+          user_id: userId,
+          email,
+          plan,
+          stripe_subscription_id: subscriptionId,
+          stripe_payment_intent_id: paymentIntentId,
+          status: "active",
+        }, { onConflict: "user_id,plan" });
 
       if (upsertError) {
-        console.error("Error upserting subscription:", upsertError.message);
-        return new NextResponse(`Error saving subscription: ${upsertError.message}`, { status: 500 });
+        console.error("Error upserting subscription:", upsertError);
+        return NextResponse.json({ error: upsertError.message }, { status: 500 });
       }
 
-      console.log("Subscription successfully saved for user:", email);
-      return new NextResponse("Webhook handled successfully.", { status: 200 });
-    } else {
-      console.log(`Unhandled event type: ${event.type}`);
+      console.log("Subscription upserted successfully for user:", email);
+      return NextResponse.json({ message: "Subscription upsert successful." }, { status: 200 });
     }
 
-    return new NextResponse("Event received.", { status: 200 });
+    console.log(`Unhandled event type: ${event.type}`);
+    return NextResponse.json({ message: "Event received." }, { status: 200 });
   } catch (error) {
     console.error("Webhook handler error:", error);
-    return new NextResponse(`Webhook handler error: ${error}`, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
