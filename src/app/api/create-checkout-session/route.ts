@@ -1,18 +1,17 @@
-// app/api/create-checkout/route.ts
+// src/app/api/create-checkout-session/route.ts
 
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
-// This is an example. Adjust the price IDs, success/cancel URLs, etc.
+// This is an example. You will need to replace these with your own values.
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 const STRIPE_SUCCESS_URL = "https://yourdomain.com/success";
 const STRIPE_CANCEL_URL = "https://yourdomain.com/cancel";
 
 export async function POST(request: Request) {
   try {
-    // 1. Read the plan from the request body
+    // 1. Parse request body
     const { plan } = await request.json();
 
     if (!plan) {
@@ -24,37 +23,24 @@ export async function POST(request: Request) {
       apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
     });
 
-    // 3. Optionally, get the user's token from Supabase
-    //    to do further checks, if needed.
-    const supabase = createMiddlewareClient({ cookies });
-    const {
-      data: { session: supabaseSession },
-    } = await supabase.auth.getSession();
+    // 3. (Optional) Create or get the user from Supabase (if needed)
+    // In this snippet, we assume you might need a user session or such.
 
-    if (!supabaseSession) {
-      // If you want to require an authenticated user at this point
-      return NextResponse.json({ error: "No Supabase user session found." }, { status: 401 });
-    }
-
-    const userEmail = supabaseSession.user.email;
-    if (!userEmail) {
-      return NextResponse.json({ error: "User session has no email." }, { status: 400 });
-    }
-
-    // 4. Decide which Stripe Price to use, depending on the plan
-    let priceId;
+    // 4. Choose which Stripe Price to use
+    let priceId: string;
     if (plan === "basic") {
-      priceId = "price_yourBasicID"; // REPLACE
+      priceId = "price_basic123"; // REPLACE with your actual price ID
     } else if (plan === "pro") {
-      priceId = "price_yourProID"; // REPLACE
+      priceId = "price_pro456"; // REPLACE with your actual price ID
     } else {
       return NextResponse.json({ error: `Unknown plan: ${plan}` }, { status: 400 });
     }
 
-    // 5. Create the Stripe Checkout Session
+    // 5. Create the Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      customer_email: userEmail,
+      // Example: you might set `customer_email` if you know the user's email from your logic
+      // customer_email: userEmail,
       line_items: [
         {
           price: priceId,
@@ -66,10 +52,15 @@ export async function POST(request: Request) {
       cancel_url: STRIPE_CANCEL_URL,
     });
 
-    // 6. Return the session URL to redirect the user
+    // 6. Return the session URL
     return NextResponse.json({ url: session.url }, { status: 200 });
-  } catch (err: any) {
-    console.error("Error creating checkout session:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    // No longer using 'any'
+    let message = "Unknown error";
+    if (err instanceof Error) {
+      message = err.message;
+    }
+    console.error("Error creating checkout session:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

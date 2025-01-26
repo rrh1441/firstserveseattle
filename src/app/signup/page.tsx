@@ -1,18 +1,20 @@
-// app/signup/page.tsx
+// src/app/signup/page.tsx
 "use client";
 
 import { useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// If you're not using the router, remove the import below.
 import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [plan, setPlan] = useState("basic"); // or "pro" or whatever
-
+  const [plan, setPlan] = useState("basic");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+
+  // Remove or use it. If you don't need router, delete this line to avoid the ESLint warning:
+  const router = useRouter(); // If you do want to redirect within the app, keep it and use it.
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,8 +24,6 @@ export default function SignUpPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      // If you want, you can pass name, etc. in user_metadata here
-      // options: { data: { full_name: ... } },
     });
 
     if (error) {
@@ -38,28 +38,38 @@ export default function SignUpPage() {
       return;
     }
 
-    // 2. Create a Stripe Checkout session on the server
+    // 2. Create a Stripe Checkout session
     try {
-      const response = await fetch("/api/create-checkout", {
+      const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }), // pass the chosen plan
+        body: JSON.stringify({ plan }),
       });
 
       if (!response.ok) {
         const errMsg = await response.text();
-        throw new Error(`Failed to create checkout session: ${errMsg}`);
+        throw new Error(errMsg);
       }
 
       const { url } = await response.json();
       if (!url) {
-        throw new Error("No session URL returned.");
+        throw new Error("No URL returned from checkout session.");
       }
 
-      // 3. Redirect user to Stripe Checkout
-      window.location.href = url; // or router.push(url)
-    } catch (err: any) {
-      alert("Error creating checkout session: " + err.message);
+      // 3. Redirect the user to Stripe Checkout
+      // Option A: direct
+      window.location.href = url;
+
+      // Option B: using Next.js router
+      // router.push(url);
+
+      // We do not set `loading` to false here, because the user leaves the site.
+    } catch (err: unknown) {
+      let errorMessage = "Unknown error";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      alert("Error creating checkout session: " + errorMessage);
       setLoading(false);
     }
   };
