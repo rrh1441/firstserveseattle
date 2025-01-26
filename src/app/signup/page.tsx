@@ -1,67 +1,62 @@
 "use client";
 
-// This ensures Next.js doesn't try to statically generate the page
-export const dynamic = "force-dynamic";
-
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-
-// If using Supabase for actual sign-up:
+// Remove if you don't actually need Supabase for sign-up
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function SignUpPage() {
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
-  const plan = planParam === "annual" ? "annual" : "monthly"; // fallback to "monthly"
+  const plan = planParam === "annual" ? "annual" : "monthly"; // fallback
 
+  // If you don't need actual sign-up, remove these lines + usage below
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // If you want to sign up the user in Supabase:
-  const supabase = createClientComponentClient();
-
-  async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
 
     try {
-      // 1. Sign up with Supabase (if needed)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      // 1. (Optional) Create the user in Supabase
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        throw new Error(`Sign-up error: ${error.message}`);
+        throw new Error(`Sign-up failed: ${error.message}`);
       }
       if (!data.user) {
         throw new Error("No user returned after sign-up.");
       }
 
-      // 2. Create a checkout session
+      // 2. Create Stripe Checkout session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       });
+
       if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText);
+        throw new Error(await response.text());
       }
 
-      const json = (await response.json()) as { url?: string; error?: string };
-      if (!json.url) {
-        throw new Error(json.error || "No URL returned from checkout session.");
+      const { url } = (await response.json()) as { url?: string };
+      if (!url) {
+        throw new Error("No checkout URL received.");
       }
 
-      // 3. Redirect to Stripe Checkout
-      window.location.href = json.url;
+      // 3. Redirect to Stripe
+      window.location.href = url;
     } catch (err: unknown) {
-      let message = "Unknown error occurred.";
+      let message = "Unknown error.";
       if (err instanceof Error) {
         message = err.message;
       }
-      alert(message);
+      setErrorMsg(message);
       setLoading(false);
     }
   }
@@ -69,9 +64,13 @@ export default function SignUpPage() {
   return (
     <div style={{ maxWidth: 400, margin: "0 auto" }}>
       <h1>Sign Up</h1>
-      <p>You chose the <strong>{plan}</strong> plan</p>
+      <p>You chose <strong>{plan}</strong>.</p>
 
-      <form onSubmit={handleSignUp} style={{ marginTop: 20 }}>
+      {errorMsg && (
+        <div style={{ color: "red", marginBottom: 8 }}>{errorMsg}</div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ marginTop: 20 }}>
         <label style={{ display: "block", marginBottom: 8 }}>
           Email:
           <input

@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 const features = [
   "Unlimited court searches",
@@ -91,7 +85,7 @@ export default function PaywallPage() {
             </ul>
           </div>
 
-          {/* CTA: Redirect to Sign Up */}
+          {/* CTA: sends user to /signup with ?plan=xxx */}
           <Link
             href={`/signup?plan=${plan}`}
             className="w-full block text-center bg-black text-white py-2 text-lg rounded-md hover:bg-gray-800"
