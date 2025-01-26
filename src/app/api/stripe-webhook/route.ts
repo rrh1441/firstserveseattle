@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// We need this so Next.js doesn't parse the body automatically.
-// Stripe requires the raw body to validate the webhook signature.
+// Prevent Next.js from parsing the body automatically
 export const config = {
   api: {
     bodyParser: false,
@@ -18,7 +17,6 @@ export async function POST(req: NextRequest) {
   });
 
   const signingSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
-
   const rawBody = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -53,75 +51,44 @@ export async function POST(req: NextRequest) {
         return new NextResponse("Missing email or plan.", { status: 400 });
       }
 
-      // --- Step 1: Look up the user ---
-      const {
-        data: { users },
-        error: listError,
-      } = await supabaseAdmin.auth.admin.listUsers({
+      // --- Step 1: Fetch the user by email ---
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers({
         emailFilter: email,
       });
 
-      if (listError) {
-        console.error("Error retrieving user:", listError.message);
-        return new NextResponse(`Error retrieving user: ${listError.message}`, { status: 500 });
+      if (userError) {
+        console.error("Error fetching user:", userError.message);
+        return new NextResponse(`Error fetching user: ${userError.message}`, { status: 500 });
       }
 
-      let userId = users.length ? users[0].id : null;
-
-      // --- Step 2: Create a new user if none exists ---
-      if (!userId) {
-        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          email_confirm: false,
-        });
-
-        if (createError) {
-          console.error("Error creating user:", createError.message);
-          return new NextResponse(`Error creating user: ${createError.message}`, { status: 500 });
-        }
-
-        userId = newUser?.user?.id;
-
-        // Send a Magic Link
-        if (userId) {
-          const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: "magiclink",
-            email,
-            options: {
-              redirectTo: "https://firstserveseattle.com",
-            },
-          });
-
-          if (magicLinkError) {
-            console.error("Error generating magic link:", magicLinkError.message);
-          } else {
-            console.log("Magic link sent:", magicLinkData);
-          }
-        }
+      if (!userData?.users?.length) {
+        console.error("User not found.");
+        return new NextResponse("User not found.", { status: 404 });
       }
 
-      // --- Step 3: Upsert Subscription ---
-      if (userId) {
-        const { error: upsertError } = await supabaseAdmin.from("subscriptions").upsert(
+      const userId = userData.users[0].id;
+
+      // --- Step 2: Upsert subscription to the subscribers table ---
+      const { error: upsertError } = await supabaseAdmin
+        .from("subscribers")
+        .upsert(
           {
             user_id: userId,
+            email,
             plan,
             stripe_subscription_id: subscriptionId,
             stripe_payment_intent_id: paymentIntentId,
             status: "active",
           },
-          {
-            onConflict: "user_id,plan",
-          }
+          { onConflict: "user_id,plan" }
         );
 
-        if (upsertError) {
-          console.error("Error upserting subscription:", upsertError.message);
-          return new NextResponse(`Error saving subscription: ${upsertError.message}`, { status: 500 });
-        }
+      if (upsertError) {
+        console.error("Error upserting subscription:", upsertError.message);
+        return new NextResponse(`Error saving subscription: ${upsertError.message}`, { status: 500 });
       }
 
-      console.log("Webhook handled successfully.");
+      console.log("Subscription successfully saved for user:", email);
       return new NextResponse("Webhook handled successfully.", { status: 200 });
     } else {
       console.log(`Unhandled event type: ${event.type}`);
