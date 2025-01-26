@@ -3,11 +3,6 @@
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignUpPage() {
   const searchParams = useSearchParams()
@@ -66,43 +61,53 @@ export default function SignUpPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create your account and start your subscription</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {errorMsg && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col items-start">
-          <p className="text-sm text-muted-foreground mb-4">
+      <div className="w-full max-w-md bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h2 className="text-2xl font-bold mb-2">Sign Up</h2>
+        <p className="text-gray-600 mb-6">Create your account and start your subscription</p>
+        {errorMsg && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{errorMsg}</span>
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
             You chose the <strong className="font-medium">{plan}</strong> plan.
           </p>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={loading}
+          >
             {loading ? "Signing up..." : "Sign Up & Pay"}
-          </Button>
-        </CardFooter>
-      </Card>
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
