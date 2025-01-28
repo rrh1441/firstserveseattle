@@ -59,6 +59,32 @@ export default function SignUpPage() {
     }
   }
 
+  async function handleGoogleSignIn() {
+    setLoading(true)
+    setErrorMsg("")
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // Redirect back to the signup page after authentication
+          redirectTo: window.location.origin + "/",
+        },
+      })
+
+      if (error) {
+        throw new Error(`Google sign-in failed: ${error.message}`)
+      }
+    } catch (err: unknown) {
+      let message = "Unknown error."
+      if (err instanceof Error) {
+        message = err.message
+      }
+      setErrorMsg(message)
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
@@ -107,8 +133,21 @@ export default function SignUpPage() {
             {loading ? "Signing up..." : "Sign Up & Pay"}
           </button>
         </form>
+        <div className="mt-6">
+          <div className="flex items-center">
+            <hr className="flex-grow border-gray-300" />
+            <span className="mx-2 text-gray-500">OR</span>
+            <hr className="flex-grow border-gray-300" />
+          </div>
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full mt-4 flex items-center justify-center bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={loading}
+          >
+            {loading ? "Signing in with Google..." : "Sign Up with Google"}
+          </button>
+        </div>
       </div>
     </div>
   )
 }
-
