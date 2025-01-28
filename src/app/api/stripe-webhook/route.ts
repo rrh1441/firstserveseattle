@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Next.js config to prevent body parsing on webhooks
+// Required for Next.js to avoid automatically parsing the body
 export const config = {
   api: {
     bodyParser: false,
@@ -19,12 +19,12 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
-  // 2. Init Stripe client
+  // 2. Initialize Stripe client
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
   });
 
-  // 3. Verify the webhook
+  // 3. Verify the webhook signature
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -36,38 +36,36 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Invalid Stripe signature.", { status: 400 });
   }
 
-  // 4. Init Supabase Admin
+  // 4. Initialize Supabase Admin
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.SUPABASE_SERVICE_ROLE_KEY as string
   );
 
-  // Helper: upsert subscription row
-  async function upsertSubscription({
-    email,
-    plan,
-    subscriptionId,
-    paymentIntentId,
-  }: {
+  // Helper function to upsert subscription rows
+  async function upsertSubscription(args: {
     email: string;
     plan: string;
     subscriptionId?: string | null;
     paymentIntentId?: string | null;
   }) {
-    // Find the user in auth.users by email
+    const { email, plan, subscriptionId, paymentIntentId } = args;
+
+    // A. Find the user in auth.users by email
     const { data: userRow, error: userErr } = await supabaseAdmin
       .from("auth.users")
       .select("id")
       .eq("email", email)
       .single();
+
     if (userErr) {
       throw new Error(`Error finding user by email: ${userErr.message}`);
     }
     if (!userRow) {
-      throw new Error(`No user with email ${email} found in auth.users`);
+      throw new Error(`No user found for email: ${email}`);
     }
 
-    // Upsert into your "subscribers" table
+    // B. Insert or update your "subscribers" table
     const { error: upsertErr } = await supabaseAdmin
       .from("subscribers")
       .upsert(
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
           status: "active",
         },
         {
-          onConflict: "user_id, plan",
+          onConflict: "user_id, plan", // or whatever your unique constraint is
         }
       );
 
@@ -88,24 +86,22 @@ export async function POST(request: NextRequest) {
       throw new Error(`Error upserting subscriber: ${upsertErr.message}`);
     }
 
-    console.log(`Subscription upserted for email=${email} plan=${plan}`);
+    console.log(`Upserted subscription for user ${email}, plan=${plan}`);
   }
 
   try {
-    // 5. Handle the event type
+    // 5. Switch on event types
     if (event.type === "checkout.session.completed") {
-      // If you do use checkout.session.completed, you'd parse the session here
+      // (Optional) If you also handle checkout.session.completed events
       const session = event.data.object as Stripe.Checkout.Session;
-
       const email = session.customer_details?.email || "";
-      // Possibly you stored the plan in session.metadata:
       const plan = session.metadata?.plan || "";
       const subscriptionId = (session.subscription as string) || null;
       const paymentIntentId = (session.payment_intent as string) || null;
 
       if (!email || !plan) {
         console.error("Missing email or plan in checkout.session:", session);
-        return new NextResponse("Missing email or plan.", { status: 400 });
+        return new NextResponse("Missing email/plan in session", { status: 400 });
       }
 
       await upsertSubscription({
@@ -116,11 +112,10 @@ export async function POST(request: NextRequest) {
       });
 
     } else if (event.type === "customer.subscription.updated") {
-      // This matches the event you posted
+      // The event you showed in your logs
       const subscription = event.data.object as Stripe.Subscription;
 
-      // Step A: Get the plan from the subscription's price
-      // if you only have 1 item, we can do subscription.items.data[0].price.id
+      // A. Figure out the plan from the price ID in subscription.items
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
       let plan = "";
       if (priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs") {
@@ -128,28 +123,36 @@ export async function POST(request: NextRequest) {
       } else if (priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8") {
         plan = "annual";
       } else {
-        plan = "unknown"; // or throw an error if you only expect those two
+        plan = "unknown";
       }
 
-      // Step B: Retrieve the customer to get the email
-      // "subscription.customer" is the Stripe customer ID (e.g. "cus_123")
+      // B. Retrieve the full Customer object to get their email
       const customerId = subscription.customer as string;
       const customer = await stripe.customers.retrieve(customerId);
-      if (!customer || typeof customer.email !== "string") {
-        console.error("No valid email found on Stripe customer:", customerId);
+
+      // Type guard: check if it's a "deleted" customer or a full "Customer"
+      if ((customer as Stripe.DeletedCustomer).deleted) {
+        console.error("No valid email: this customer is deleted:", customerId);
+        return new NextResponse("Customer is deleted, no email found.", { status: 400 });
+      }
+
+      // Now "customer" is definitely a Stripe.Customer (not deleted)
+      const { email } = customer as Stripe.Customer;
+      if (!email) {
+        console.error("No valid email found on non-deleted customer:", customerId);
         return new NextResponse("No email on customer.", { status: 400 });
       }
 
-      // Step C: Upsert the subscription
+      // C. Upsert to subscribers
       await upsertSubscription({
-        email: customer.email,
+        email,
         plan,
         subscriptionId: subscription.id,
-        // Payment intent might not exist in a subscription.updated event
         paymentIntentId: null,
       });
 
     } else {
+      // Optionally handle other events
       console.log(`Unhandled event type: ${event.type}`);
     }
 
