@@ -1,5 +1,3 @@
-// File: SignUpPage.tsx
-
 "use client"
 
 import { useState } from "react"

@@ -1,5 +1,3 @@
-// File: route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
@@ -24,9 +22,9 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
-  // 2️⃣ **Initialize Stripe client**
+  // 2️⃣ **Initialize Stripe client with correct API version**
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2022-11-15", // Use the latest stable API version
+    apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion, // Correct API version
   });
 
   // 3️⃣ **Verify webhook signature**
