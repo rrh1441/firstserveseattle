@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
-  // 2️⃣ Initialize Stripe client (API Version `2025-01-27.acacia`)
+  // 2️⃣ Initialize Stripe  client (API Version `2025-01-27.acacia`)
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
   });
