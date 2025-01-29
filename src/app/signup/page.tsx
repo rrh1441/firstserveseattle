@@ -10,6 +10,7 @@ export default function SignUpPage() {
   const plan = planParam === "annual" ? "annual" : "monthly"
 
   const supabase = createClientComponentClient()
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -21,10 +22,21 @@ export default function SignUpPage() {
     setErrorMsg("")
 
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      // 1. Create the user in Supabase with additional metadata
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      })
+      
       if (error) throw new Error(`Sign-up failed: ${error.message}`)
       if (!data.user) throw new Error("No user returned after sign-up.")
 
+      // 2. Create Stripe Checkout session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,6 +127,21 @@ export default function SignUpPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <input
+                id="fullName"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="John Smith"
+              />
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
