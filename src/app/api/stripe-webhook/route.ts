@@ -1,3 +1,5 @@
+// File: route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
@@ -22,9 +24,9 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
-  // 2️⃣ **Initialize Stripe client (✅ FIXED API VERSION ERROR)**
+  // 2️⃣ **Initialize Stripe client**
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion, // ✅ No more `any` errors
+    apiVersion: "2022-11-15", // Use the latest stable API version
   });
 
   // 3️⃣ **Verify webhook signature**
@@ -51,22 +53,25 @@ export async function POST(request: NextRequest) {
     plan,
     subscriptionId,
     status,
+    fullName,
   }: {
     email: string;
     plan: string;
     subscriptionId?: string | null;
     status: string;
+    fullName: string;
   }) {
-    console.log("🔄 Upserting subscription:", { email, plan, subscriptionId, status });
+    console.log("🔄 Upserting subscription:", { email, plan, subscriptionId, status, fullName });
 
     const { error } = await supabaseAdmin
       .from("subscribers")
       .upsert(
         {
-          email, // ✅ **Primary Key**
+          email, // Primary Key
           plan,
           stripe_subscription_id: subscriptionId,
           status,
+          full_name: fullName, // Ensure full_name is provided
           updated_at: new Date().toISOString(),
         },
         { onConflict: "email" } // Ensure email is unique
@@ -86,6 +91,7 @@ export async function POST(request: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_details?.email ?? session.customer_email;
+      const fullName = session.customer_details?.name ?? "Unknown"; // Use full name or default
       const plan = session.metadata?.plan ?? "unknown"; // Default to "unknown" if missing
       const subscriptionId = session.subscription as string | null;
 
@@ -99,6 +105,7 @@ export async function POST(request: NextRequest) {
         plan,
         subscriptionId,
         status: "active",
+        fullName,
       });
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
@@ -118,11 +125,14 @@ export async function POST(request: NextRequest) {
         return new NextResponse("No email on customer.", { status: 400 });
       }
 
+      const fullName = customer.name ?? "Unknown"; // Use full name or default
+
       await upsertSubscription({
         email: customer.email,
         plan,
         subscriptionId: subscription.id,
         status: subscription.status,
+        fullName,
       });
     } else {
       console.log(`⚠️ Unhandled event type: ${event.type}`);

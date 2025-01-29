@@ -1,3 +1,5 @@
+// File: SignUpPage.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -38,18 +40,13 @@ export default function SignUpPage() {
       if (!authData.user) throw new Error("No user returned after sign-up.")
 
       // 2. Create subscriber record
-      const names = fullName.split(' ')
-      const firstName = names[0]
-      const lastName = names.slice(1).join(' ')
-
       const { error: subscriberError } = await supabase
         .from('subscribers')
         .insert([
           {
             id: authData.user.id,
             email: email,
-            first_name: firstName,
-            last_name: lastName,
+            full_name: fullName, // Insert full_name directly
             plan: plan,
             status: 'pending'
           }
@@ -94,6 +91,7 @@ export default function SignUpPage() {
 
       if (error) throw new Error(`Google sign-in failed: ${error.message}`)
     } catch (err) {
+      console.error('Google Sign-In error:', err)
       setErrorMsg(err instanceof Error ? err.message : "Unknown error.")
       setLoading(false)
     }
