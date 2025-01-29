@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   // 2. Initialize Stripe client
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-01-27.acacia", // Update API version
+    apiVersion: "2025-01-27.acacia" as any, // Update API version
   });
 
   // 3. Verify the webhook signature
