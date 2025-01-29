@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       // Determine the plan from the price ID in subscription.items
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
-      let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
+      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
         ? "monthly"
         : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8"
         ? "annual"
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       }
 
       const priceId = invoice.lines.data[0]?.price?.id || "";
-      let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
+      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
         ? "monthly"
         : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8"
         ? "annual"
