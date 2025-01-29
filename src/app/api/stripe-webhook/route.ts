@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Required for Next.js API routes
+// ✅ Required for Next.js API routes
 export const config = {
   api: {
     bodyParser: false,
@@ -13,7 +13,7 @@ export const config = {
 export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
-  // 1. Read raw body + signature
+  // 1️⃣ **Read raw body & verify signature**
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
 
@@ -22,12 +22,12 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
-  // 2. Initialize Stripe client
+  // 2️⃣ **Initialize Stripe client**
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion, // Properly cast the version
+    apiVersion: "2025-01-27.acacia",
   });
 
-  // 3. Verify the webhook signature
+  // 3️⃣ **Verify webhook signature**
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -39,13 +39,13 @@ export async function POST(request: NextRequest) {
     return new NextResponse("Invalid Stripe signature.", { status: 400 });
   }
 
-  // 4. Initialize Supabase Admin
+  // 4️⃣ **Initialize Supabase Admin Client**
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.SUPABASE_SERVICE_ROLE_KEY as string
   );
 
-  // ✅ Helper function to upsert subscriber **without id**
+  // ✅ **Helper function to upsert subscription (email is primary key)**
   async function upsertSubscription({
     email,
     plan,
@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
           plan,
           stripe_subscription_id: subscriptionId,
           status,
-          updated_at: new Date().toISOString(), // Update timestamp
+          updated_at: new Date().toISOString(),
         },
-        { onConflict: "email" } // Ensure email is unique
+        { onConflict: "email" } // Ensures email is unique
       );
 
     if (error) {
@@ -86,12 +86,12 @@ export async function POST(request: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_details?.email;
-      const plan = session.metadata?.plan;
+      const plan = session.metadata?.plan || "unknown"; // Default to "unknown" if missing
       const subscriptionId = session.subscription as string | null;
 
-      if (!email || !plan) {
-        console.error("❌ Missing email or plan in checkout.session:", session);
-        return new NextResponse("Missing email/plan in session", { status: 400 });
+      if (!email) {
+        console.error("❌ Missing email in checkout.session:", session);
+        return new NextResponse("Missing email in session", { status: 400 });
       }
 
       await upsertSubscription({
@@ -102,8 +102,14 @@ export async function POST(request: NextRequest) {
       });
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
-      const priceId = subscription.items?.data?.[0]?.price?.id;
-      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" : "annual";
+      const priceId = subscription.items?.data?.[0]?.price?.id || "";
+      const plan =
+        priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
+          ? "monthly"
+          : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8"
+          ? "annual"
+          : "unknown";
+
       const customerId = subscription.customer as string;
       const customer = await stripe.customers.retrieve(customerId);
 
