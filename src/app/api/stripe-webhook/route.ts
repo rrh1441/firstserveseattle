@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
       // Get Plan from Stripe Price ID
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
-      let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" : "annual";
+      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" : "annual";
 
       // Retrieve customer email
       const customerId = subscription.customer as string;
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       }
 
       const priceId = invoice.lines.data[0]?.price?.id || "";
-      let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" : "annual";
+      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" : "annual";
 
       await upsertSubscription({
         email,
