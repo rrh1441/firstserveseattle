@@ -51,34 +51,19 @@ export async function POST(request: NextRequest) {
   }) {
     const { email, plan, subscriptionId, paymentIntentId } = args;
 
-    // A. Find the user in auth.users by email
-    const { data: userRow, error: userErr } = await supabaseAdmin
-      .from("auth.users")
-      .select("id")
-      .eq("email", email)
-      .single();
-
-    if (userErr) {
-      throw new Error(`Error finding user by email: ${userErr.message}`);
-    }
-    if (!userRow) {
-      throw new Error(`No user found for email: ${email}`);
-    }
-
-    // B. Insert or update your "subscribers" table
+    // Insert or update based on email
     const { error: upsertErr } = await supabaseAdmin
       .from("subscribers")
       .upsert(
         {
-          user_id: userRow.id,
           email,
           plan,
           stripe_subscription_id: subscriptionId,
-          stripe_payment_intent_id: paymentIntentId,
+          stripe_payment_intent: paymentIntentId,
           status: "active",
         },
         {
-          onConflict: "user_id, plan", // or whatever your unique constraint is
+          onConflict: "email",
         }
       );
 
@@ -92,7 +77,6 @@ export async function POST(request: NextRequest) {
   try {
     // 5. Switch on event types
     if (event.type === "checkout.session.completed") {
-      // (Optional) If you also handle checkout.session.completed events
       const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_details?.email || "";
       const plan = session.metadata?.plan || "";
@@ -112,10 +96,9 @@ export async function POST(request: NextRequest) {
       });
 
     } else if (event.type === "customer.subscription.updated") {
-      // The event you showed in your logs
       const subscription = event.data.object as Stripe.Subscription;
 
-      // A. Figure out the plan from the price ID in subscription.items
+      // Figure out the plan from the price ID in subscription.items
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
       let plan = "";
       if (priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs") {
@@ -126,7 +109,7 @@ export async function POST(request: NextRequest) {
         plan = "unknown";
       }
 
-      // B. Retrieve the full Customer object to get their email
+      // Retrieve the full Customer object to get their email
       const customerId = subscription.customer as string;
       const customer = await stripe.customers.retrieve(customerId);
 
@@ -143,7 +126,7 @@ export async function POST(request: NextRequest) {
         return new NextResponse("No email on customer.", { status: 400 });
       }
 
-      // C. Upsert to subscribers
+      // Update subscription in database
       await upsertSubscription({
         email,
         plan,
