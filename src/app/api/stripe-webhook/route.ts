@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
-    console.error("❌ Missing Stripe signature");
+    console.error("❌ Missing Stripe signature ");
     return new NextResponse("Missing Stripe signature.", { status: 400 });
   }
 
