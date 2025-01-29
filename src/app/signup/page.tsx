@@ -46,7 +46,7 @@ export default function SignUpPage() {
         .from('subscribers')
         .insert([
           {
-            user_id: authData.user.id,
+            id: authData.user.id,
             email: email,
             first_name: firstName,
             last_name: lastName,
