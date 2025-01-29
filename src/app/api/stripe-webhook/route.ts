@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. Initialize Stripe client
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: "2025-01-27.acacia" as any, // Update API version
   });
