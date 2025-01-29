@@ -7,7 +7,7 @@ export const config = {
   api: {
     bodyParser: false,
   },
-  runtime: 'edge',
+  runtime: "edge",
 };
 
 export async function POST(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   // 2️⃣ **Initialize Stripe client**
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-01-27.acacia" as unknown as Stripe.LatestApiVersion,
+    apiVersion: "2025-01-27.acacia",
   });
 
   // 3️⃣ **Verify webhook signature**
@@ -63,13 +63,13 @@ export async function POST(request: NextRequest) {
       .from("subscribers")
       .upsert(
         {
-          email, // **Primary Key**
+          email, // ✅ **Primary Key**
           plan,
           stripe_subscription_id: subscriptionId,
           status,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "email" } // Ensures email is unique
+        { onConflict: "email" } // Ensure email is unique
       );
 
     if (error) {
@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const email = session.customer_details?.email;
-      const plan = session.metadata?.plan || "unknown"; // Default to "unknown" if missing
+      const email = session.customer_details?.email ?? session.customer_email;
+      const plan = session.metadata?.plan ?? "unknown"; // Default to "unknown" if missing
       const subscriptionId = session.subscription as string | null;
 
       if (!email) {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
-      const priceId = subscription.items?.data?.[0]?.price?.id || "";
+      const priceId = subscription.items?.data?.[0]?.price?.id ?? "";
       const plan =
         priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
           ? "monthly"
@@ -111,15 +111,15 @@ export async function POST(request: NextRequest) {
           : "unknown";
 
       const customerId = subscription.customer as string;
-      const customer = await stripe.customers.retrieve(customerId);
+      const customer = (await stripe.customers.retrieve(customerId)) as Stripe.Customer;
 
-      if (!("email" in customer)) {
+      if (!customer.email) {
         console.error("❌ No valid email found on customer:", customerId);
         return new NextResponse("No email on customer.", { status: 400 });
       }
 
       await upsertSubscription({
-        email: customer.email as string,
+        email: customer.email,
         plan,
         subscriptionId: subscription.id,
         status: subscription.status,
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     return new NextResponse("OK", { status: 200 });
-  } catch (err: unknown) {
+  } catch (err) {
     console.error("❌ Webhook handler error:", err);
     return new NextResponse(`Webhook error: ${String(err)}`, { status: 500 });
   }
