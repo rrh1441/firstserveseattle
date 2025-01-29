@@ -22,21 +22,45 @@ export default function SignUpPage() {
     setErrorMsg("")
 
     try {
-      // 1. Create the user in Supabase with additional metadata
-      const { data, error } = await supabase.auth.signUp({
+      // 1. Create the user in Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
+            plan: plan
           }
         }
       })
       
-      if (error) throw new Error(`Sign-up failed: ${error.message}`)
-      if (!data.user) throw new Error("No user returned after sign-up.")
+      if (authError) throw new Error(`Sign-up failed: ${authError.message}`)
+      if (!authData.user) throw new Error("No user returned after sign-up.")
 
-      // 2. Create Stripe Checkout session
+      // 2. Create subscriber record
+      const names = fullName.split(' ')
+      const firstName = names[0]
+      const lastName = names.slice(1).join(' ')
+
+      const { error: subscriberError } = await supabase
+        .from('subscribers')
+        .insert([
+          {
+            user_id: authData.user.id,
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            plan: plan,
+            status: 'pending'
+          }
+        ])
+
+      if (subscriberError) {
+        console.error('Error creating subscriber:', subscriberError)
+        throw new Error(`Failed to create subscriber: ${subscriberError.message}`)
+      }
+
+      // 3. Create Stripe Checkout session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,6 +74,7 @@ export default function SignUpPage() {
 
       window.location.href = url
     } catch (err) {
+      console.error('Signup error:', err)
       setErrorMsg(err instanceof Error ? err.message : "Unknown error.")
       setLoading(false)
     }
