@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
       // Extract plan from price ID
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
-      let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" :
+      const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" :
                  priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8" ? "annual" : "unknown";
 
       // Retrieve the full Customer object
