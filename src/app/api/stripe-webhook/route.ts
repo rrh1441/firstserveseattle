@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         console.log("🔄 Subscription updated:", subscription.id);
 
         const priceId = subscription.items?.data?.[0]?.price?.id || "";
-        let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" 
+        const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" 
                    : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8" ? "annual" 
                    : "unknown";
 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         }
 
         const priceId = invoice.lines.data[0]?.price?.id || "";
-        let plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" 
+        const plan = priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs" ? "monthly" 
                    : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8" ? "annual" 
                    : "unknown";
 
