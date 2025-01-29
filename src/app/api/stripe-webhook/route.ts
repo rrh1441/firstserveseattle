@@ -7,6 +7,7 @@ export const config = {
   api: {
     bodyParser: false,
   },
+  runtime: 'edge',
 };
 
 export async function POST(request: NextRequest) {
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
+    console.error("Missing Stripe signature header");
     return new NextResponse("Missing Stripe signature header.", { status: 400 });
   }
 
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
     paymentIntentId?: string | null;
   }) {
     const { email, plan, subscriptionId, paymentIntentId } = args;
+    console.log('Upserting subscription:', { email, plan, subscriptionId, paymentIntentId });
 
     // Insert or update based on email
     const { error: upsertErr } = await supabaseAdmin
@@ -68,13 +71,16 @@ export async function POST(request: NextRequest) {
       );
 
     if (upsertErr) {
+      console.error('Upsert error:', upsertErr);
       throw new Error(`Error upserting subscriber: ${upsertErr.message}`);
     }
 
-    console.log(`Upserted subscription for user ${email}, plan=${plan}`);
+    console.log(`Successfully upserted subscription for user ${email}, plan=${plan}`);
   }
 
   try {
+    console.log(`Processing webhook event: ${event.type}`);
+
     // 5. Switch on event types
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -82,6 +88,8 @@ export async function POST(request: NextRequest) {
       const plan = session.metadata?.plan || "";
       const subscriptionId = (session.subscription as string) || null;
       const paymentIntentId = (session.payment_intent as string) || null;
+
+      console.log('Checkout session completed:', { email, plan, subscriptionId, paymentIntentId });
 
       if (!email || !plan) {
         console.error("Missing email or plan in checkout.session:", session);
@@ -97,6 +105,7 @@ export async function POST(request: NextRequest) {
 
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
+      console.log('Subscription updated:', subscription.id);
 
       // Figure out the plan from the price ID in subscription.items
       const priceId = subscription.items?.data?.[0]?.price?.id || "";
@@ -112,6 +121,7 @@ export async function POST(request: NextRequest) {
       // Retrieve the full Customer object to get their email
       const customerId = subscription.customer as string;
       const customer = await stripe.customers.retrieve(customerId);
+      console.log('Retrieved customer:', customerId);
 
       // Type guard: check if it's a "deleted" customer or a full "Customer"
       if ((customer as Stripe.DeletedCustomer).deleted) {
@@ -134,8 +144,36 @@ export async function POST(request: NextRequest) {
         paymentIntentId: null,
       });
 
+    } else if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      console.log('Invoice payment succeeded:', invoice.id);
+
+      const email = invoice.customer_email;
+      if (!email) {
+        console.error("No email found on invoice:", invoice.id);
+        return new NextResponse("No email on invoice.", { status: 400 });
+      }
+
+      // Determine plan from price ID
+      const priceId = invoice.lines.data[0]?.price?.id || "";
+      let plan = "";
+      if (priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs") {
+        plan = "monthly";
+      } else if (priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8") {
+        plan = "annual";
+      } else {
+        plan = "unknown";
+      }
+
+      await upsertSubscription({
+        email,
+        plan,
+        subscriptionId: invoice.subscription as string || null,
+        paymentIntentId: invoice.payment_intent as string || null,
+      });
+
     } else {
-      // Optionally handle other events
+      // Log unhandled event types
       console.log(`Unhandled event type: ${event.type}`);
     }
 
