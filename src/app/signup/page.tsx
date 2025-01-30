@@ -97,7 +97,7 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4 py-16">
       <div className="mx-auto max-w-md">
         <div className="overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
+          <div className="bg-[#0c372b] px-8 py-6 text-white">
             <h2 className="text-3xl font-bold tracking-tight">Create account</h2>
             <p className="mt-2 text-blue-100">
               Get started with your {plan === "annual" ? "annual" : "monthly"} subscription
@@ -115,7 +115,7 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setPlan(plan === "monthly" ? "annual" : "monthly")}
-                className="w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="w-full rounded-lg bg-[#0c372b] px-4 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
               >
                 {plan === "monthly" ? "Switch to Annual and Save 33%" : "Switch to Monthly"}
               </button>
@@ -173,7 +173,7 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="relative w-full rounded-lg bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70"
+                className="relative w-full rounded-lg bg-[#0c372b] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
                   <svg className="mr-2 inline h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
