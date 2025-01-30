@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
               className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? "Updating Password..." : "Reset Password"}
+              {loading ? "Updating  Password..." : "Reset Password"}
             </button>
           </form>
         )}
