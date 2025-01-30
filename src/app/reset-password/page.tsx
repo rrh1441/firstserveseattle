@@ -13,13 +13,16 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasAccessToken, setHasAccessToken] = useState(false);
 
   useEffect(() => {
-    // Ensure we have an access token in the URL hash for the password reset
-    if (!window.location.hash.includes("access_token")) {
-      router.push("/");
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get("access_token");
+
+    if (accessToken) {
+      setHasAccessToken(true);
     }
-  }, [router]);
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +53,25 @@ export default function ResetPasswordPage() {
       router.push("/login");
     }, 3000);
   };
+
+  if (!hasAccessToken) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md text-center">
+          <h1 className="text-2xl font-bold mb-4">Invalid Password Reset Link</h1>
+          <p className="text-gray-600">
+            The reset link is invalid or has expired. Please request a new password reset.
+          </p>
+          <button
+            onClick={() => router.push("/signin")}
+            className="mt-4 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
+          >
+            Go to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
