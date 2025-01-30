@@ -14,26 +14,22 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hashParams = new URLSearchParams(window.location.hash.replace("#", ""));
-      const resetToken = hashParams.get("access_token");
-      if (resetToken) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const resetToken = searchParams.get("token");
+      const userEmail = searchParams.get("email");
+
+      if (resetToken && userEmail) {
         setToken(resetToken);
-        authenticateUser(resetToken);
+        setEmail(userEmail);
       } else {
         setError("Invalid or expired reset link. Please request a new one.");
       }
     }
   }, []);
-
-  const authenticateUser = async (token: string) => {
-    const { error } = await supabase.auth.exchangeCodeForSession(token);
-    if (error) {
-      setError("Auth session missing! Please request a new reset link.");
-    }
-  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +40,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (!token) {
+    if (!token || !email) {
       setError("Invalid or expired reset link.");
       return;
     }
@@ -52,7 +48,23 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      // Step 1: Verify the reset token
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "recovery",
+      });
+
+      if (verifyError) {
+        setError(verifyError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Now update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
 
       if (updateError) {
         setError(updateError.message);
@@ -72,14 +84,6 @@ export default function ResetPasswordPage() {
       setLoading(false);
     }
   };
-
-  if (!token && !error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p>Loading...</p>
-      </div>
-    );
-  }
 
   if (error) {
     return (
