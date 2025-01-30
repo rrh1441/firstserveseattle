@@ -44,10 +44,9 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Use the token to update the password
-      const { error: resetError } = await supabase.auth.updateUser({
+      // Update user password using the reset token
+      const { error: resetError } = await supabase.auth.api.updateUser(token, {
         password,
-        // Include the access token in the headers if required
       });
 
       if (resetError) {
@@ -63,7 +62,7 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
