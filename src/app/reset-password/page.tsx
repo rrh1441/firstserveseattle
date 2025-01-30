@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ResetPasswordPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,13 +16,16 @@ export default function ResetPasswordPage() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const resetToken = searchParams.get("token"); // Get token from query params
-    if (resetToken) {
-      setToken(resetToken);
-    } else {
-      setError("Invalid or expired reset link. Please request a new one.");
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const resetToken = searchParams.get("token");
+      if (resetToken) {
+        setToken(resetToken);
+      } else {
+        setError("Invalid or expired reset link. Please request a new one.");
+      }
     }
-  }, [searchParams]);
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
