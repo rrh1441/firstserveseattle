@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const resetToken = searchParams.get("token"); // ✅ Get token from query params
+    const resetToken = searchParams.get("token"); // Get token from query params
     if (resetToken) {
       setToken(resetToken);
     } else {
@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    // ✅ Removing error variable from session check
+    // Check user session
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       setError("Invalid session. Please request a new password reset.");
@@ -49,6 +49,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // Update user password
     const { error: resetError } = await supabase.auth.updateUser({ password });
     if (resetError) {
       setError(resetError.message);
@@ -92,6 +93,10 @@ export default function ResetPasswordPage() {
           </p>
         ) : (
           <form onSubmit={handleResetPassword}>
+            {/* Display error message if any */}
+            {error && (
+              <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+            )}
             <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 New Password
