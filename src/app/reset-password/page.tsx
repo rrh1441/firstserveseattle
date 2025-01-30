@@ -44,12 +44,11 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Use verifyRecovery to reset the password with the token
-      const { error: resetError } = await supabase.auth.verifyRecovery({
+      // Use Supabase's resetPasswordForEmail to reset the password with the token
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         token,
-        type: "recovery",
-        newPassword: password,
-      });
+        { password }
+      );
 
       if (resetError) {
         setError(resetError.message);
@@ -71,7 +70,6 @@ export default function ResetPasswordPage() {
   };
 
   if (!token && !error) {
-    // While checking for the token
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <p>Loading...</p>
@@ -106,15 +104,11 @@ export default function ResetPasswordPage() {
           </p>
         ) : (
           <form onSubmit={handleResetPassword}>
-            {/* Display error message if any */}
             {error && (
               <p className="text-red-500 text-sm text-center mb-4">{error}</p>
             )}
             <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 New Password
               </label>
               <input
@@ -128,10 +122,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div className="mb-6">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <input
