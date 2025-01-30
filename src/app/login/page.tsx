@@ -10,28 +10,35 @@ export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
+
     try {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { data: authUser, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (loginError) {
         setError(loginError.message);
+        setLoading(false);
         return;
       }
 
-      router.push("/tennis-courts"); // Redirect to main page after login
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unexpected error occurred.");
+      if (!authUser.user) {
+        setError("Login failed. Please check your credentials.");
+        setLoading(false);
+        return;
       }
+
+      router.push("/premium-test"); // Redirect to premium test page
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setLoading(false);
     }
   };
 
@@ -42,14 +49,10 @@ export default function LoginPage() {
         className="w-full max-w-md bg-white p-6 rounded-lg shadow-md"
       >
         <h1 className="text-2xl font-bold text-center mb-4">Sign In</h1>
-        {error && (
-          <p className="text-red-500 text-sm text-center mb-4">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+        
         <div className="mb-4">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
           <input
@@ -61,11 +64,9 @@ export default function LoginPage() {
             required
           />
         </div>
+
         <div className="mb-6">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Password
           </label>
           <input
@@ -77,11 +78,13 @@ export default function LoginPage() {
             required
           />
         </div>
+
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
+          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+          disabled={loading}
         >
-          Sign In
+          {loading ? "Signing in..." : "Sign In"}
         </button>
       </form>
     </div>
