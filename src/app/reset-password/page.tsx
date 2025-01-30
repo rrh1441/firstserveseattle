@@ -21,11 +21,19 @@ export default function ResetPasswordPage() {
       const resetToken = searchParams.get("token");
       if (resetToken) {
         setToken(resetToken);
+        authenticateUser(resetToken); // Create session
       } else {
         setError("Invalid or expired reset link. Please request a new one.");
       }
     }
   }, []);
+
+  const authenticateUser = async (token: string) => {
+    const { error } = await supabase.auth.exchangeCodeForSession(token);
+    if (error) {
+      setError("Auth session missing! Please request a new reset link.");
+    }
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,7 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Directly update the user's password (Supabase already verified the token)
+      // Update the password now that the session is active
       const { error: updateError } = await supabase.auth.updateUser({
         password,
       });
