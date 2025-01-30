@@ -1,61 +1,56 @@
-// src/app/page.tsx
-"use client"
+"use client";
 
-import { useEffect, useState, Suspense } from "react"
-import { ExternalLink } from "lucide-react"
-import Image from "next/image"
+import { useEffect, useState, Suspense } from "react";
+import { usePathname } from "next/navigation"; // ✅ Import pathname detection
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 
-import { Button } from "@/components/ui/button"
-
-// We'll assume Paywall is at "src/app/tennis-courts/components/paywall.tsx"
-import Paywall from "./tennis-courts/components/paywall"
-
-// For updating session counts
-import { updateUserSession } from "@/lib/updateUserSessions"
-
-// The tennis court list
-import TennisCourtList from "./tennis-courts/components/TennisCourtList"
+import { Button } from "@/components/ui/button";
+import Paywall from "./tennis-courts/components/paywall"; // Import Paywall
+import { updateUserSession } from "@/lib/updateUserSessions"; // Updating session count
+import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 
 export default function HomePage() {
-  const [showPaywall, setShowPaywall] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
+  const pathname = usePathname(); // ✅ Get the current URL path
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // ✅ Exclude reset-password, signin, and subscribe from paywall logic
+    const exemptPaths = ["/reset-password", "/login", "/signup"];
+    if (exemptPaths.includes(pathname)) return;
+
     // Generate or retrieve userId from localStorage
-    let storedId = localStorage.getItem("userId")
+    let storedId = localStorage.getItem("userId");
     if (!storedId) {
-      storedId = crypto.randomUUID()
-      localStorage.setItem("userId", storedId)
-      console.log("[page.tsx] New userId created:", storedId)
-    } else {
-      console.log("[page.tsx] Existing userId found:", storedId)
+      storedId = crypto.randomUUID();
+      localStorage.setItem("userId", storedId);
     }
-    setUserId(storedId)
-  }, [])
+    setUserId(storedId);
+  }, [pathname]);
 
   useEffect(() => {
-    // Once userId is known, increment session
-    if (!userId) return
-    console.log("[page.tsx] Calling updateUserSession with userId:", userId)
+    if (!userId || pathname === "/reset-password") return; // ✅ Ensure reset-password is ignored
+
+    console.log("[page.tsx] Calling updateUserSession with userId:", userId);
 
     updateUserSession(userId)
       .then(async () => {
-        // Check if we should show paywall
-        console.log("[page.tsx] updateUserSession done, checking paywall")
-        const res = await fetch(`/api/check-paywall?userId=${userId}`)
-        const data = await res.json()
-        console.log("[page.tsx] /api/check-paywall response:", data)
+        console.log("[page.tsx] updateUserSession done, checking paywall");
+        const res = await fetch(`/api/check-paywall?userId=${userId}`);
+        const data = await res.json();
+        console.log("[page.tsx] /api/check-paywall response:", data);
         if (data?.showPaywall) {
-          setShowPaywall(true)
+          setShowPaywall(true);
         }
       })
       .catch((err) => {
-        console.error("[page.tsx] updateUserSession error:", err)
-      })
-  }, [userId])
+        console.error("[page.tsx] updateUserSession error:", err);
+      });
+  }, [userId, pathname]);
 
   if (showPaywall) {
-    return <Paywall />
+    return <Paywall />;
   }
 
   return (
@@ -71,8 +66,7 @@ export default function HomePage() {
           />
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
-              <span>First Serve</span>{" "}
-              <span>Seattle</span>
+              <span>First Serve</span> <span>Seattle</span>
             </h1>
             <p className="text-base md:text-lg font-semibold">
               Today&#39;s Open Tennis and Pickleball Courts
@@ -109,5 +103,5 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
