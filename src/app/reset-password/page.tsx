@@ -13,16 +13,22 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasAccessToken, setHasAccessToken] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false); // Ensure we check the session properly
 
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
+    async function checkSession() {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error || !data.session) {
+        setError("Invalid or expired reset link. Please request a new one.");
+        return;
+      }
 
-    if (accessToken) {
-      setHasAccessToken(true);
+      setSessionChecked(true);
     }
-  }, []);
+
+    checkSession();
+  }, [supabase]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +60,20 @@ export default function ResetPasswordPage() {
     }, 3000);
   };
 
-  if (!hasAccessToken) {
+  if (!sessionChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-lg text-gray-600">Verifying reset link...</p>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md text-center">
-          <h1 className="text-2xl font-bold mb-4">Invalid Password Reset Link</h1>
-          <p className="text-gray-600">
-            The reset link is invalid or has expired. Please request a new password reset.
-          </p>
+          <h1 className="text-2xl font-bold mb-4">Reset Link Expired</h1>
+          <p className="text-gray-600">{error}</p>
           <button
             onClick={() => router.push("/signin")}
             className="mt-4 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
@@ -77,7 +89,6 @@ export default function ResetPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-center mb-4">Reset Password</h1>
-        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
         {success ? (
           <p className="text-green-500 text-sm text-center mb-4">
             Password updated! Redirecting to login...
