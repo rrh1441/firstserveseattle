@@ -115,7 +115,7 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setPlan(plan === "monthly" ? "annual" : "monthly")}
-                className="w-full rounded-lg bg-[#acdf77] px-4 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
+                className="w-full rounded-lg bg-[#acdf77] px-4 py-3 text-lg font-bold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
               >
                 {plan === "monthly" ? "Switch to Annual and Save 33%" : "Switch to Monthly"}
               </button>
