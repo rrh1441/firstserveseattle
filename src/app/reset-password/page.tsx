@@ -17,11 +17,11 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      const resetToken = searchParams.get("token");
+      const hashParams = new URLSearchParams(window.location.hash.replace("#", ""));
+      const resetToken = hashParams.get("access_token");
       if (resetToken) {
         setToken(resetToken);
-        authenticateUser(resetToken); // Create session
+        authenticateUser(resetToken);
       } else {
         setError("Invalid or expired reset link. Please request a new one.");
       }
@@ -52,10 +52,7 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Update the password now that the session is active
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
       if (updateError) {
         setError(updateError.message);
