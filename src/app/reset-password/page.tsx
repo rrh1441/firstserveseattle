@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ResetPasswordPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,9 +15,8 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // If no access token is provided, redirect to home
-    const hash = window.location.hash;
-    if (!hash.includes("access_token")) {
+    // Ensure we have an access token in the URL hash for the password reset
+    if (!window.location.hash.includes("access_token")) {
       router.push("/");
     }
   }, [router]);
