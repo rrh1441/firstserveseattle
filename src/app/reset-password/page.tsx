@@ -44,12 +44,11 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Use verifyOtp to reset the password with the token
-      const { error: resetError } = await supabase.auth.verifyOtp({
-        token,
-        type: "recovery",
-        newPassword: password,
-      });
+      // Update user password using the reset token
+      const { error: resetError } = await supabase.auth.updateUser(
+        { password },
+        { access_token: token }
+      );
 
       if (resetError) {
         setError(resetError.message);
