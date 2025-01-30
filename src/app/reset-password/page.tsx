@@ -44,11 +44,10 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Use Supabase's resetPasswordForEmail to reset the password with the token
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        token,
-        { password }
-      );
+      // Reset password using updateUser (valid only if token is present)
+      const { error: resetError } = await supabase.auth.updateUser({
+        password,
+      });
 
       if (resetError) {
         setError(resetError.message);
