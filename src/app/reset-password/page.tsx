@@ -43,37 +43,47 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    // Check user session
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      setError("Invalid session. Please request a new password reset.");
+    try {
+      // Use the token to update the password
+      const { error: resetError } = await supabase.auth.updateUser({
+        password,
+        // Include the access token in the headers if required
+      });
+
+      if (resetError) {
+        setError(resetError.message);
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(true);
       setLoading(false);
-      return;
-    }
 
-    // Update user password
-    const { error: resetError } = await supabase.auth.updateUser({ password });
-    if (resetError) {
-      setError(resetError.message);
+      // Redirect after success
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000);
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
       setLoading(false);
-      return;
     }
-
-    setSuccess(true);
-    setLoading(false);
-
-    // Redirect after success
-    setTimeout(() => {
-      router.push("/login");
-    }, 3000);
   };
 
-  if (!token) {
+  if (!token && !error) {
+    // While checking for the token
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md text-center">
-          <h1 className="text-2xl font-bold mb-4">Reset Link Expired</h1>
-          <p className="text-gray-600">The reset link is invalid or has expired.</p>
+          <h1 className="text-2xl font-bold mb-4">Reset Link Invalid</h1>
+          <p className="text-gray-600">{error}</p>
           <button
             onClick={() => router.push("/signin")}
             className="mt-4 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
@@ -100,7 +110,10 @@ export default function ResetPasswordPage() {
               <p className="text-red-500 text-sm text-center mb-4">{error}</p>
             )}
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 New Password
               </label>
               <input
@@ -114,7 +127,10 @@ export default function ResetPasswordPage() {
             </div>
 
             <div className="mb-6">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <input
