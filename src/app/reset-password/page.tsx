@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+// Force dynamic rendering to avoid prerendering issues with useSearchParams
+export const dynamic = "force-dynamic";
+
 export default function ResetPasswordPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
