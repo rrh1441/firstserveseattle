@@ -44,11 +44,11 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      // Verify the token before updating the password
+      // Verify token and reset password
       const { error: verifyError } = await supabase.auth.verifyOtp({
-        token,
         type: "recovery",
-        newPassword: password,
+        token,
+        password,
       });
 
       if (verifyError) {
@@ -60,11 +60,11 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       setLoading(false);
 
-      // Redirect after success
+      // Redirect to login after success
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
