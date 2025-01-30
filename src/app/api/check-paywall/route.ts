@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
 
   const viewsCount = data?.views_count ?? 0
-  const showPaywall = viewsCount > 2
+  const showPaywall = viewsCount > 3
 
   return NextResponse.json({ showPaywall })
 }
