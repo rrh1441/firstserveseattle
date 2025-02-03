@@ -17,7 +17,7 @@ export default function HomePage() {
 
   useEffect(() => {
     // ✅ Exclude reset-password, signin, and subscribe from paywall logic
-    const exemptPaths = ["/reset-password", "/login", "/signup"];
+    const exemptPaths = ["/reset-password", "/login", "/signup", "/members"];
     if (exemptPaths.includes(pathname)) return;
 
     // Generate or retrieve userId from localStorage
