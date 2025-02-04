@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import TennisCourtList from "./tennis-courts/components/TennisCourtList";
+import TennisCourtList from "../tennis-courts/components/TennisCourtList";
 
 export default function PremiumTestPage() {
   return (
@@ -23,7 +23,7 @@ export default function PremiumTestPage() {
               <span>First Serve</span> <span>Seattle</span>
             </h1>
             <p className="text-base md:text-lg font-semibold">
-              Today&#39;s Open Tennis and Pickleball Courts
+              Today&apos;s Open Tennis and Pickleball Courts
             </p>
           </div>
         </div>
