@@ -8,7 +8,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Paywall from "./tennis-courts/components/paywall"; // Import Paywall
 import { updateUserSession } from "@/lib/updateUserSessions"; // Updating session count
-import TennisCourtList from "./tennis-courts/components/TennisCourtList";
+import TennisCourtList from "../tennis-courts/components/TennisCourtList";
 
 export default function HomePage() {
   const pathname = usePathname(); // ✅ Get the current URL path
@@ -69,7 +69,7 @@ export default function HomePage() {
               <span>First Serve</span> <span>Seattle</span>
             </h1>
             <p className="text-base md:text-lg font-semibold">
-              Today&#39;s Open Tennis and Pickleball Courts
+              Today&apos;s Open Tennis and Pickleball Courts
             </p>
           </div>
         </div>
@@ -78,6 +78,11 @@ export default function HomePage() {
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
         <TennisCourtList />
       </Suspense>
+
+      {/* Disclaimer added below the toggles (court list) */}
+      <div className="mt-4 text-center text-sm text-gray-600">
+        <p>Disclaimer: Lights are only available March–October.</p>
+      </div>
 
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
