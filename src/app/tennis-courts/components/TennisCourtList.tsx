@@ -7,7 +7,7 @@ import { Star, MapPin } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 
-// Keep existing interfaces and utility functions
+// Interfaces and utility functions remain the same
 interface ParsedInterval {
   date: string;
   start: string;
@@ -49,7 +49,6 @@ export default function TennisCourtList() {
     pickleball_lined: false,
   });
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
-  // Removed isFiltersVisible state since filters are always shown
 
   const timesInOneHour = [
     "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
@@ -61,7 +60,6 @@ export default function TennisCourtList() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Keep existing useEffect hooks and utility functions
   useEffect(() => {
     getTennisCourts()
       .then((data) => {
@@ -105,7 +103,6 @@ export default function TennisCourtList() {
     );
   };
 
-  // Keep existing filtering and sorting logic
   const filtered = courts.filter((court) => {
     const matchesSearch = court.title
       ?.toLowerCase()
@@ -217,6 +214,16 @@ export default function TennisCourtList() {
               <Image src="/icons/wallicon.png" alt="Hitting Wall" width={14} height={14} />
               <span className="text-sm">Wall</span>
             </Button>
+          </div>
+
+          {/* Brief Explainer for Slot Availability */}
+          <div className="mt-2 text-center text-xs text-gray-500">
+            <p>Gray slots are reserved. Green slots are first come, first serve.</p>
+          </div>
+
+          {/* Disclaimer for Lights */}
+          <div className="mt-1 text-center text-xs text-gray-500">
+            <p>Note: Lights are only available March–October.</p>
           </div>
         </div>
       </div>
