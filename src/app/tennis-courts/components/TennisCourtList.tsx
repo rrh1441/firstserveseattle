@@ -217,12 +217,12 @@ export default function TennisCourtList() {
           </div>
 
           {/* Brief Explainer for Slot Availability */}
-          <div className="mt-2 text-center text-xs text-gray-500">
+          <div className="mt-2 text-left text-small text-gray-500">
             <p>Gray slots are reserved. Green slots are first come, first serve.</p>
           </div>
 
           {/* Disclaimer for Lights */}
-          <div className="mt-1 text-center text-xs text-gray-500">
+          <div className="mt-1 text-left text-small text-gray-500">
             <p>Note: Lights are only available March–October.</p>
           </div>
         </div>
