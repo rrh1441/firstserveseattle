@@ -6,9 +6,9 @@ import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import Paywall from "./tennis-courts/components/paywall"; // Import Paywall
-import { updateUserSession } from "@/lib/updateUserSessions"; // Updating session count
-import TennisCourtList from "../tennis-courts/components/TennisCourtList";
+import Paywall from "./tennis-courts/components/paywall"; // Assuming this is in src/app/tennis-courts/components
+import { updateUserSession } from "@/lib/updateUserSessions";
+import TennisCourtList from "./tennis-courts/components/TennisCourtList"; // Updated import
 
 export default function HomePage() {
   const pathname = usePathname(); // ✅ Get the current URL path
@@ -79,9 +79,9 @@ export default function HomePage() {
         <TennisCourtList />
       </Suspense>
 
-      {/* Disclaimer added below the toggles (court list) */}
+      {/* Disclaimer below the toggles (or court list) */}
       <div className="mt-4 text-center text-sm text-gray-600">
-        <p>Disclaimer: Lights are only available March–October.</p>
+        <p>Note: Lights are only available March–October.</p>
       </div>
 
       <div className="mt-8 text-center">
