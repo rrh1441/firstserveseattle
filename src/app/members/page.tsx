@@ -1,12 +1,37 @@
 "use client";
 
-import { Suspense } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import TennisCourtList from "../tennis-courts/components/TennisCourtList";
 
-export default function PremiumTestPage() {
+export default function MembersPage() {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkSession() {
+      // Retrieve the current session from Supabase
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        // If there is no session, redirect to the login page
+        router.push("/login");
+      } else {
+        // If session exists, allow access
+        setLoading(false);
+      }
+    }
+    checkSession();
+  }, [router, supabase]);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
       <header className="flex items-center mb-8">
@@ -29,9 +54,12 @@ export default function PremiumTestPage() {
         </div>
       </header>
 
-      <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
-        <TennisCourtList />
-      </Suspense>
+      <TennisCourtList />
+
+      {/* Disclaimer below the court toggles */}
+      <div className="mt-4 text-center text-sm text-gray-600">
+        <p>Disclaimer: Lights are only available March–October.</p>
+      </div>
 
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
