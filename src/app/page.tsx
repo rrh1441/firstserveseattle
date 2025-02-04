@@ -79,11 +79,6 @@ export default function HomePage() {
         <TennisCourtList />
       </Suspense>
 
-      {/* Disclaimer below the toggles (or court list) */}
-      <div className="mt-4 text-center text-sm text-gray-600">
-        <p>Note: Lights are only available March–October.</p>
-      </div>
-
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
           <a
