@@ -35,7 +35,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/premium-test"); // Redirect to premium test page
+      router.push("/members"); // Redirect to members page
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
       setLoading(false);
