@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_details?.email ?? session.customer_email;
       const fullName = session.customer_details?.name ?? "Unknown"; // Use full name or default
-      const plan = session.metadata?.plan ?? "unknown"; // Default to "unknown" if missing
+      // Use metadata if provided. Otherwise, default to unknown.
+      const plan = session.metadata?.plan ?? "unknown";
       const subscriptionId = session.subscription as string | null;
 
       if (!email) {
@@ -108,10 +109,11 @@ export async function POST(request: NextRequest) {
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
       const priceId = subscription.items?.data?.[0]?.price?.id ?? "";
+      // Update the price IDs to match the ones used in your checkout session creation.
       const plan =
-        priceId === "price_1Qc9d9KSaqiJUYkjvqlvMfVs"
+        priceId === "price_1Qbm96KSaqiJUYkj7SWySbjU"
           ? "monthly"
-          : priceId === "price_1Qc9dKKSaqiJUYkjXu5QHgk8"
+          : priceId === "price_1QowMRKSaqiJUYkjgeqLADm4"
           ? "annual"
           : "unknown";
 
