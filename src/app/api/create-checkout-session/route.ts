@@ -5,8 +5,8 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 const SUCCESS_URL = "https://firstserveseattle.com";
 const CANCEL_URL = "https://firstserveseattle.com";
 
-const MONTHLY_ID = "price_1Qc9d9KSaqiJUYkjvqlvMfVs";
-const ANNUAL_ID = "price_1Qc9dKKSaqiJUYkjXu5QHgk8";
+const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
+const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
 
 export async function POST(request: Request) {
   try {
