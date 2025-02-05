@@ -1,26 +1,22 @@
 "use client";
-
 import { useEffect, useState, Suspense } from "react";
-import { usePathname } from "next/navigation"; // ✅ Import pathname detection
+import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
-
 import { Button } from "@/components/ui/button";
-import Paywall from "./tennis-courts/components/paywall"; // Assuming this is in src/app/tennis-courts/cmomponents
+import Paywall from "./tennis-courts/components/paywall";
 import { updateUserSession } from "@/lib/updateUserSessions";
-import TennisCourtList from "./tennis-courts/components/TennisCourtList"; // Updated import
+import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 
 export default function HomePage() {
-  const pathname = usePathname(); // ✅ Get the current URL path
+  const pathname = usePathname();
   const [showPaywall, setShowPaywall] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // ✅ Exclude reset-password, signin, and subscribe from paywall logic
     const exemptPaths = ["/reset-password", "/login", "/signup", "/members"];
     if (exemptPaths.includes(pathname)) return;
 
-    // Generate or retrieve userId from localStorage
     let storedId = localStorage.getItem("userId");
     if (!storedId) {
       storedId = crypto.randomUUID();
@@ -30,23 +26,23 @@ export default function HomePage() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!userId || pathname === "/reset-password") return; // ✅ Ensure reset-password is ignored
-
-    console.log("[page.tsx] Calling updateUserSession with userId:", userId);
-
-    updateUserSession(userId)
-      .then(async () => {
-        console.log("[page.tsx] updateUserSession done, checking paywall");
+    if (!userId || pathname === "/reset-password") return;
+    
+    const checkUserSession = async () => {
+      try {
+        await updateUserSession(userId);
         const res = await fetch(`/api/check-paywall?userId=${userId}`);
         const data = await res.json();
-        console.log("[page.tsx] /api/check-paywall response:", data);
-        if (data?.showPaywall) {
+        
+        if (data.showPaywall) {
           setShowPaywall(true);
         }
-      })
-      .catch((err) => {
-        console.error("[page.tsx] updateUserSession error:", err);
-      });
+      } catch (err) {
+        console.error("[page.tsx] Session update error:", err);
+      }
+    };
+
+    checkUserSession();
   }, [userId, pathname]);
 
   if (showPaywall) {
@@ -55,7 +51,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      <header className="flex items-center mb-8">
+      <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -73,6 +69,14 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+        <Button 
+          asChild 
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap"
+        >
+          <a href="https://firstserveseattle.com/signup">
+            Get Unlimited Views
+          </a>
+        </Button>
       </header>
 
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
@@ -81,7 +85,7 @@ export default function HomePage() {
 
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
-          <a
+          
             href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
             target="_blank"
             rel="noopener noreferrer"

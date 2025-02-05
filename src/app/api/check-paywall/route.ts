@@ -1,5 +1,4 @@
 // src/app/api/check-paywall/route.ts
-
 import { supabase } from "@/app/supabaseClient"
 import { NextResponse } from "next/server"
 
@@ -12,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   const { data, error } = await supabase
-    .from("user_sessions")         // Must be exactly user_sessions
+    .from("user_sessions")
     .select("views_count")
     .eq("user_id", userId)
     .single()
@@ -23,7 +22,9 @@ export async function GET(request: Request) {
   }
 
   const viewsCount = data?.views_count ?? 0
-  const showPaywall = viewsCount > 3
-
-  return NextResponse.json({ showPaywall })
+  
+  return NextResponse.json({
+    showPaywall: viewsCount > 3,
+    viewsCount: viewsCount
+  })
 }
