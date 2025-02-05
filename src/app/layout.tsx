@@ -15,7 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <Analytics /> {/* This ensures Analytics is used and tracked */}
+        <Analytics /> {/* Thi s ensures Analytics is used and tracked */}
       </body>
     </html>
   )
