@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
+      allow_promotion_codes: true, // This enables promotion codes
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       metadata: { plan }, // Optional: Add metadata if you want to use it in your webhook
