@@ -6,7 +6,7 @@ import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import Paywall from "./tennis-courts/components/paywall"; // Assuming this is in src/app/tennis-courts/components
+import Paywall from "./tennis-courts/components/paywall"; // Assuming this is in src/app/tennis-courts/cmomponents
 import { updateUserSession } from "@/lib/updateUserSessions";
 import TennisCourtList from "./tennis-courts/components/TennisCourtList"; // Updated import
 
