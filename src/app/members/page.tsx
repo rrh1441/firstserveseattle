@@ -56,11 +56,7 @@ export default function MembersPage() {
 
       <TennisCourtList />
 
-      {/* Disclaimer below the court toggles */}
-      <div className="mt-4 text-center text-sm text-gray-600">
-        <p>Disclaimer: Lights are only available March–October.</p>
-      </div>
-
+      {/* Button for future reservations */}
       <div className="mt-8 text-center">
         <Button asChild className="gap-2">
           <a
@@ -69,6 +65,21 @@ export default function MembersPage() {
             rel="noopener noreferrer"
           >
             For future reservations, book here
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </Button>
+      </div>
+
+      {/* Replacing the second disclaimer with a "Join a Local Tennis League" link */}
+      <div className="mt-4 text-center text-sm">
+        <Button asChild variant="link" className="gap-2">
+          <a
+            href="http://www.tennis-seattle.com?From=185415"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-black transition-colors"
+          >
+            Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
