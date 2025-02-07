@@ -60,6 +60,7 @@ export default function TennisCourtList() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch tennis courts data from the API
   useEffect(() => {
     getTennisCourts()
       .then((data) => {
@@ -73,6 +74,7 @@ export default function TennisCourtList() {
       });
   }, []);
 
+  // Load favorites from localStorage
   useEffect(() => {
     const storedFavorites = localStorage.getItem("favoriteCourts");
     if (storedFavorites) {
@@ -80,6 +82,7 @@ export default function TennisCourtList() {
     }
   }, []);
 
+  // Toggle favorite state and persist in localStorage
   const toggleFavorite = (courtId: number) => {
     const updated = favoriteCourts.includes(courtId)
       ? favoriteCourts.filter((id) => id !== courtId)
@@ -96,13 +99,14 @@ export default function TennisCourtList() {
   };
 
   const toggleMapExpansion = (courtId: number) => {
-    setExpandedMaps((prev) => 
-      prev.includes(courtId) 
-        ? prev.filter(id => id !== courtId)
+    setExpandedMaps((prev) =>
+      prev.includes(courtId)
+        ? prev.filter((id) => id !== courtId)
         : [...prev, courtId]
     );
   };
 
+  // Filter courts by search term and active filters
   const filtered = courts.filter((court) => {
     const matchesSearch = court.title
       ?.toLowerCase()
@@ -114,9 +118,15 @@ export default function TennisCourtList() {
     return matchesSearch && matchesFilters;
   });
 
-  const sorted = [...filtered].sort((a, b) =>
-    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
-  );
+  // Sort so that favorited courts are pinned at the top; then sort alphabetically
+  const sorted = [...filtered].sort((a, b) => {
+    const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
+    const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
+    if (aFav !== bFav) {
+      return bFav - aFav; // Favorites (1) come before non-favorites (0)
+    }
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  });
 
   const todayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -217,12 +227,12 @@ export default function TennisCourtList() {
           </div>
 
           {/* Brief Explainer for Slot Availability */}
-          <div className="mt-2 text-left text-small text-black-500">
+          <div className="mt-2 text-left text-small text-gray-500">
             <p>Gray slots are reserved. Green slots are first come, first serve.</p>
           </div>
 
           {/* Disclaimer for Lights */}
-          <div className="mt-1 text-left text-small text-black-500">
+          <div className="mt-1 text-left text-small text-gray-500">
             <p>Note: Lights are only available March–October.</p>
           </div>
         </div>
