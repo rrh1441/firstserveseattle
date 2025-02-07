@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
     // Validate the session and get user
     const {
       data: { user },
-      error: sessionError
+      error: sessionError,
     } = await supabaseAdmin.auth.getUser(accessToken)
+
     if (sessionError || !user) {
       return NextResponse.json({ error: "Invalid session" }, { status: 401 })
     }
@@ -40,7 +41,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Fetch the subscription from Stripe to get the customer ID
-    const subscription = await stripe.subscriptions.retrieve(subscriberData.stripe_subscription_id)
+    const subscription = await stripe.subscriptions.retrieve(
+      subscriberData.stripe_subscription_id
+    )
     if (!subscription.customer) {
       return NextResponse.json({ error: "No customer attached to subscription" }, { status: 400 })
     }
@@ -50,13 +53,20 @@ export async function POST(req: NextRequest) {
     // 4. Create a Billing Portal Session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: "https://yourdomain.com/members" // Where to send them back after management
+      return_url: "https://yourdomain.com/members", // Where to send them back after management
     })
 
     // 5. Return the portal URL to the client
     return NextResponse.json({ url: portalSession.url })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Portal error:", err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+
+    // Safely handle unknown error
+    let message = "An unknown error occurred."
+    if (err instanceof Error) {
+      message = err.message
+    }
+
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
