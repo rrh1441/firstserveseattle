@@ -15,7 +15,7 @@ export default function MembersPage() {
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // On mount, check for a valid session and retrieve the access token.
+  // Check for an authenticated session and retrieve the access token.
   useEffect(() => {
     async function checkSession() {
       const {
@@ -26,7 +26,6 @@ export default function MembersPage() {
       if (error || !session) {
         router.push("/login");
       } else {
-        // Save the access token so it can be sent with our API requests.
         setAccessToken(session.access_token);
         setLoading(false);
       }
@@ -34,7 +33,7 @@ export default function MembersPage() {
     checkSession();
   }, [router, supabase]);
 
-  // Handle the "Manage Subscription" button click
+  // Handle the "Manage Subscription" button click by calling your API.
   async function handleManageSubscription() {
     setLoadingPortal(true);
     try {
@@ -51,12 +50,9 @@ export default function MembersPage() {
       }
 
       const { url } = await response.json();
-
-      // Redirect the user to the Stripe Billing Portal
       window.location.href = url;
     } catch (err) {
       console.error("Failed to create portal link:", err);
-      // Optionally: display an error to the user
     } finally {
       setLoadingPortal(false);
     }
@@ -111,7 +107,7 @@ export default function MembersPage() {
             href="http://www.tennis-seattle.com?From=185415"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black-600 hover:text-black transition-colors"
+            className="text-gray-600 hover:text-black transition-colors"
           >
             Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
@@ -126,14 +122,33 @@ export default function MembersPage() {
         </Button>
       </div>
 
+      {/* Responsive Footer with inline links */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
-        <div className="flex justify-center gap-4">
-          <a href="/privacy-policy" className="hover:text-black transition-colors">
+        <div className="flex flex-wrap md:flex-nowrap justify-center items-center gap-4">
+          <a
+            href="/privacy-policy"
+            className="hover:text-black transition-colors whitespace-nowrap"
+          >
             Privacy Policy
           </a>
-          <a href="/terms-of-service" className="hover:text-black transition-colors">
+          <span>|</span>
+          <a
+            href="/terms-of-service"
+            className="hover:text-black transition-colors whitespace-nowrap"
+          >
             Terms of Service
           </a>
+          <span>|</span>
+          <Button asChild variant="link">
+            <a
+              href="https://billing.stripe.com/p/login/bIYcNjb9M6id5Og7ss"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-black transition-colors whitespace-nowrap"
+            >
+              Manage Your Account
+            </a>
+          </Button>
         </div>
       </footer>
     </div>
