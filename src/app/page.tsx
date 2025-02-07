@@ -71,7 +71,7 @@ export default function HomePage() {
         </div>
         <Button 
           asChild 
-          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap"
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white"
         >
           <a href="https://firstserveseattle.com/signup">
             Get Unlimited Views
