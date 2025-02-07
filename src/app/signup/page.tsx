@@ -184,6 +184,16 @@ export default function SignUpPage() {
                 {loading ? "Creating your account..." : "Create account"}
               </button>
             </form>
+            
+            <p className="mt-6 text-center">
+              Already have an account?{" "}
+              <a
+                href="https://www.firstserveseattle.com/login"
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Sign In
+              </a>
+            </p>
           </div>
         </div>
       </div>
