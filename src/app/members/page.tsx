@@ -12,21 +12,49 @@ export default function MembersPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(true);
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   useEffect(() => {
     async function checkSession() {
-      // Retrieve the current session from Supabase
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      // If no session, redirect to the login page
       if (error || !session) {
-        // If there is no session, redirect to the login page
         router.push("/login");
       } else {
-        // If session exists, allow access
         setLoading(false);
       }
     }
     checkSession();
   }, [router, supabase]);
+
+  // Handle the "Manage Subscription" button click
+  async function handleManageSubscription() {
+    setLoadingPortal(true);
+    try {
+      const response = await fetch("/api/create-portal-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error creating portal link: ${response.statusText}`);
+      }
+
+      const { url } = await response.json();
+
+      // Redirect the user to the Stripe Billing Portal
+      window.location.href = url;
+    } catch (err) {
+      console.error("Failed to create portal link:", err);
+      // Optionally show an error to the user
+    } finally {
+      setLoadingPortal(false);
+    }
+  }
 
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
@@ -70,7 +98,7 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Replacing the second disclaimer with a "Join a Local Tennis League" link */}
+      {/* "Join a Local Tennis League" link */}
       <div className="mt-4 text-center text-sm">
         <Button asChild variant="link" className="gap-2">
           <a
@@ -82,6 +110,13 @@ export default function MembersPage() {
             Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
           </a>
+        </Button>
+      </div>
+
+      {/* Manage Subscription Button */}
+      <div className="mt-8 text-center">
+        <Button onClick={handleManageSubscription} disabled={loadingPortal}>
+          {loadingPortal ? "Loading..." : "Manage Subscription"}
         </Button>
       </div>
 
