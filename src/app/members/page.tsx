@@ -100,14 +100,14 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* "Join a Local Tennis League" link */}
+      {/* "Join a Local Tennis League" link with black text */}
       <div className="mt-4 text-center text-sm">
         <Button asChild variant="link" className="gap-2">
           <a
             href="http://www.tennis-seattle.com?From=185415"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-black transition-colors"
+            className="text-black hover:text-black transition-colors"
           >
             Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
@@ -124,31 +124,29 @@ export default function MembersPage() {
 
       {/* Responsive Footer with inline links */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
-        <div className="flex flex-wrap md:flex-nowrap justify-center items-center gap-4">
+        <div className="flex flex-row flex-nowrap justify-center items-center space-x-4">
           <a
             href="/privacy-policy"
-            className="hover:text-black transition-colors whitespace-nowrap"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Privacy Policy
           </a>
-          <span>|</span>
+          <span className="text-black">|</span>
           <a
             href="/terms-of-service"
-            className="hover:text-black transition-colors whitespace-nowrap"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Terms of Service
           </a>
-          <span>|</span>
-          <Button asChild variant="link">
-            <a
-              href="https://billing.stripe.com/p/login/bIYcNjb9M6id5Og7ss"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-black transition-colors whitespace-nowrap"
-            >
-              Manage Your Account
-            </a>
-          </Button>
+          <span className="text-black">|</span>
+          <a
+            href="https://billing.stripe.com/p/login/bIYcNjb9M6id5Og7ss"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
+          >
+            Manage Your Account
+          </a>
         </div>
       </footer>
     </div>
