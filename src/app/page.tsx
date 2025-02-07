@@ -83,14 +83,24 @@ export default function HomePage() {
         <TennisCourtList />
       </Suspense>
 
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-center space-x-4">
         <Button asChild className="gap-2">
-          
+          <a
             href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
             target="_blank"
             rel="noopener noreferrer"
           >
             For future reservations, book here
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </Button>
+        <Button asChild className="gap-2">
+          <a
+            href="http://www.tennis-seattle.com?From=185415"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
