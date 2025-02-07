@@ -64,17 +64,7 @@ export default function MembersPage() {
 
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      <div className="flex justify-end mb-4">
-        <Button 
-          onClick={handleManageSubscription} 
-          disabled={loadingPortal}
-          className="bg-[#0c372b] hover:bg-[#0c372b]/90 text-white px-6 py-2 rounded-md"
-        >
-          {loadingPortal ? "Loading..." : "Manage Subscription"}
-        </Button>
-      </div>
-
-      <header className="flex items-center mb-8">
+      <header className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -92,6 +82,13 @@ export default function MembersPage() {
             </p>
           </div>
         </div>
+        <Button 
+          onClick={handleManageSubscription} 
+          disabled={loadingPortal}
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 text-white px-6 py-2 rounded-md"
+        >
+          {loadingPortal ? "Loading..." : "Manage Subscription"}
+        </Button>
       </header>
 
       <TennisCourtList />
