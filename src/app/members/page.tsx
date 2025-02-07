@@ -64,6 +64,16 @@ export default function MembersPage() {
 
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
+      <div className="flex justify-end mb-4">
+        <Button 
+          onClick={handleManageSubscription} 
+          disabled={loadingPortal}
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 text-white px-6 py-2 rounded-md"
+        >
+          {loadingPortal ? "Loading..." : "Manage Subscription"}
+        </Button>
+      </div>
+
       <header className="flex items-center mb-8">
         <div className="flex items-center gap-6">
           <Image
@@ -115,30 +125,23 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Manage Subscription Button */}
-      <div className="mt-8 text-center">
-        <Button onClick={handleManageSubscription} disabled={loadingPortal}>
-          {loadingPortal ? "Loading..." : "Manage Subscription"}
-        </Button>
-      </div>
-
       {/* Responsive Footer with inline links */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
-        <div className="flex flex-row flex-nowrap justify-center items-center space-x-4">
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-4">
           <a
             href="/privacy-policy"
             className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Privacy Policy
           </a>
-          <span className="text-black">|</span>
+          <span className="text-black hidden md:inline">|</span>
           <a
             href="/terms-of-service"
             className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Terms of Service
           </a>
-          <span className="text-black">|</span>
+          <span className="text-black hidden md:inline">|</span>
           <a
             href="https://billing.stripe.com/p/login/bIYcNjb9M6id5Og7ss"
             target="_blank"
