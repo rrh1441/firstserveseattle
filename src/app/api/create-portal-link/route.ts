@@ -1,32 +1,32 @@
-import { NextRequest, NextResponse } from "next/server"
-import Stripe from "stripe"
-import { createClient } from "@supabase/supabase-js"
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
+// Update the API version to the expected value.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2022-11-15",
-})
+  apiVersion: "2024-12-18.acacia",
+});
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // service role key for secure DB reads
-)
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate the user
-    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "")
+    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "");
     if (!accessToken) {
-      return NextResponse.json({ error: "No token provided" }, { status: 401 })
+      return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
 
-    // Validate the session and get user
     const {
       data: { user },
       error: sessionError,
-    } = await supabaseAdmin.auth.getUser(accessToken)
+    } = await supabaseAdmin.auth.getUser(accessToken);
 
     if (sessionError || !user) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 })
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
     // 2. Look up the subscription ID from your 'subscribers' table
@@ -34,39 +34,34 @@ export async function POST(req: NextRequest) {
       .from("subscribers")
       .select("stripe_subscription_id")
       .eq("id", user.id)
-      .single()
+      .single();
 
     if (error || !subscriberData?.stripe_subscription_id) {
-      return NextResponse.json({ error: "No subscription ID found" }, { status: 404 })
+      return NextResponse.json({ error: "No subscription ID found" }, { status: 404 });
     }
 
     // 3. Fetch the subscription from Stripe to get the customer ID
-    const subscription = await stripe.subscriptions.retrieve(
-      subscriberData.stripe_subscription_id
-    )
+    const subscription = await stripe.subscriptions.retrieve(subscriberData.stripe_subscription_id);
     if (!subscription.customer) {
-      return NextResponse.json({ error: "No customer attached to subscription" }, { status: 400 })
+      return NextResponse.json({ error: "No customer attached to subscription" }, { status: 400 });
     }
 
-    const customerId = subscription.customer as string
+    const customerId = subscription.customer as string;
 
     // 4. Create a Billing Portal Session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: "https://yourdomain.com/members", // Where to send them back after management
-    })
+      return_url: "https://firstserveseattle.com/members", // Where to send them back after management
+    });
 
     // 5. Return the portal URL to the client
-    return NextResponse.json({ url: portalSession.url })
+    return NextResponse.json({ url: portalSession.url });
   } catch (err: unknown) {
-    console.error("Portal error:", err)
-
-    // Safely handle unknown error
-    let message = "An unknown error occurred."
+    console.error("Portal error:", err);
+    let message = "An unknown error occurred.";
     if (err instanceof Error) {
-      message = err.message
+      message = err.message;
     }
-
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
