@@ -13,7 +13,9 @@ export default function MembersPage() {
   const supabase = createClientComponentClient();
   const [loading, setLoading] = useState(true);
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  // On mount, check for a valid session and retrieve the access token.
   useEffect(() => {
     async function checkSession() {
       const {
@@ -21,10 +23,11 @@ export default function MembersPage() {
         error,
       } = await supabase.auth.getSession();
 
-      // If no session, redirect to the login page
       if (error || !session) {
         router.push("/login");
       } else {
+        // Save the access token so it can be sent with our API requests.
+        setAccessToken(session.access_token);
         setLoading(false);
       }
     }
@@ -37,7 +40,10 @@ export default function MembersPage() {
     try {
       const response = await fetch("/api/create-portal-link", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: accessToken ? `Bearer ${accessToken}` : "",
+        },
       });
 
       if (!response.ok) {
@@ -50,7 +56,7 @@ export default function MembersPage() {
       window.location.href = url;
     } catch (err) {
       console.error("Failed to create portal link:", err);
-      // Optionally show an error to the user
+      // Optionally: display an error to the user
     } finally {
       setLoadingPortal(false);
     }
@@ -105,7 +111,7 @@ export default function MembersPage() {
             href="http://www.tennis-seattle.com?From=185415"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 hover:text-black transition-colors"
+            className="text-black-600 hover:text-black transition-colors"
           >
             Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
