@@ -27,13 +27,13 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!userId || pathname === "/reset-password") return;
-    
+
     const checkUserSession = async () => {
       try {
         await updateUserSession(userId);
         const res = await fetch(`/api/check-paywall?userId=${userId}`);
         const data = await res.json();
-        
+
         if (data.showPaywall) {
           setShowPaywall(true);
         }
@@ -51,7 +51,11 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      <header className="flex items-center justify-between mb-8">
+      {/*
+        - The header is now flex-col by default and md:flex-row on larger devices.
+        - This places the button below the logo/name on mobile.
+      */}
+      <header className="flex flex-col md:flex-row items-center justify-between mb-8">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -69,9 +73,9 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-        <Button 
-          asChild 
-          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white"
+        <Button
+          asChild
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white mt-4 md:mt-0"
         >
           <a href="https://firstserveseattle.com/signup">
             Get Unlimited Views
@@ -108,12 +112,26 @@ export default function HomePage() {
 
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex justify-center gap-4">
-          <a href="/privacy-policy" className="hover:text-black transition-colors">
+          <a
+            href="/privacy-policy"
+            className="hover:text-black transition-colors"
+          >
             Privacy Policy
           </a>
-          <a href="/terms-of-service" className="hover:text-black transition-colors">
+          <a
+            href="/terms-of-service"
+            className="hover:text-black transition-colors"
+          >
             Terms of Service
           </a>
+        </div>
+        {/* 
+          - "Questions?" button linking to mailto for support email
+        */}
+        <div className="mt-4">
+          <Button asChild>
+            <a href="mailto:support@firstserveseattle.com">Questions?</a>
+          </Button>
         </div>
       </footer>
     </div>
