@@ -7,7 +7,6 @@ import { Star, MapPin } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 
-// Interfaces remain the same
 interface ParsedInterval {
   date: string;
   start: string;
@@ -26,11 +25,6 @@ interface Court {
   parsed_intervals: ParsedInterval[];
 }
 
-// --- Utility functions ---
-
-/**
- * Convert a time string (e.g. "6:00 AM") to total minutes (0-1439).
- */
 function timeToMinutes(str: string): number {
   if (!str) return -1;
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -44,29 +38,15 @@ function timeToMinutes(str: string): number {
   return adjustedHh * 60 + mm;
 }
 
-/**
- * Checks if a given half-hour range [startM, endM) is fully contained in at least one free interval.
- * If your intervals represent "free times," we need the entire half-hour to be free to return true.
- */
 function isRangeFree(court: Court, startM: number, endM: number): boolean {
   if (!Array.isArray(court.parsed_intervals)) return false;
-
-  // We treat each parsed interval as [intervalStart, intervalEnd)
-  // If we find an interval that completely covers [startM, endM), return true.
   return court.parsed_intervals.some((interval) => {
     const intervalStart = timeToMinutes(interval.start);
     const intervalEnd = timeToMinutes(interval.end);
-    // intervalStart <= startM and intervalEnd >= endM => fully covers that half hour
     return intervalStart <= startM && intervalEnd >= endM;
   });
 }
 
-/**
- * Returns a Tailwind color class depending on whether the hour is fully free, fully booked, or partially free.
- * - fully free => green
- * - fully booked => gray
- * - partially free => orange
- */
 function getHourAvailabilityColor(court: Court, hourSlot: string): string {
   const startM = timeToMinutes(hourSlot);
   const midM = startM + 30;
@@ -76,13 +56,10 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
   const half2Free = isRangeFree(court, midM, endM);
 
   if (half1Free && half2Free) {
-    // Entire hour is free
     return "bg-green-500 text-white";
   } else if (!half1Free && !half2Free) {
-    // Entire hour is booked
     return "bg-gray-300 text-gray-600";
   } else {
-    // One half is free, the other half is booked => partial
     return "bg-orange-300 text-orange-800";
   }
 }
@@ -90,17 +67,16 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
 export default function TennisCourtList() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [favoriteCourts, setFavoriteCourts] = useState<number[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     lights: false,
     hitting_wall: false,
     pickleball_lined: false,
   });
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hour boundaries (still on the hour)
   const timesInOneHour = [
     "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
     "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
@@ -108,7 +84,6 @@ export default function TennisCourtList() {
     "9:00 PM", "10:00 PM"
   ];
 
-  // Fetch tennis courts data from Supabase
   useEffect(() => {
     getTennisCourts()
       .then((data) => {
@@ -122,7 +97,6 @@ export default function TennisCourtList() {
       });
   }, []);
 
-  // Load favorites from localStorage
   useEffect(() => {
     const storedFavorites = localStorage.getItem("favoriteCourts");
     if (storedFavorites) {
@@ -130,7 +104,6 @@ export default function TennisCourtList() {
     }
   }, []);
 
-  // Toggle favorite
   const toggleFavorite = (courtId: number) => {
     const updated = favoriteCourts.includes(courtId)
       ? favoriteCourts.filter((id) => id !== courtId)
@@ -139,7 +112,6 @@ export default function TennisCourtList() {
     localStorage.setItem("favoriteCourts", JSON.stringify(updated));
   };
 
-  // Toggle filters
   const toggleFilter = (filter: keyof typeof filters) => {
     setFilters((prev) => ({
       ...prev,
@@ -147,7 +119,6 @@ export default function TennisCourtList() {
     }));
   };
 
-  // Toggle map expansion
   const toggleMapExpansion = (courtId: number) => {
     setExpandedMaps((prev) =>
       prev.includes(courtId)
@@ -156,7 +127,6 @@ export default function TennisCourtList() {
     );
   };
 
-  // Filter by search term + active filters
   const filtered = courts.filter((court) => {
     const matchesSearch = court.title
       ?.toLowerCase()
@@ -168,12 +138,11 @@ export default function TennisCourtList() {
     return matchesSearch && matchesFilters;
   });
 
-  // Sort so that favorited courts appear at the top; then sort A–Z
   const sorted = [...filtered].sort((a, b) => {
     const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
     const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
     if (aFav !== bFav) {
-      return bFav - aFav; // Favorites first
+      return bFav - aFav;
     }
     return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
@@ -185,7 +154,6 @@ export default function TennisCourtList() {
     year: "numeric",
   });
 
-  // Build Google Maps URL if needed
   const getGoogleMapsUrl = (court: Court): string => {
     if (court.google_maps_url && court.google_maps_url.trim() !== "") {
       return court.google_maps_url;
@@ -194,7 +162,6 @@ export default function TennisCourtList() {
     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   };
 
-  // Loading or error states
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -202,6 +169,7 @@ export default function TennisCourtList() {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -212,11 +180,9 @@ export default function TennisCourtList() {
 
   return (
     <div className="bg-white text-black min-h-screen p-2 sm:p-4 space-y-4">
-      {/* Sticky Header w/ Search + Filters */}
+      {/* Date & Search/Filter Section */}
       <div className="sticky top-0 bg-white z-10 pb-2 space-y-3">
-        <div className="text-2xl font-bold text-gray-800">
-          {todayDate}
-        </div>
+        <div className="text-2xl font-bold text-gray-800">{todayDate}</div>
 
         <div className="space-y-2">
           <input
@@ -227,7 +193,6 @@ export default function TennisCourtList() {
             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Filter Buttons */}
           <div className="grid grid-cols-3 gap-2">
             <Button
               onClick={() => toggleFilter("lights")}
@@ -265,17 +230,32 @@ export default function TennisCourtList() {
               <span className="text-sm">Wall</span>
             </Button>
           </div>
+        </div>
 
-          <div className="mt-2 text-left text-small text-gray-500">
-            <p>Gray = reserved, Green = free, Orange = partially free.</p>
-          </div>
-          <div className="mt-1 text-left text-small text-gray-500">
-            <p>Lights: Typically available March–October.</p>
-          </div>
+        {/* -- Color Key (new) -- */}
+        <div className="mt-2 p-4 bg-gray-50 border rounded text-sm text-gray-700">
+          <p>
+            <strong>Color Key:</strong>
+            <br />
+            <span className="block mt-1">
+              <span className="font-semibold">Green</span> = fully available
+            </span>
+            <span className="block">
+              <span className="font-semibold">Orange</span> = partially available
+            </span>
+            <span className="block">
+              <span className="font-semibold">Gray</span> = fully reserved
+            </span>
+          </p>
+        </div>
+
+        {/* Keep the note about lights if you want */}
+        <div className="mt-1 text-left text-small text-gray-500">
+          <p>Note: Lights are typically available March–October.</p>
         </div>
       </div>
 
-      {/* Court Cards */}
+      {/* Courts List */}
       {sorted.length === 0 ? (
         <div className="text-center text-lg text-gray-600 mt-8">
           No courts found matching your criteria.
@@ -284,7 +264,6 @@ export default function TennisCourtList() {
         <div className="space-y-4 mt-4">
           {sorted.map((court) => (
             <Card key={court.id} className="shadow-md overflow-hidden">
-              {/* Court Header */}
               <div className="p-3 border-b">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -308,7 +287,7 @@ export default function TennisCourtList() {
                   </div>
                 </div>
 
-                {/* Amenities Icons */}
+                {/* Amenities */}
                 <div className="flex flex-wrap gap-2 mt-2">
                   {court.lights && (
                     <div className="flex items-center gap-1">
@@ -332,7 +311,6 @@ export default function TennisCourtList() {
               </div>
 
               <CardContent className="p-3">
-                {/* Time Slots Grid */}
                 <div className="grid grid-cols-3 gap-2">
                   {timesInOneHour.map((timeSlot, idx) => {
                     const colorClass = getHourAvailabilityColor(court, timeSlot);
@@ -347,7 +325,6 @@ export default function TennisCourtList() {
                   })}
                 </div>
 
-                {/* Show / Hide Map Button */}
                 <Button
                   onClick={() => toggleMapExpansion(court.id)}
                   className="w-full mt-4 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200"
@@ -356,7 +333,6 @@ export default function TennisCourtList() {
                   {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
                 </Button>
 
-                {/* Expanded Map / Address */}
                 {expandedMaps.includes(court.id) && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 mb-2">{court.address}</p>
