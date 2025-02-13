@@ -142,7 +142,7 @@ export default function TennisCourtList() {
     const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
     const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
     if (aFav !== bFav) {
-      return bFav - aFav;
+      return bFav - aFav; // favorites first
     }
     return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
@@ -180,7 +180,7 @@ export default function TennisCourtList() {
 
   return (
     <div className="bg-white text-black min-h-screen p-2 sm:p-4 space-y-4">
-      {/* Date & Search/Filter Section */}
+      {/* Sticky header: Date, search, filters */}
       <div className="sticky top-0 bg-white z-10 pb-2 space-y-3">
         <div className="text-2xl font-bold text-gray-800">{todayDate}</div>
 
@@ -232,8 +232,11 @@ export default function TennisCourtList() {
           </div>
         </div>
 
-        {/* -- Color Key (new) -- */}
+        {/* Single box with the Note about Lights, plus the Color Key */}
         <div className="mt-2 p-4 bg-gray-50 border rounded text-sm text-gray-700">
+          <p className="mb-2">
+            <strong>Note:</strong> Lights are typically available March–October.
+          </p>
           <p>
             <strong>Color Key:</strong>
             <br />
@@ -247,11 +250,6 @@ export default function TennisCourtList() {
               <span className="font-semibold">Gray</span> = fully reserved
             </span>
           </p>
-        </div>
-
-        {/* Keep the note about lights if you want */}
-        <div className="mt-1 text-left text-small text-gray-500">
-          <p>Note: Lights are typically available March–October.</p>
         </div>
       </div>
 
