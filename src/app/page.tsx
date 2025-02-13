@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Generate local userId (for anonymous tracking) if not present
   useEffect(() => {
     const exemptPaths = ["/reset-password", "/login", "/signup", "/members"];
     if (exemptPaths.includes(pathname)) return;
@@ -25,6 +27,7 @@ export default function HomePage() {
     setUserId(storedId);
   }, [pathname]);
 
+  // Check paywall
   useEffect(() => {
     if (!userId || pathname === "/reset-password") return;
 
@@ -33,7 +36,6 @@ export default function HomePage() {
         await updateUserSession(userId);
         const res = await fetch(`/api/check-paywall?userId=${userId}`);
         const data = await res.json();
-
         if (data.showPaywall) {
           setShowPaywall(true);
         }
@@ -79,8 +81,12 @@ export default function HomePage() {
         </Button>
       </header>
 
-      {/* Color-coding Explainer */}
-      <div className="mb-4 p-4 bg-gray-50 border rounded text-sm text-gray-700">
+      <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
+        <TennisCourtList />
+      </Suspense>
+
+      {/* Color Key moved here, below the courts (and search bar inside TennisCourtList). */}
+      <div className="mt-4 p-4 bg-gray-50 border rounded text-sm text-gray-700">
         <p>
           <strong>Color Key:</strong>
           <br />
@@ -88,17 +94,13 @@ export default function HomePage() {
             <span className="font-semibold">Green</span> = fully available
           </span>
           <span className="block">
-            <span className="font-semibold">Orange</span> = partially available (e.g., half the hour)
+            <span className="font-semibold">Orange</span> = partially available
           </span>
           <span className="block">
             <span className="font-semibold">Gray</span> = fully reserved
           </span>
         </p>
       </div>
-
-      <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
-        <TennisCourtList />
-      </Suspense>
 
       <div className="mt-8 text-center space-x-4">
         <Button asChild className="gap-2">
