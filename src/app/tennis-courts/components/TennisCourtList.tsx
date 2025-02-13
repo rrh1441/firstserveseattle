@@ -244,7 +244,7 @@ export default function TennisCourtList() {
               <span className="font-semibold">Green</span> = fully available
             </span>
             <span className="block">
-              <span className="font-semibold">Orange</span> = partially available
+              <span className="font-semibold">Orange</span> = partially available (i.e. if 2pm and 3pm are orange, court is booked from 2:30-3:30)
             </span>
             <span className="block">
               <span className="font-semibold">Gray</span> = fully reserved
