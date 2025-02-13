@@ -51,10 +51,6 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      {/*
-        - The header is now flex-col by default and md:flex-row on larger devices.
-        - This places the button below the logo/name on mobile.
-      */}
       <header className="flex flex-col md:flex-row items-center justify-between mb-8">
         <div className="flex items-center gap-6">
           <Image
@@ -82,6 +78,23 @@ export default function HomePage() {
           </a>
         </Button>
       </header>
+
+      {/* Color-coding Explainer */}
+      <div className="mb-4 p-4 bg-gray-50 border rounded text-sm text-gray-700">
+        <p>
+          <strong>Color Key:</strong>
+          <br />
+          <span className="block mt-1">
+            <span className="font-semibold">Green</span> = fully available
+          </span>
+          <span className="block">
+            <span className="font-semibold">Orange</span> = partially available (e.g., half the hour)
+          </span>
+          <span className="block">
+            <span className="font-semibold">Gray</span> = fully reserved
+          </span>
+        </p>
+      </div>
 
       <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
         <TennisCourtList />
@@ -125,9 +138,6 @@ export default function HomePage() {
             Terms of Service
           </a>
         </div>
-        {/* 
-          - "Questions?" button linking to mailto for support email
-        */}
         <div className="mt-4">
           <Button asChild>
             <a href="mailto:support@firstserveseattle.com">Questions?</a>
