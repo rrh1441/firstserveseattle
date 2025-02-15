@@ -6,8 +6,8 @@ const TermsOfService = () => {
       <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
       <p className="mb-4"><strong>Effective Date:</strong> February 15, 2025</p>
       <p className="mb-6">
-        These Terms of Service ("Terms") govern your use of the First Serve Seattle app ("the App"),
-        owned and operated by Simple Apps, LLC ("we," "our," or "us"). By accessing or using the App,
+        These Terms of Service (&quot;Terms&quot;) govern your use of the First Serve Seattle app (&quot;the App&quot;),
+        owned and operated by Simple Apps, LLC (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). By accessing or using the App,
         you agree to these Terms. If you do not agree, please refrain from using the App.
       </p>
       
@@ -34,7 +34,7 @@ const TermsOfService = () => {
       <p className="mb-6">All content, features, and functionality of the App are owned by Simple Apps, LLC and protected by intellectual property laws.</p>
       
       <h2 className="text-2xl font-semibold mb-4">5. Limitation of Liability</h2>
-      <p className="mb-6">The App is provided "as is" without warranties of any kind. We are not liable for any damages resulting from your use of the App, to the fullest extent permitted by law.</p>
+      <p className="mb-6">The App is provided &quot;as is&quot; without warranties of any kind. We are not liable for any damages resulting from your use of the App, to the fullest extent permitted by law.</p>
       
       <h2 className="text-2xl font-semibold mb-4">6. Termination</h2>
       <ul className="list-disc list-inside mb-6">
@@ -49,7 +49,7 @@ const TermsOfService = () => {
       <p className="mb-6">These Terms are governed by the laws of the State of Wyoming, without regard to its conflict of laws principles.</p>
       
       <h2 className="text-2xl font-semibold mb-4">9. Ball Machine Rentals</h2>
-      <p className="mb-6">By renting the Proton Tennis Ball Machine (“Equipment”) from Seattle Tennis Ball Machine Rental, you (“Renter”) agree to the following terms and conditions:</p>
+      <p className="mb-6">By renting the Proton Tennis Ball Machine (&quot;Equipment&quot;) from Seattle Tennis Ball Machine Rental, you (&quot;Renter&quot;) agree to the following terms and conditions:</p>
       <ul className="list-disc list-inside mb-6">
         <li>The rental period begins at the time of pick-up/delivery and ends upon return.</li>
         <li>Late returns are subject to additional charges of $150 per hour.</li>
