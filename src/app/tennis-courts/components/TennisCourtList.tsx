@@ -25,6 +25,7 @@ interface Court {
   parsed_intervals: ParsedInterval[];
 }
 
+// Converts "1:00 PM" -> 780 minutes
 function timeToMinutes(str: string): number {
   if (!str) return -1;
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -38,6 +39,7 @@ function timeToMinutes(str: string): number {
   return adjustedHh * 60 + mm;
 }
 
+// Checks if a given time range is free for a court
 function isRangeFree(court: Court, startM: number, endM: number): boolean {
   if (!Array.isArray(court.parsed_intervals)) return false;
   return court.parsed_intervals.some((interval) => {
@@ -47,6 +49,7 @@ function isRangeFree(court: Court, startM: number, endM: number): boolean {
   });
 }
 
+// Gets the color class for a 1-hour block (with half-hour granularity)
 function getHourAvailabilityColor(court: Court, hourSlot: string): string {
   const startM = timeToMinutes(hourSlot);
   const midM = startM + 30;
@@ -76,6 +79,9 @@ export default function TennisCourtList() {
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Start expanded by default
+  const [infoBoxOpen, setInfoBoxOpen] = useState(true);
 
   const timesInOneHour = [
     "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
@@ -138,11 +144,12 @@ export default function TennisCourtList() {
     return matchesSearch && matchesFilters;
   });
 
+  // Sort favorites first, then alphabetically
   const sorted = [...filtered].sort((a, b) => {
     const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
     const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
     if (aFav !== bFav) {
-      return bFav - aFav; // favorites first
+      return bFav - aFav;
     }
     return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
@@ -214,7 +221,12 @@ export default function TennisCourtList() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <Image src="/icons/pickleballicon.png" alt="Pickleball" width={14} height={14} />
+              <Image
+                src="/icons/pickleballicon.png"
+                alt="Pickleball"
+                width={14}
+                height={14}
+              />
               <span className="text-sm">Pickle</span>
             </Button>
 
@@ -234,22 +246,34 @@ export default function TennisCourtList() {
 
         {/* Single box with the Note about Lights, plus the Color Key */}
         <div className="mt-2 p-4 bg-gray-50 border rounded text-sm text-gray-700">
-          <p className="mb-2">
-            <strong>Note:</strong> Lights are typically available March–October.
-          </p>
-          <p>
-            <strong>Color Key:</strong>
-            <br />
-            <span className="block mt-1">
-              <span className="font-semibold">Green</span> = fully available
-            </span>
-            <span className="block">
-              <span className="font-semibold">Orange</span> = partially available (i.e. if 2pm and 3pm are orange, court is booked from 2:30-3:30)
-            </span>
-            <span className="block">
-              <span className="font-semibold">Gray</span> = fully reserved
-            </span>
-          </p>
+          <div className="flex items-center justify-between mb-1">
+            <strong>Information</strong>
+            <Button variant="ghost" size="sm" onClick={() => setInfoBoxOpen(!infoBoxOpen)}>
+              {infoBoxOpen ? "Minimize" : "Expand"}
+            </Button>
+          </div>
+
+          {infoBoxOpen && (
+            <>
+              <p className="mb-2">
+                <strong>Note:</strong> Lights are typically available Mar–Oct
+              </p>
+              <p>
+                <strong>Color Key:</strong>
+                <br />
+                <span className="block mt-1">
+                  <span className="font-semibold">Green</span> = fully available
+                </span>
+                <span className="block">
+                  <span className="font-semibold">Orange</span> = partially available (i.e.
+                  if 2pm and 3pm are orange, court is booked from 2:30–3:30)
+                </span>
+                <span className="block">
+                  <span className="font-semibold">Gray</span> = fully reserved
+                </span>
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -295,7 +319,12 @@ export default function TennisCourtList() {
                   )}
                   {court.pickleball_lined && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/pickleballicon.png" alt="Pickleball" width={14} height={14} />
+                      <Image
+                        src="/icons/pickleballicon.png"
+                        alt="Pickleball"
+                        width={14}
+                        height={14}
+                      />
                       <span className="text-sm">Pickleball</span>
                     </div>
                   )}
