@@ -15,6 +15,7 @@ export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Certain paths are exempt from paywall checks
     const exemptPaths = ["/reset-password", "/login", "/signup", "/members"];
     if (exemptPaths.includes(pathname)) return;
 
@@ -74,9 +75,7 @@ export default function HomePage() {
           asChild
           className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white mt-4 md:mt-0"
         >
-          <a href="https://firstserveseattle.com/signup">
-            Get Unlimited Views
-          </a>
+          <a href="https://firstserveseattle.com/signup">Get Unlimited Views</a>
         </Button>
       </header>
 
@@ -84,6 +83,7 @@ export default function HomePage() {
         <TennisCourtList />
       </Suspense>
 
+      {/* Side-by-side buttons: future reservations & local tennis league */}
       <div className="mt-8 text-center space-x-4">
         <Button asChild className="gap-2">
           <a
@@ -107,6 +107,7 @@ export default function HomePage() {
         </Button>
       </div>
 
+      {/* Original footer with “Questions?” link */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex justify-center gap-4">
           <a
