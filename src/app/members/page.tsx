@@ -82,13 +82,12 @@ export default function MembersPage() {
             </p>
           </div>
         </div>
-        {/* Removed the "Manage Subscription" button previously here */}
       </header>
 
       <TennisCourtList />
 
-      {/* Button for future reservations */}
-      <div className="mt-8 text-center">
+      {/* Buttons styled as in page.tsx */}
+      <div className="mt-8 text-center space-x-4">
         <Button asChild className="gap-2">
           <a
             href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
@@ -99,16 +98,11 @@ export default function MembersPage() {
             <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
-      </div>
-
-      {/* "Join a Local Tennis League" link with black text */}
-      <div className="mt-4 text-center text-sm">
-        <Button asChild variant="link" className="gap-2">
+        <Button asChild className="gap-2">
           <a
             href="http://www.tennis-seattle.com?From=185415"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black hover:text-black transition-colors"
           >
             Join a Local Tennis League
             <ExternalLink className="h-4 w-4" />
@@ -116,7 +110,7 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Responsive Footer with inline links */}
+      {/* Responsive Footer with an additional Support link */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-4">
           <a
@@ -140,6 +134,14 @@ export default function MembersPage() {
             disabled={loadingPortal}
           >
             {loadingPortal ? "Loading..." : "Manage Your Subscription"}
+          </Button>
+          <span className="text-black hidden md:inline">|</span>
+          <Button
+            asChild
+            variant="link"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
+          >
+            <a href="mailto:support@firstserveseattle.com">Support</a>
           </Button>
         </div>
       </footer>
