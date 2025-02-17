@@ -33,7 +33,7 @@ export default function MembersPage() {
     checkSession();
   }, [router, supabase]);
 
-  // Handle the "Manage Subscription" button click by calling your API.
+  // Handle the "Manage Subscription" click by calling your API.
   async function handleManageSubscription() {
     setLoadingPortal(true);
     try {
@@ -82,13 +82,7 @@ export default function MembersPage() {
             </p>
           </div>
         </div>
-        <Button 
-          onClick={handleManageSubscription} 
-          disabled={loadingPortal}
-          className="bg-[#0c372b] hover:bg-[#0c372b]/90 text-white px-6 py-2 rounded-md"
-        >
-          {loadingPortal ? "Loading..." : "Manage Subscription"}
-        </Button>
+        {/* Removed the "Manage Subscription" button previously here */}
       </header>
 
       <TennisCourtList />
@@ -139,14 +133,14 @@ export default function MembersPage() {
             Terms of Service
           </a>
           <span className="text-black hidden md:inline">|</span>
-          <a
-            href="https://billing.stripe.com/p/login/bIYcNjb9M6id5Og7ss"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            onClick={handleManageSubscription}
+            variant="link"
             className="text-black hover:text-black transition-colors whitespace-nowrap"
+            disabled={loadingPortal}
           >
-            Manage Your Account
-          </a>
+            {loadingPortal ? "Loading..." : "Manage Your Subscription"}
+          </Button>
         </div>
       </footer>
     </div>
