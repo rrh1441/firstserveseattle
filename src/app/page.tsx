@@ -15,7 +15,7 @@ export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Certain paths are exempt from paywall checks
+    // Certain paths are exempt from paywall checks.
     const exemptPaths = ["/reset-password", "/login", "/signup", "/members"];
     if (exemptPaths.includes(pathname)) return;
 
@@ -107,24 +107,28 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {/* Original footer with “Questions?” link */}
+      {/* Footer with /members-like formatting but NO Manage Subscription link */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
-        <div className="flex justify-center gap-4">
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-4">
           <a
             href="/privacy-policy"
-            className="hover:text-black transition-colors"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Privacy Policy
           </a>
+          <span className="text-black hidden md:inline">|</span>
           <a
             href="/terms-of-service"
-            className="hover:text-black transition-colors"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
           >
             Terms of Service
           </a>
-        </div>
-        <div className="mt-4">
-          <Button asChild>
+          <span className="text-black hidden md:inline">|</span>
+          <Button
+            asChild
+            variant="link"
+            className="text-black hover:text-black transition-colors whitespace-nowrap"
+          >
             <a href="mailto:support@firstserveseattle.com">Questions?</a>
           </Button>
         </div>
