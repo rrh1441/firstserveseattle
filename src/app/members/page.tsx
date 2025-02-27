@@ -12,24 +12,22 @@ export default function MembersPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  // ----------------------------------------------------------------------
-  // Added state variables to handle loading, subscription status, etc.
-  // ----------------------------------------------------------------------
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  // Access token for the "Manage Subscription" portal link
   const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(
     null
   );
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // ----------------------------------------------------------------------
-  // 1. Check session + subscription status
+  // 1. Check session & subscription status on mount
   // ----------------------------------------------------------------------
   useEffect(() => {
     const checkSessionAndSubscription = async () => {
       try {
-        // First, get the session
+        // Get session
         const {
           data: { session },
           error: sessionError,
@@ -42,20 +40,16 @@ export default function MembersPage() {
           return;
         }
 
-        // If there's no session, redirect to login
+        // No session => must login
         if (!session) {
           router.push("/login");
           return;
         }
 
-        // Store the access token for later use (manage subscription portal)
+        // For manage-subscription portal
         setSessionAccessToken(session.access_token);
 
-        // ------------------------------------------------------------------
-        // Check subscription status in your `subscribers` table:
-        //  - The user's ID in Supabase is session.user.id
-        //  - We need the "status" field (should be "active" if subscription is good)
-        // ------------------------------------------------------------------
+        // 2. Check the subscription status in `subscribers` table
         const { data: subscriberData, error: subError } = await supabase
           .from("subscribers")
           .select("status")
@@ -63,22 +57,32 @@ export default function MembersPage() {
           .single();
 
         if (subError) {
-          console.error("Error fetching subscription status:", subError);
+          console.error("Error fetching subscriber row:", subError);
           setFetchError("Error retrieving subscription status.");
           setIsLoading(false);
           return;
         }
 
-        // If no row in `subscribers`, or status is not 'active', we treat it as unsubscribed
+        // If no row or not active => redirect user straight to Stripe checkout
+        // You can choose a default plan, e.g. "monthly".
         if (!subscriberData || subscriberData.status !== "active") {
-          // Immediately redirect to the paywall if subscription is not active
-          router.push("/signup?plan=monthly"); // or to any paywall page you prefer
+          const defaultPlan = "monthly"; // or "annual"
+
+          const response = await fetch("/api/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ plan: defaultPlan }),
+          });
+          if (!response.ok) {
+            throw new Error(`Cannot create checkout session: ${response.statusText}`);
+          }
+          const { url } = await response.json();
+          window.location.href = url;
           return;
         }
 
-        // If we got here, the user has an active subscription
-        setIsSubscriptionActive(true);
-      } catch (err) {
+        // If subscription is active, show the page
+      } catch (err: unknown) {
         console.error("Unhandled subscription check error:", err);
         setFetchError("An unexpected error occurred.");
       } finally {
@@ -90,7 +94,7 @@ export default function MembersPage() {
   }, [router, supabase]);
 
   // ----------------------------------------------------------------------
-  // 2. "Manage Subscription" portal link
+  // Manage Subscription portal link
   // ----------------------------------------------------------------------
   async function handleManageSubscription() {
     setPortalLoading(true);
@@ -99,7 +103,6 @@ export default function MembersPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Use "Bearer <token>" for Supabase to authenticate
           Authorization: sessionAccessToken ? `Bearer ${sessionAccessToken}` : "",
         },
       });
@@ -112,7 +115,9 @@ export default function MembersPage() {
       window.location.href = url;
     } catch (err) {
       console.error("Failed to create portal link:", err);
-      setFetchError(err instanceof Error ? err.message : "Portal link error.");
+      setFetchError(
+        err instanceof Error ? err.message : "Portal link error, please try again."
+      );
     } finally {
       setPortalLoading(false);
     }
@@ -122,7 +127,7 @@ export default function MembersPage() {
   // 3. Render states
   // ----------------------------------------------------------------------
   if (isLoading) {
-    return <div className="text-center py-8">Checking membership...</div>;
+    return <div className="text-center py-8">Checking membership status...</div>;
   }
 
   if (fetchError) {
@@ -133,15 +138,8 @@ export default function MembersPage() {
     );
   }
 
-  // If the subscription is not active, we already redirected,
-  // but just in case:
-  if (!isSubscriptionActive) {
-    return null; // or a backup message if needed
-  }
-
-  // ----------------------------------------------------------------------
-  // 4. The main members-only view
-  // ----------------------------------------------------------------------
+  // If subscription was inactive, we already redirected to Stripe checkout.
+  // If code reaches here, the user is active.
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
       <header className="flex justify-between items-center mb-8">
@@ -164,10 +162,9 @@ export default function MembersPage() {
         </div>
       </header>
 
-      {/* The members-only content */}
       <TennisCourtList />
 
-      {/* Buttons styled as in page.tsx */}
+      {/* Some extra calls to action, if desired */}
       <div className="mt-8 text-center space-x-4">
         <Button asChild className="gap-2">
           <a
@@ -191,7 +188,7 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Responsive Footer with an additional 'Manage Subscription' link */}
+      {/* Footer with 'Manage Subscription' */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-4">
           <a
