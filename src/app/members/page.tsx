@@ -11,37 +11,96 @@ import TennisCourtList from "../tennis-courts/components/TennisCourtList";
 export default function MembersPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
-  const [loading, setLoading] = useState(true);
-  const [loadingPortal, setLoadingPortal] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  // Check for an authenticated session and retrieve the access token.
+  // ----------------------------------------------------------------------
+  // Added state variables to handle loading, subscription status, etc.
+  // ----------------------------------------------------------------------
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(
+    null
+  );
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // ----------------------------------------------------------------------
+  // 1. Check session + subscription status
+  // ----------------------------------------------------------------------
   useEffect(() => {
-    async function checkSession() {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+    const checkSessionAndSubscription = async () => {
+      try {
+        // First, get the session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (error || !session) {
-        router.push("/login");
-      } else {
-        setAccessToken(session.access_token);
-        setLoading(false);
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          setFetchError("Error retrieving session.");
+          setIsLoading(false);
+          return;
+        }
+
+        // If there's no session, redirect to login
+        if (!session) {
+          router.push("/login");
+          return;
+        }
+
+        // Store the access token for later use (manage subscription portal)
+        setSessionAccessToken(session.access_token);
+
+        // ------------------------------------------------------------------
+        // Check subscription status in your `subscribers` table:
+        //  - The user's ID in Supabase is session.user.id
+        //  - We need the "status" field (should be "active" if subscription is good)
+        // ------------------------------------------------------------------
+        const { data: subscriberData, error: subError } = await supabase
+          .from("subscribers")
+          .select("status")
+          .eq("id", session.user.id)
+          .single();
+
+        if (subError) {
+          console.error("Error fetching subscription status:", subError);
+          setFetchError("Error retrieving subscription status.");
+          setIsLoading(false);
+          return;
+        }
+
+        // If no row in `subscribers`, or status is not 'active', we treat it as unsubscribed
+        if (!subscriberData || subscriberData.status !== "active") {
+          // Immediately redirect to the paywall if subscription is not active
+          router.push("/signup?plan=monthly"); // or to any paywall page you prefer
+          return;
+        }
+
+        // If we got here, the user has an active subscription
+        setIsSubscriptionActive(true);
+      } catch (err) {
+        console.error("Unhandled subscription check error:", err);
+        setFetchError("An unexpected error occurred.");
+      } finally {
+        setIsLoading(false);
       }
-    }
-    checkSession();
+    };
+
+    checkSessionAndSubscription();
   }, [router, supabase]);
 
-  // Handle the "Manage Subscription" click by calling your API.
+  // ----------------------------------------------------------------------
+  // 2. "Manage Subscription" portal link
+  // ----------------------------------------------------------------------
   async function handleManageSubscription() {
-    setLoadingPortal(true);
+    setPortalLoading(true);
     try {
       const response = await fetch("/api/create-portal-link", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          // Use "Bearer <token>" for Supabase to authenticate
+          Authorization: sessionAccessToken ? `Bearer ${sessionAccessToken}` : "",
         },
       });
 
@@ -53,15 +112,36 @@ export default function MembersPage() {
       window.location.href = url;
     } catch (err) {
       console.error("Failed to create portal link:", err);
+      setFetchError(err instanceof Error ? err.message : "Portal link error.");
     } finally {
-      setLoadingPortal(false);
+      setPortalLoading(false);
     }
   }
 
-  if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+  // ----------------------------------------------------------------------
+  // 3. Render states
+  // ----------------------------------------------------------------------
+  if (isLoading) {
+    return <div className="text-center py-8">Checking membership...</div>;
   }
 
+  if (fetchError) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        {fetchError} — please refresh or contact support.
+      </div>
+    );
+  }
+
+  // If the subscription is not active, we already redirected,
+  // but just in case:
+  if (!isSubscriptionActive) {
+    return null; // or a backup message if needed
+  }
+
+  // ----------------------------------------------------------------------
+  // 4. The main members-only view
+  // ----------------------------------------------------------------------
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
       <header className="flex justify-between items-center mb-8">
@@ -84,6 +164,7 @@ export default function MembersPage() {
         </div>
       </header>
 
+      {/* The members-only content */}
       <TennisCourtList />
 
       {/* Buttons styled as in page.tsx */}
@@ -110,7 +191,7 @@ export default function MembersPage() {
         </Button>
       </div>
 
-      {/* Responsive Footer with an additional Support link */}
+      {/* Responsive Footer with an additional 'Manage Subscription' link */}
       <footer className="mt-12 border-t pt-6 text-center text-sm">
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-4">
           <a
@@ -131,9 +212,9 @@ export default function MembersPage() {
             onClick={handleManageSubscription}
             variant="link"
             className="text-black hover:text-black transition-colors whitespace-nowrap"
-            disabled={loadingPortal}
+            disabled={portalLoading}
           >
-            {loadingPortal ? "Loading..." : "Manage Your Subscription"}
+            {portalLoading ? "Loading..." : "Manage Your Subscription"}
           </Button>
           <span className="text-black hidden md:inline">|</span>
           <Button
