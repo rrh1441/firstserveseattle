@@ -144,7 +144,8 @@ export default function MembersPage() {
   // If code reaches here, the user is active.
   return (
     <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      <header className="flex justify-between items-center mb-8">
+      {/* Use flex-col on small, row on md+ screens, with items centered */}
+      <header className="flex flex-col md:flex-row items-center md:justify-between mb-8 gap-4">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -162,10 +163,8 @@ export default function MembersPage() {
             </p>
           </div>
         </div>
-      </header>
 
-      {/* NEW TOP BUTTON */}
-      <div className="mb-8">
+        {/* Top "Manage Your Subscription" button aligned on the right for md+ */}
         <Button
           onClick={handleManageSubscription}
           className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white"
@@ -173,7 +172,7 @@ export default function MembersPage() {
         >
           {portalLoading ? "Loading..." : "Manage Your Subscription"}
         </Button>
-      </div>
+      </header>
 
       <TennisCourtList />
 
