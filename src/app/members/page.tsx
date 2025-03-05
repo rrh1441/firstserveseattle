@@ -74,7 +74,9 @@ export default function MembersPage() {
             body: JSON.stringify({ plan: defaultPlan }),
           });
           if (!response.ok) {
-            throw new Error(`Cannot create checkout session: ${response.statusText}`);
+            throw new Error(
+              `Cannot create checkout session: ${response.statusText}`
+            );
           }
           const { url } = await response.json();
           window.location.href = url;
@@ -161,6 +163,17 @@ export default function MembersPage() {
           </div>
         </div>
       </header>
+
+      {/* NEW TOP BUTTON */}
+      <div className="mb-8">
+        <Button
+          onClick={handleManageSubscription}
+          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white"
+          disabled={portalLoading}
+        >
+          {portalLoading ? "Loading..." : "Manage Your Subscription"}
+        </Button>
+      </div>
 
       <TennisCourtList />
 
