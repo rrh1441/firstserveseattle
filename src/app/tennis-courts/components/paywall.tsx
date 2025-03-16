@@ -93,12 +93,12 @@ export default function PaywallPage() {
             Create Account and Subscribe
           </Link>
 
-          <p className="text-xs text-center text-gray-500 mt-4">
+          <p className="text-xs text-center text-gray-500">
             Secure payment powered by Stripe. Cancel anytime.
           </p>
 
-          {/* Already subscribed? Sign in */}
-          <div className="text-center mt-4">
+          {/* Combined subscription/sign-in and support links */}
+          <div className="text-center mt-4 space-y-2">
             <p className="text-sm text-gray-600">
               Already subscribed?{" "}
               <Link
@@ -108,14 +108,10 @@ export default function PaywallPage() {
                 Sign in here
               </Link>
             </p>
-          </div>
-
-          {/* Email support link */}
-          <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
               Need help?{" "}
               <a
-                href="mailto:support@yourdomain.com"
+                href="mailto:support@firstserveseattle.com"
                 className="font-semibold text-blue-600 hover:underline"
               >
                 Contact support
