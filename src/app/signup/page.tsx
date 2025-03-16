@@ -185,26 +185,26 @@ export default function SignUpPage() {
               </button>
             </form>
             
-            <p className="mt-6 text-center">
-              Already have an account?{" "}
-              <a
-                href="https://www.firstserveseattle.com/login"
-                className="font-medium text-blue-600 hover:underline"
-              >
-                Sign In
-              </a>
-            </p>
-
-            {/* Assistance link */}
-            <p className="mt-4 text-center text-sm text-gray-600">
-              Need help?{" "}
-              <a
-                href="mailto:support@firstserveseattle.com"
-                className="font-medium text-blue-600 hover:underline"
-              >
-                Contact support
-              </a>
-            </p>
+            <div className="mt-6 text-center space-y-2">
+              <p className="text-sm">
+                Already have an account?{" "}
+                <a
+                  href="https://www.firstserveseattle.com/login"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Sign In
+                </a>
+              </p>
+              <p className="text-sm text-gray-600">
+                Need help?{" "}
+                <a
+                  href="mailto:support@firstserveseattle.com"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Contact support
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
