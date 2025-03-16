@@ -195,7 +195,7 @@ export default function SignUpPage() {
                   Sign In
                 </a>
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-black-600">
                 Need help?{" "}
                 <a
                   href="mailto:support@firstserveseattle.com"
