@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const PrivacyPolicy = () => {
   return (
@@ -115,18 +115,22 @@ const PrivacyPolicy = () => {
         </Card>
       </div>
     </div>
-  )
-}
+  );
+};
 
 // Helper component for sections
-const Section = ({ title, children }) => {
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const Section: React.FC<SectionProps> = ({ title, children }) => {
   return (
     <div className="space-y-3">
       <h2 className="text-2xl font-semibold text-slate-800">{title}</h2>
       <div className="text-slate-700">{children}</div>
     </div>
-  )
-}
+  );
+};
 
-export default PrivacyPolicy
-
+export default PrivacyPolicy;
