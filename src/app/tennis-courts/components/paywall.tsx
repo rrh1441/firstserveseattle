@@ -109,6 +109,19 @@ export default function PaywallPage() {
               </Link>
             </p>
           </div>
+
+          {/* Email support link */}
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              Need help?{" "}
+              <a
+                href="mailto:support@yourdomain.com"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                Contact support
+              </a>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
