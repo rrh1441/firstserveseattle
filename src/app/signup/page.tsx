@@ -194,6 +194,17 @@ export default function SignUpPage() {
                 Sign In
               </a>
             </p>
+
+            {/* Assistance link */}
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Need help?{" "}
+              <a
+                href="mailto:support@firstserveseattle.com"
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Contact support
+              </a>
+            </p>
           </div>
         </div>
       </div>

@@ -86,6 +86,17 @@ export default function LoginPage() {
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>
+
+        {/* Assistance link */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Need help?{" "}
+          <a
+            href="mailto:support@firstserveseattle.com"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            Contact support
+          </a>
+        </p>
       </form>
     </div>
   );
