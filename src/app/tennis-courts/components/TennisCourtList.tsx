@@ -71,7 +71,7 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
   }
 }
 
-// AboutUsModal component that renders a popup modal with the About Us information.
+// AboutUsModal component that renders a popup modal with the About Us / Key information.
 function AboutUsModal({
   isOpen,
   onClose,
@@ -84,7 +84,7 @@ function AboutUsModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">About Us</h2>
+          <h2 className="text-xl font-bold">About Us / Key</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 focus:outline-none"
@@ -96,15 +96,17 @@ function AboutUsModal({
           <div>
             <h3 className="text-lg font-bold">First Serve Seattle</h3>
             <p>
-              Tired of wondering if your favorite tennis court will be free? Ditch
-              the old reservation maze and let First Serve Seattle serve you the
-              real-time scoop. Every day, we dish out a live list of available
-              public tennis courts in Seattle—so you can always find a spot to play,
-              even when the system locks down at midnight.
+              Tired of wondering if your favorite tennis court will be free? Ditch the old reservation maze and use First Serve Seattle.
+            </p>
+            <p className="mt-2">
+              Every day, we provide a list of all available public tennis courts in Seattle so you can always find a spot to play.
             </p>
           </div>
           <div className="bg-gray-50 p-4 border rounded text-sm text-gray-700">
             <strong>Key Information</strong>
+            <p className="mt-2">
+              <strong>Note:</strong> Lights are typically available Mar–Oct.
+            </p>
             <p className="mt-2">
               <strong>Color Key:</strong>
               <br />
@@ -264,7 +266,7 @@ export default function TennisCourtList() {
         onClose={() => setAboutModalOpen(false)}
       />
 
-      {/* Sticky header: Date, search, filters, and About Us button */}
+      {/* Sticky header: Date, search, filters, and About Us / Key button */}
       <div className="sticky top-0 bg-white z-10 pb-2 space-y-3 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-2xl font-bold text-gray-800">{todayDate}</div>
@@ -329,12 +331,13 @@ export default function TennisCourtList() {
           </div>
         </div>
 
-        <div className="mt-2 sm:mt-0">
+        {/* Center the button on mobile with mx-auto and keep original on larger screens */}
+        <div className="mt-2 sm:mt-0 mx-auto sm:mx-0">
           <Button
             onClick={() => setAboutModalOpen(true)}
             className="bg-blue-500 text-white hover:bg-blue-600"
           >
-            About Us
+            About Us / Key
           </Button>
         </div>
       </div>
