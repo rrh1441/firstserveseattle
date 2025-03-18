@@ -119,6 +119,16 @@ function AboutUsModal({
             </p>
           </div>
         </div>
+        <div className="mt-6 flex justify-center">
+          <Button
+            onClick={() =>
+              window.location.href = "https://www.firstserveseattle.com/signup"
+            }
+            className="bg-blue-500 text-white hover:bg-blue-600 focus:outline-none"
+          >
+            Get Unlimited Views
+          </Button>
+        </div>
       </div>
     </div>
   );
