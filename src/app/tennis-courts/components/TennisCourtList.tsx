@@ -105,9 +105,6 @@ function AboutUsModal({
           <div className="bg-gray-50 p-4 border rounded text-sm text-gray-700">
             <strong>Key Information</strong>
             <p className="mt-2">
-              <strong>Note:</strong> Lights are typically available Mar–Oct.
-            </p>
-            <p className="mt-2">
               <strong>Color Key:</strong>
               <br />
               <span className="block mt-1">
@@ -331,11 +328,11 @@ export default function TennisCourtList() {
           </div>
         </div>
 
-        {/* Center the button on mobile with mx-auto and keep original on larger screens */}
+        {/* Center the About Us / Key button on mobile with mx-auto and keep original on larger screens */}
         <div className="mt-2 sm:mt-0 mx-auto sm:mx-0">
           <Button
             onClick={() => setAboutModalOpen(true)}
-            className="bg-blue-500 text-white hover:bg-blue-600"
+            className="bg-[#304c44] text-white hover:bg-[#304c44] focus:outline-none"
           >
             About Us / Key
           </Button>
