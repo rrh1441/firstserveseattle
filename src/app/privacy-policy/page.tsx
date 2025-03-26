@@ -21,7 +21,7 @@ const PrivacyPolicy = () => {
                   Simple Apps, LLC (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your
                   privacy. This Privacy Policy outlines how we collect, use, and safeguard your information when you use
                   the First Serve Seattle app (&quot;the App&quot;). By using the App, you agree to the terms of this
-                  Privacy Policy.
+                  Privacy Policy. 
                 </p>
               </div>
 
