@@ -1,5 +1,5 @@
+// src/app/layout.tsx
 import { Analytics } from "@vercel/analytics/react";
-// No need to import 'Script' if placing directly in <head>
 import "./globals.css";
 
 export const metadata = {
@@ -15,19 +15,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Metadata tags (like title, description) are automatically 
-          handled by Next.js based on the 'metadata' export above. 
-          Only add tags here that aren't covered by the metadata object.
-        */}
+        {/* Metadata tags */}
 
-        {/* Your DataFast script, correctly formatted for TSX/JSX */}
+        {/* === ADDED DATAFAST SCRIPT HERE === */}
         <script
           defer
-          data-website-id="67e42faaad4cc8e626767b22"
-          data-domain="firstserveseattle.com"
+          data-website-id="67e42faaad4cc8e626767b22" // Replace if you get a different ID
+          data-domain="firstserveseattle.com" // Replace if your domain changes
           src="https://datafa.st/js/script.js"
-        ></script> 
-        {/* You can use self-closing <script ... /> if preferred, but <script></script> is also valid */}
+        ></script>
+        {/* =================================== */}
 
       </head>
       <body>

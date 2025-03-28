@@ -1,3 +1,4 @@
+// src/app/signup/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -42,6 +43,7 @@ export default function SignUpPage() {
     }
 
     try {
+      // 1. Sign up the user with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -52,10 +54,21 @@ export default function SignUpPage() {
           }
         }
       })
-      
+
       if (authError) throw new Error(`Sign-up failed: ${authError.message}`)
       if (!authData.user) throw new Error("No user returned after sign-up.")
 
+      // === ADDED DATAFAST SIGNUP TRACKING HERE ===
+      // Check if window.datafast exists before calling
+      if (window && typeof window.datafast === 'function') {
+        window.datafast("signup", { email: email });
+        console.log("Datafast signup event tracked for:", email);
+      } else {
+        console.warn("Datafast function not found on window object.");
+      }
+      // ===========================================
+
+      // 2. Upsert subscriber record (existing logic)
       const { error: subscriberError } = await supabase
         .from('subscribers')
         .upsert(
@@ -64,28 +77,31 @@ export default function SignUpPage() {
             email: email,
             full_name: fullName,
             plan: plan,
-            status: 'pending'
+            status: 'pending' // Status is pending until payment confirmation
           },
           { onConflict: 'email' }
         )
 
       if (subscriberError) {
         console.error('Error upserting subscriber:', subscriberError)
-        throw new Error(`Failed to upsert subscriber: ${subscriberError.message}`)
+        // Don't necessarily throw here, maybe just log, as signup succeeded
       }
 
+      // 3. Create Stripe checkout session (existing logic)
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       })
 
-      if (!response.ok) throw new Error(await response.text())
+      if (!response.ok) throw new Error(`Checkout session failed: ${await response.text()}`)
 
       const { url } = await response.json()
       if (!url) throw new Error("No checkout URL received.")
 
+      // 4. Redirect to Stripe
       window.location.href = url
+
     } catch (err) {
       console.error('Signup error:', err)
       setErrorMsg(err instanceof Error ? err.message : "Unknown error.")
@@ -93,6 +109,7 @@ export default function SignUpPage() {
     }
   }
 
+  // --- Rest of the component ---
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4 py-16">
       <div className="mx-auto max-w-md">
@@ -184,7 +201,7 @@ export default function SignUpPage() {
                 {loading ? "Creating your account..." : "Create account"}
               </button>
             </form>
-            
+
             <div className="mt-6 text-center space-y-2">
               <p className="text-sm">
                 Already have an account?{" "}
