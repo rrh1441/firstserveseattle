@@ -1,7 +1,7 @@
 // src/app/api/create-checkout-session/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers"; // Keep the import
+import { cookies } from "next/headers";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 const SUCCESS_URL = "https://www.firstserveseattle.com/login";
@@ -10,7 +10,6 @@ const CANCEL_URL = "https://firstserveseattle.com";
 const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
 const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
 
-// Ensure the function is async (it already was, which is good)
 export async function POST(request: Request) {
   try {
     const { plan } = (await request.json()) as { plan?: string };
@@ -22,17 +21,19 @@ export async function POST(request: Request) {
     const priceId = plan === "annual" ? ANNUAL_ID : MONTHLY_ID;
 
     const stripe = new Stripe(STRIPE_SECRET_KEY, {
+      // === KEPT YOUR SPECIFIED API VERSION ===
       apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
+      // ======================================
     });
 
-    // === CORRECTED: Await the cookies() promise ===
-    const cookieStore = await cookies(); // <--- Added await here
+    const cookieStore = await cookies();
     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
     const sessionId = cookieStore.get('datafast_session_id')?.value;
-    // ============================================
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      // === REMOVED: payment_method_types based on the previous type error ===
+      // payment_method_types: ["card"],
+      // ====================================================================
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       allow_promotion_codes: true,
