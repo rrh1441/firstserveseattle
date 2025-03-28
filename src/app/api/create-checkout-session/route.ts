@@ -1,7 +1,7 @@
 // src/app/api/create-checkout-session/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers"; // <-- Import cookies
+import { cookies } from "next/headers"; // Keep the import
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 const SUCCESS_URL = "https://www.firstserveseattle.com/login";
@@ -10,6 +10,7 @@ const CANCEL_URL = "https://firstserveseattle.com";
 const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
 const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
 
+// Ensure the function is async (it already was, which is good)
 export async function POST(request: Request) {
   try {
     const { plan } = (await request.json()) as { plan?: string };
@@ -24,11 +25,11 @@ export async function POST(request: Request) {
       apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
     });
 
-    // === ADDED: Get Datafast cookies ===
-    const cookieStore = cookies();
+    // === CORRECTED: Await the cookies() promise ===
+    const cookieStore = await cookies(); // <--- Added await here
     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
     const sessionId = cookieStore.get('datafast_session_id')?.value;
-    // =====================================
+    // ============================================
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -38,11 +39,9 @@ export async function POST(request: Request) {
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       metadata: {
-        plan, // Keep existing metadata
-        // === ADDED: Datafast metadata ===
-        visitorId: visitorId ?? undefined, // Pass as visitorId or undefined
-        sessionId: sessionId ?? undefined // Pass as sessionId or undefined
-        // ==============================
+        plan,
+        visitorId: visitorId ?? undefined,
+        sessionId: sessionId ?? undefined
       },
     });
 
