@@ -1,17 +1,15 @@
 /* src/app/api/create-checkout-session/route.ts */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers"; // Import cookies function
+import { cookies } from "next/headers";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 const SUCCESS_URL = "https://www.firstserveseattle.com/members";
 const CANCEL_URL = "https://www.firstserveseattle.com/";
 
-// Verify these Price IDs are correct in your Stripe account
 const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
 const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
 
-// Verify this Coupon ID is correct in your Stripe account
 const FIRST_MONTH_50_OFF_COUPON_ID = "8m1czvbe";
 
 export async function POST(request: Request) {
@@ -30,10 +28,9 @@ export async function POST(request: Request) {
       apiVersion: '2025-02-24.acacia',
     });
 
-     // Retrieve cookies for potential metadata - ADD AWAIT HERE
-     const cookieStore = await cookies(); // <<<< ADDED await
-     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
-     const sessionId = cookieStore.get('datafast_session_id')?.value;
+     const cookieStore = await cookies();
+     const visitorId = cookieStore.get('datafast_visitor_id')?.value; // Type: string | undefined
+     const sessionId = cookieStore.get('datafast_session_id')?.value; // Type: string | undefined
 
     // Prepare parameters for the Stripe Checkout Session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -44,8 +41,9 @@ export async function POST(request: Request) {
       cancel_url: CANCEL_URL,
       metadata: {
         plan: selectedPlan,
-        visitorId: visitorId ?? undefined,
-        sessionId: sessionId ?? undefined
+        // Use ?? null to convert undefined to null for Stripe metadata compatibility
+        visitorId: visitorId ?? null, // <<<< CHANGED undefined to null
+        sessionId: sessionId ?? null  // <<<< CHANGED undefined to null
       },
     };
 
