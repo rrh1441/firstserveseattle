@@ -1,13 +1,13 @@
 // src/app/signup/page.tsx
 "use client"
 
-import { useState } from "react" // Removed unused useEffect import
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import Image from "next/image"; // Import Image
-import Link from "next/link"; // Import Link
-import { PlanSelector } from "@/components/PlanSelector"; // Import the PlanSelector
-import { Eye, EyeOff } from 'lucide-react'; // For password visibility
+import Image from "next/image";
+import Link from "next/link";
+import { PlanSelector } from "@/components/PlanSelector";
+import { Eye, EyeOff } from 'lucide-react';
 
 const features = [ // Keep features consistent with Paywall
   "See today's availability for ALL public courts",
@@ -17,13 +17,16 @@ const features = [ // Keep features consistent with Paywall
   "Priority customer support",
 ];
 
+// Define the specific type for the plan state
+type PlanType = "monthly" | "annual";
+
 export default function SignUpPage() {
   const searchParams = useSearchParams()
   const initialPlanParam = searchParams.get("plan")
-  const headlineGroupParam = searchParams.get("headline_group"); // Get headline group if passed
+  const headlineGroupParam = searchParams.get("headline_group");
 
-  // Default to monthly unless 'annual' is explicitly in the URL param
-  const [plan, setPlan] = useState(initialPlanParam === "annual" ? "annual" : "monthly")
+  // Explicitly type the useState hook
+  const [plan, setPlan] = useState<PlanType>(initialPlanParam === "annual" ? "annual" : "monthly");
 
   const supabase = createClientComponentClient()
   const [fullName, setFullName] = useState("")
@@ -69,8 +72,6 @@ export default function SignUpPage() {
         options: {
           data: {
             full_name: fullName,
-            // Optionally store initial plan choice or other metadata if needed
-            // plan: plan // Storing plan here might be redundant if 'subscribers' table is source of truth
           }
         }
       })
@@ -78,7 +79,7 @@ export default function SignUpPage() {
       if (authError) throw new Error(`Sign-up failed: ${authError.message}`)
       if (!authData.user) throw new Error("No user returned after sign-up.")
 
-      // === Datafast Signup Tracking (Keep as is) ===
+      // === Datafast Signup Tracking ===
       if (window && typeof window.datafast === 'function') {
         window.datafast("signup", { email: email });
         console.log("Datafast signup event tracked for:", email);
@@ -87,40 +88,31 @@ export default function SignUpPage() {
       }
       // ===========================================
 
-      // 2. Upsert subscriber record (Keep as is - sets status to 'pending')
+      // 2. Upsert subscriber record
       const { error: subscriberError } = await supabase
         .from('subscribers')
         .upsert(
           {
-            id: authData.user.id, // Ensure primary key matches auth user id
+            id: authData.user.id,
             email: email,
             full_name: fullName,
-            plan: plan, // Store the plan they are *intending* to purchase
-            status: 'pending', // Status is pending until payment confirmation
-            // Add headline group if tracking required here
-            // paywall_headline_group: headlineGroupParam,
-             created_at: new Date().toISOString(), // Good practice to add timestamps
+            plan: plan, // Store the intended plan
+            status: 'pending',
+             created_at: new Date().toISOString(),
              updated_at: new Date().toISOString(),
           },
-          { onConflict: 'email' } // Assumes email is unique constraint key for upsert
+          { onConflict: 'email' }
         )
 
       if (subscriberError) {
         console.error('Error upserting subscriber record:', subscriberError);
-        // Decide if this is a critical failure. Signup succeeded, maybe log and continue.
-        // throw new Error(`Database error after signup: ${subscriberError.message}`);
       }
 
-      // 3. Create Stripe checkout session (Passes the selected 'plan')
+      // 3. Create Stripe checkout session
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Body includes the selected plan
-        body: JSON.stringify({
-             plan: plan,
-             // Pass headline group to Stripe metadata if needed for tracking/analytics
-             // metadata: { paywall_headline_group: headlineGroupParam }
-             }),
+        body: JSON.stringify({ plan: plan }),
       })
 
       if (!response.ok) {
@@ -132,14 +124,13 @@ export default function SignUpPage() {
       if (!url) throw new Error("No checkout URL received from server.")
 
       // --- Optional: Track conversion intention ---
-      // Send event BEFORE redirecting
        if (window && typeof window.datafast === 'function') {
         window.datafast('event', {
             name: 'InitiateCheckout',
             properties: {
                 plan: plan,
-                paywall_headline_group: headlineGroupParam, // Include if tracking
-                email: email // Link event to user
+                paywall_headline_group: headlineGroupParam,
+                email: email
             }
         });
         console.log("Datafast InitiateCheckout event tracked.");
@@ -153,9 +144,8 @@ export default function SignUpPage() {
     } catch (err) {
       console.error('Signup or Checkout Error:', err)
       setErrorMsg(err instanceof Error ? err.message : "An unknown error occurred during signup.")
-      setLoading(false) // Ensure loading stops on error
+      setLoading(false)
     }
-     // No finally block needed here as redirect happens on success
   }
 
    const togglePasswordVisibility = () => {
@@ -167,15 +157,15 @@ export default function SignUpPage() {
        {/* Logo */}
         <div className="flex justify-center mb-8">
            <Image
-             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg" // Use your logo URL
+             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
              alt="First Serve Seattle Logo"
-             width={80} // Adjust size as needed
+             width={80}
              height={80}
              priority
            />
         </div>
 
-      <div className="mx-auto max-w-lg"> {/* Increased max-width slightly */}
+      <div className="mx-auto max-w-lg">
         <div className="overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100">
           <div className="px-6 py-8 sm:px-10">
              <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 mb-2">Choose Your Plan</h2>
@@ -184,8 +174,8 @@ export default function SignUpPage() {
             {/* Render PlanSelector Here */}
             <div className="mb-10">
                  <PlanSelector
-                   selectedPlan={plan}
-                   onPlanSelect={setPlan} // Pass the state setter
+                   selectedPlan={plan} // This now passes the correctly typed state
+                   onPlanSelect={setPlan}
                    features={features}
                  />
             </div>
@@ -264,7 +254,6 @@ export default function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                // Consistent primary button style
                 className="w-full rounded-lg bg-[#0c372b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
