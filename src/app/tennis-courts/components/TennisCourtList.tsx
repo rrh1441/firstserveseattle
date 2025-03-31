@@ -74,7 +74,7 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
 }
 
 
-// --- AboutUsModal Component Definition (with updates) ---
+// --- CORRECTED AboutUsModal Component Definition ---
 function AboutUsModal({
   isOpen,
   onClose,
@@ -126,21 +126,23 @@ function AboutUsModal({
                 <h2 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
                     Spend Less Time Searching, <br /> More Time Playing!
                 </h2>
-                {/* UPDATED: Removed date from sub-headline */}
                 <p className="mt-2 text-base text-gray-600">
                     Your daily guide to open courts in Seattle.
                 </p>
             </div>
             <div className="space-y-6">
+                {/* How It Works Section */}
                 <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1 text-blue-600"> <Info size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">How It Works</h3>
+                        {/* UPDATED: Escaped apostrophe */}
                         <p className="text-sm text-gray-600 leading-relaxed">
-                           First Serve Seattle checks the official Parks reservation system each morning to show you today's available public tennis and pickleball courts for walk-on play. No more guesswork!
+                           First Serve Seattle checks the official Parks reservation system each morning to show you today&apos;s available public tennis and pickleball courts for walk-on play. No more guesswork!
                         </p>
                     </div>
                 </div>
+                {/* Availability Key Section */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <KeyRound size={18} className="text-gray-600" />
@@ -163,17 +165,18 @@ function AboutUsModal({
                             <span className="text-gray-600">Fully Reserved</span>
                         </div>
                     </div>
-                     {/* UPDATED: Disclaimer text */}
                     <p className="text-xs text-gray-500 mt-3 pt-2 border-t border-gray-200">
                         Availability based on schedule data checked this morning. Real-time court status may vary due to recent bookings or walk-ons.
                     </p>
                 </div>
+                {/* Booking Ahead Section */}
                  <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1 text-orange-600"> <AlertTriangle size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">Booking Ahead?</h3>
+                        {/* UPDATED: Escaped apostrophe */}
                         <p className="text-sm text-gray-600 leading-relaxed">
-                            This app shows <span className="font-medium">today's</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
+                            This app shows <span className="font-medium">today&apos;s</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
                             <a href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                                 Seattle Parks Reservation Site
                             </a>.
@@ -182,6 +185,7 @@ function AboutUsModal({
                 </div>
             </div>
         </div>
+        {/* Modal Footer */}
         <div className="p-6 pt-4 bg-gray-50 border-t border-gray-200 mt-auto">
             <Button
                 onClick={() => window.location.href = "/signup"}
@@ -270,7 +274,6 @@ export default function TennisCourtList() {
      }
      const address = court.address || court.title || 'Seattle Tennis Court';
      const encodedAddress = encodeURIComponent(address);
-      // Standard Google Maps search query URL
      return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
    };
 
@@ -293,12 +296,11 @@ export default function TennisCourtList() {
     return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
 
-   // Use dynamic date fetching, but format it simply
    const today = new Date();
    const todayDate = today.toLocaleDateString("en-US", {
-        weekday: 'long', // e.g., Monday
-        month: 'long',   // e.g., March
-        day: 'numeric'   // e.g., 31
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
    });
 
 
@@ -384,7 +386,6 @@ export default function TennisCourtList() {
               <div className="p-3 border-b border-gray-100 bg-gray-50/60">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    {/* UPDATED: Removed hover effect from h3 */}
                     <h3 className="text-base font-semibold truncate text-gray-800">
                         {court.title}
                     </h3>
@@ -423,7 +424,6 @@ export default function TennisCourtList() {
                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1.5">
                    {timesInOneHour.map((timeSlot, idx) => {
                      const colorClass = getHourAvailabilityColor(court, timeSlot);
-                     // UPDATED: Time format e.g., "7am", "12pm", "2pm"
                      const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
                      return (
                        <div
