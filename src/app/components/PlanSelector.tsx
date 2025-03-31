@@ -3,8 +3,7 @@
 
 import React from "react";
 import { Check, Sparkles } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"; // Assuming path from original paywall
-import { Button } from "@/components/ui/button"; // Use your Button component
+// Removed unused imports: Card, CardContent, CardDescription, CardHeader, CardTitle, Button
 import { cn } from "@/lib/utils"; // Utility for class names
 
 interface PlanSelectorProps {

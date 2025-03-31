@@ -1,7 +1,7 @@
 // src/app/signup/page.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react" // Removed unused useEffect import
 import { useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Image from "next/image"; // Import Image
