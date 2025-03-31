@@ -83,30 +83,24 @@ function AboutUsModal({
   onClose: () => void;
 }) {
 
-  // --- FIX: Moved useEffect hook BEFORE the early return ---
-  // This hook handles body scroll lock/unlock
+  // Body scroll lock/unlock effect
   useEffect(() => {
     if (isOpen) {
-      // Prevent scrolling on mount
       document.body.style.overflow = 'hidden';
     } else {
-      // Re-enable scrolling if modal was open but now isn't
       document.body.style.overflow = 'unset';
     }
-    // Cleanup function to re-enable scrolling when component unmounts
-    // or when isOpen becomes false
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]); // Dependency array ensures this runs when isOpen changes
-  // --- END FIX ---
+  }, [isOpen]);
 
 
   // Early return if modal is not open
   if (!isOpen) return null;
 
 
-  // Modal JSX (remains the same as the previous good version)
+  // Modal JSX
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in-0 duration-300"
@@ -137,6 +131,7 @@ function AboutUsModal({
                     Spend Less Time Searching, <br /> More Time Playing!
                 </h2>
                 <p className="mt-2 text-base text-gray-600">
+                    {/* Using specific date */}
                     Your daily guide to open courts in Seattle (Monday, March 31).
                 </p>
             </div>
@@ -360,7 +355,7 @@ export default function TennisCourtList() {
                      })}
                  </div>
              </div>
-             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start">
+             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-end">
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
@@ -401,22 +396,24 @@ export default function TennisCourtList() {
                      </div>
                   </div>
                   <div className="flex-shrink-0">
+                    {/* --- CORRECTED FAVORITE BUTTON --- */}
                     <Button
                       variant="ghost"
-                      size="icon"
+                      // Removed invalid size="icon" prop
                       onClick={() => toggleFavorite(court.id)}
-                       className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150"
+                       className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150" // Applied size via className
                        aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
                     >
                       <Star
                          size={18}
                         className={`transition-colors duration-150 ${
                           favoriteCourts.includes(court.id)
-                            ? "fill-yellow-400 text-yellow-500"
-                            : ""
+                            ? "fill-yellow-400 text-yellow-500" // Apply fill directly when favorited
+                            : "" // Rely on hover styles for non-favorited state
                         }`}
                       />
                     </Button>
+                    {/* --- END CORRECTION --- */}
                   </div>
                 </div>
               </div>
