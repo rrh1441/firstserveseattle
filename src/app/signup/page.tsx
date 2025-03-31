@@ -7,9 +7,9 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Image from "next/image";
 import Link from "next/link";
 import { PlanSelector } from "@/components/PlanSelector";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react'; // Added Check and X icons
 
-const features = [ // Keep features consistent with Paywall
+const features = [
   "See today's availability for ALL public courts",
   "Filter courts by lights, pickleball lines, hitting walls",
   "Save your favorite courts for quick access",
@@ -17,15 +17,28 @@ const features = [ // Keep features consistent with Paywall
   "Priority customer support",
 ];
 
-// Define the specific type for the plan state
 type PlanType = "monthly" | "annual";
+
+// Define requirement structure
+interface PasswordRequirement {
+    id: string; // Unique key for mapping
+    regex: RegExp;
+    message: string;
+}
+
+// Password requirements definitions
+const passwordRequirements: PasswordRequirement[] = [
+    { id: 'length', regex: /.{6,}/, message: "At least 6 characters" },
+    { id: 'lowercase', regex: /[a-z]/, message: "At least one lowercase letter" },
+    { id: 'uppercase', regex: /[A-Z]/, message: "At least one uppercase letter" },
+    { id: 'digit', regex: /\d/, message: "At least one digit" },
+];
 
 export default function SignUpPage() {
   const searchParams = useSearchParams()
   const initialPlanParam = searchParams.get("plan")
   const headlineGroupParam = searchParams.get("headline_group");
 
-  // Explicitly type the useState hook
   const [plan, setPlan] = useState<PlanType>(initialPlanParam === "annual" ? "annual" : "monthly");
 
   const supabase = createClientComponentClient()
@@ -36,34 +49,40 @@ export default function SignUpPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // Password requirements (keep for validation logic)
-   const passwordRequirements = [
-     { regex: /.{6,}/, message: "At least 6 characters" },
-     { regex: /[a-z]/, message: "At least one lowercase letter" },
-     { regex: /[A-Z]/, message: "At least one uppercase letter" },
-     { regex: /\d/, message: "At least one digit" },
-     // Add symbol requirement if needed: { regex: /[!@#$%^&*(),.?":{}|<>]/, message: "At least one symbol" }
-   ]
+  // --- State for tracking met password requirements ---
+  const [metRequirements, setMetRequirements] = useState<string[]>([]);
 
-   const validatePassword = (pwd: string): string[] => {
-     return passwordRequirements
-       .filter(req => !req.regex.test(pwd))
-       .map(req => req.message)
-   }
+  // Function to validate password and update met requirements state
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newPassword = e.target.value;
+      setPassword(newPassword);
+
+      const currentlyMet = passwordRequirements
+          .filter(req => req.regex.test(newPassword))
+          .map(req => req.id); // Store IDs of met requirements
+      setMetRequirements(currentlyMet);
+  };
+
+  // Function to check if all requirements are met (used for form validation)
+  const allPasswordRequirementsMet = () => {
+      return passwordRequirements.every(req => metRequirements.includes(req.id));
+  };
+
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setLoading(true)
-    setErrorMsg("")
+    setErrorMsg("") // Clear previous errors
 
-    const pwdErrors = validatePassword(password)
-    if (pwdErrors.length > 0) {
-       // More user-friendly display of errors
-       setErrorMsg(`Password needs: ${pwdErrors.join(", ")}.`);
-      setLoading(false)
-      return
+    // --- Use the validation function based on met requirements ---
+    if (!allPasswordRequirementsMet()) {
+       setErrorMsg(`Password does not meet all requirements.`);
+      return; // Don't set loading true if validation fails client-side
     }
+    // --- End validation check ---
 
+    setLoading(true) // Set loading only if validation passes
+
+    // ... (rest of the handleSubmit function remains the same)
     try {
       // 1. Sign up the user with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -174,7 +193,7 @@ export default function SignUpPage() {
             {/* Render PlanSelector Here */}
             <div className="mb-10">
                  <PlanSelector
-                   selectedPlan={plan} // This now passes the correctly typed state
+                   selectedPlan={plan}
                    onPlanSelect={setPlan}
                    features={features}
                  />
@@ -193,6 +212,7 @@ export default function SignUpPage() {
 
              {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Full Name Input */}
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
@@ -208,6 +228,7 @@ export default function SignUpPage() {
                 />
               </div>
 
+              {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -223,6 +244,7 @@ export default function SignUpPage() {
                 />
               </div>
 
+              {/* Password Input & Validation */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -233,9 +255,11 @@ export default function SignUpPage() {
                        type={passwordVisible ? "text" : "password"}
                        required
                        value={password}
-                       onChange={(e) => setPassword(e.target.value)}
-                       className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200 pr-10" // Added padding-right
+                       // Use the updated handler
+                       onChange={handlePasswordChange}
+                       className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200 pr-10"
                        placeholder="••••••••"
+                       aria-describedby="password-requirements" // Link input to requirements list
                      />
                       <button
                        type="button"
@@ -246,14 +270,28 @@ export default function SignUpPage() {
                        {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                      </button>
                  </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Min 6 chars, uppercase, lowercase, number.
-                </p>
+                 {/* Real-time Password Requirements Feedback */}
+                 <ul id="password-requirements" className="mt-2 space-y-1 list-none pl-0">
+                     {passwordRequirements.map(req => {
+                         const isMet = metRequirements.includes(req.id);
+                         return (
+                             <li key={req.id} className={`flex items-center text-xs ${isMet ? 'text-green-600' : 'text-gray-500'}`}>
+                                 {isMet ? (
+                                     <CheckCircle2 size={14} className="mr-1.5 flex-shrink-0" />
+                                 ) : (
+                                     <XCircle size={14} className="mr-1.5 flex-shrink-0" />
+                                 )}
+                                 {req.message}
+                             </li>
+                         );
+                     })}
+                 </ul>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !allPasswordRequirementsMet()} // Disable if loading or requirements not met
                 className="w-full rounded-lg bg-[#0c372b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
@@ -266,7 +304,7 @@ export default function SignUpPage() {
               </button>
             </form>
 
-            {/* Sign In and Support Links */}
+            {/* Footer Links */}
             <div className="mt-6 text-center text-sm text-gray-600 space-y-1">
                  <p>
                    Already have an account?{" "}

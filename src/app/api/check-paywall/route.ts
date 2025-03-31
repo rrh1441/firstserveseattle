@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   const viewsCount = data?.views_count ?? 0
   
   return NextResponse.json({
-    showPaywall: viewsCount > 3,
+    showPaywall: viewsCount > 5,
     viewsCount: viewsCount
   })
 }
