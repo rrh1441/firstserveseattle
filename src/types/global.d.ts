@@ -3,6 +3,9 @@
 // Extend the global Window interface
 interface Window {
     // Declare datafast as an optional function property
-    // Adjust the function signature if Datafast expects different parameters or return types
-    datafast?: (action: string, payload?: Record<string, any>) => void;
+    // Use a more specific type for the payload instead of 'any' to satisfy ESLint
+    datafast?: (
+      action: string,
+      payload?: Record<string, string | number | boolean | null | undefined> // Replaced 'any' here
+    ) => void;
   }
