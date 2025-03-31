@@ -1,7 +1,7 @@
 /* src/app/page.tsx */
 "use client";
 
-import { useEffect, useState, Suspense } from "react"; // Removed useMemo, not needed for constant
+import { useEffect, useState, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
@@ -12,7 +12,6 @@ import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 import ViewsCounter from "./tennis-courts/components/counter";
 
 // Define exemptPaths OUTSIDE the component function scope
-// This makes it a stable constant across renders.
 const exemptPaths = ["/reset-password", "/login", "/signup", "/members", "/privacy-policy", "/terms-of-service"];
 
 export default function HomePage() {
@@ -20,41 +19,33 @@ export default function HomePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [viewsCount, setViewsCount] = useState<number>(0);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Keep isLoading state
+  const [isLoading, setIsLoading] = useState(true);
 
   // First useEffect: Set userId, depends on pathname
   useEffect(() => {
-    // Check against the constant exemptPaths array
     if (exemptPaths.includes(pathname)) {
        setIsLoading(false);
        return;
     }
-
     let storedId = localStorage.getItem("userId");
     if (!storedId) {
       storedId = crypto.randomUUID();
       localStorage.setItem("userId", storedId);
     }
     setUserId(storedId);
-    // No dependency on exemptPaths needed here as it's a constant defined outside
   }, [pathname]);
 
   // Second useEffect: Check session, depends on userId and pathname
   useEffect(() => {
-    // Check against the constant exemptPaths array
     if (!userId || exemptPaths.includes(pathname)) {
        if (exemptPaths.includes(pathname)) {
            setIsLoading(false);
        }
        return;
     }
-
-    let isMounted = true; // Flag to prevent state updates on unmounted component
-
+    let isMounted = true;
     const checkUserSession = async () => {
-      // Set loading true at the start of the check
       setIsLoading(true);
-
       try {
         await updateUserSession(userId);
         const res = await fetch(`/api/check-paywall?userId=${userId}`);
@@ -62,32 +53,24 @@ export default function HomePage() {
             throw new Error(`Failed to fetch paywall status: ${res.statusText}`);
         }
         const data = await res.json();
-
-        // Only update state if the component is still mounted
         if (isMounted) {
             setViewsCount(data.viewsCount ?? 0);
-            setShowPaywall(data.showPaywall ?? false); // Update based on fetched data
+            setShowPaywall(data.showPaywall ?? false);
         }
       } catch (err) {
         if (isMounted){
              console.error("[page.tsx] Session update/check error:", err);
-             // Consider setting an error state here to show user
         }
       } finally {
-        // Only update loading state if the component is still mounted
         if (isMounted) {
             setIsLoading(false);
         }
       }
     };
-
     checkUserSession();
-
-    // Cleanup function to set the mounted flag to false when component unmounts
     return () => {
         isMounted = false;
     };
-    // Dependencies are userId and pathname
   }, [userId, pathname]);
 
   // --- Render logic ---
@@ -98,13 +81,12 @@ export default function HomePage() {
     return <Paywall />;
   }
   if (exemptPaths.includes(pathname)) {
-      // Let Next.js handle rendering for these specific paths
       return null;
   }
-  // Only render the main content if it's the root path
   if (pathname === '/') {
     return (
         <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
+          {/* Updated Header: Removed the Button */}
           <header className="flex flex-col md:flex-row items-center justify-between mb-8">
             <div className="flex items-center gap-6">
               <Image
@@ -119,23 +101,15 @@ export default function HomePage() {
                   <span>First Serve</span> <span>Seattle</span>
                 </h1>
                 <p className="text-base md:text-lg font-semibold">
-                  {/* Use &apos; for the apostrophe */}
                   Today&apos;s Open Tennis and Pickleball Courts
                 </p>
               </div>
             </div>
-            <Button
-              asChild
-              className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white mt-4 md:mt-0"
-            >
-              <a href="https://firstserveseattle.com/signup">Get Unlimited Views</a>
-            </Button>
+            {/* <<<< The Button component previously here is now REMOVED >>>> */}
           </header>
 
-          {/* Render the counter */}
           <ViewsCounter viewsCount={viewsCount} />
 
-          {/* Render the list */}
           <Suspense fallback={<div className="text-center mt-8">Loading courts...</div>}>
             <TennisCourtList />
           </Suspense>
@@ -193,6 +167,5 @@ export default function HomePage() {
         </div>
       );
   }
-  // Default return if not loading, not paywalled, and not an exempt or root path
-  return null;
+  return null; // Default return
 }
