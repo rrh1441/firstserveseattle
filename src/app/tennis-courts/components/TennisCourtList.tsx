@@ -74,7 +74,7 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
 }
 
 
-// --- CORRECTED AboutUsModal Component Definition ---
+// --- AboutUsModal Component Definition ---
 function AboutUsModal({
   isOpen,
   onClose,
@@ -131,18 +131,15 @@ function AboutUsModal({
                 </p>
             </div>
             <div className="space-y-6">
-                {/* How It Works Section */}
                 <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1 text-blue-600"> <Info size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">How It Works</h3>
-                        {/* UPDATED: Escaped apostrophe */}
                         <p className="text-sm text-gray-600 leading-relaxed">
                            First Serve Seattle checks the official Parks reservation system each morning to show you today&apos;s available public tennis and pickleball courts for walk-on play. No more guesswork!
                         </p>
                     </div>
                 </div>
-                {/* Availability Key Section */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <KeyRound size={18} className="text-gray-600" />
@@ -166,15 +163,13 @@ function AboutUsModal({
                         </div>
                     </div>
                     <p className="text-xs text-gray-500 mt-3 pt-2 border-t border-gray-200">
-                        Availability based on schedule data checked this morning. Real-time court status may vary due to walk-ons.
+                        Availability based on schedule data checked this morning. Real-time court status may vary due to recent bookings or walk-ons.
                     </p>
                 </div>
-                {/* Booking Ahead Section */}
                  <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 mt-1 text-orange-600"> <AlertTriangle size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">Booking Ahead?</h3>
-                        {/* UPDATED: Escaped apostrophe */}
                         <p className="text-sm text-gray-600 leading-relaxed">
                             This app shows <span className="font-medium">today&apos;s</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
                             <a href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
@@ -185,7 +180,6 @@ function AboutUsModal({
                 </div>
             </div>
         </div>
-        {/* Modal Footer */}
         <div className="p-6 pt-4 bg-gray-50 border-t border-gray-200 mt-auto">
             <Button
                 onClick={() => window.location.href = "/signup"}
@@ -297,10 +291,13 @@ export default function TennisCourtList() {
   });
 
    const today = new Date();
+   // Use Seattle timezone if possible, otherwise fallback to system timezone
+   const timeZone = 'America/Los_Angeles';
    const todayDate = today.toLocaleDateString("en-US", {
         weekday: 'long',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: timeZone
    });
 
 
@@ -421,14 +418,18 @@ export default function TennisCourtList() {
                 </div>
               </div>
               <CardContent className="p-3 space-y-3">
-                 <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1.5">
+                 {/* --- UPDATED GRID CLASSES --- */}
+                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                 {/* --- END GRID CLASS UPDATE --- */}
                    {timesInOneHour.map((timeSlot, idx) => {
                      const colorClass = getHourAvailabilityColor(court, timeSlot);
+                     // Use format like "7am", "12pm", "2pm"
                      const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
                      return (
                        <div
                          key={idx}
-                         className={`text-center py-1 px-0.5 rounded text-[10px] sm:text-[11px] ${colorClass} font-medium shadow-sm transition-colors duration-150`}
+                         // Adjusted text size slightly for potentially longer "10am" etc.
+                         className={`text-center py-1.5 px-0.5 rounded text-[10px] sm:text-xs ${colorClass} font-medium shadow-sm transition-colors duration-150`}
                          title={`Availability ${timeSlot} - ${
                             colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved'
                          }`}

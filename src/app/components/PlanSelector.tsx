@@ -61,7 +61,7 @@ export function PlanSelector({ selectedPlan, onPlanSelect, features }: PlanSelec
           </span>
         </div>
          <p className="text-sm font-semibold text-[#0c372b]">
-           {isAnnual && `$${(prices.annual / 12).toFixed(2)} / month effectively`}
+           {isAnnual && `$${(prices.annual / 12).toFixed(2)} / month`}
            {isMonthly && `Just $${prices.monthly} for unlimited access`}
         </p>
          {/* Display 50% off notice ONLY for monthly */}
