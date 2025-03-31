@@ -1,73 +1,102 @@
-/* src/app/api/create-checkout-session/route.ts */
-import { NextResponse } from "next/server";
+/* src/app/api/create-portal-link/route.ts */
+import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
-const SUCCESS_URL = "https://www.firstserveseattle.com/members";
-const CANCEL_URL = "https://www.firstserveseattle.com/";
+// Use the API version required by the installed Stripe library
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-02-24.acacia', // <<<< UPDATED API Version
+});
 
-const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
-const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
+// Ensure Supabase Admin client uses appropriate keys from environment variables
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // Ensure this env var is set in Vercel
+);
 
-const FIRST_MONTH_50_OFF_COUPON_ID = "8m1czvbe";
-
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { plan } = (await request.json()) as { plan?: string };
-
-    const selectedPlan = plan === "annual" ? "annual" : "monthly";
-    const priceId = selectedPlan === "annual" ? ANNUAL_ID : MONTHLY_ID;
-
-    if (!STRIPE_SECRET_KEY) {
-        console.error("Stripe secret key is not configured.");
-        throw new Error("Server configuration error.");
+    // 1. Authenticate the user via Authorization header
+    const accessToken = req.headers.get("Authorization")?.replace("Bearer ", "");
+    if (!accessToken) {
+      console.error("Create Portal Link Error: No token provided");
+      return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     }
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: '2025-02-24.acacia',
+    // Validate the session and get user details using the admin client
+    const { data: { user }, error: sessionError } = await supabaseAdmin.auth.getUser(accessToken);
+
+    if (sessionError || !user) {
+      console.error("Create Portal Link Error: Invalid session.", sessionError);
+      // Avoid leaking detailed error messages in production responses
+      return NextResponse.json({ error: "Invalid session or user not found." }, { status: 401 });
+    }
+
+    // Log the user ID being processed
+    console.log(`Create Portal Link: Processing request for user ID: ${user.id}`);
+
+    // 2. Look up the Stripe Customer ID from your 'subscribers' table (or directly if stored)
+    // Assuming stripe_customer_id is stored on subscribers table for direct lookup
+    // If only subscription ID is stored, keep the original logic
+    // Let's assume you have customer_id for simplicity here, adjust if needed:
+    /*
+    const { data: subscriberData, error: dbError } = await supabaseAdmin
+      .from("subscribers")
+      .select("stripe_customer_id") // Assuming you store customer ID
+      .eq("id", user.id)
+      .single();
+
+    if (dbError || !subscriberData?.stripe_customer_id) {
+      console.error(`Create Portal Link Error: No Stripe customer ID found for user ${user.id}:`, dbError);
+      return NextResponse.json({ error: "Subscription details not found." }, { status: 404 });
+    }
+    const customerId = subscriberData.stripe_customer_id;
+    */
+
+    // --- ALTERNATIVE: Original Logic if only subscription_id is stored ---
+    const { data: subscriberData, error: subIdError } = await supabaseAdmin
+       .from("subscribers")
+       .select("stripe_subscription_id") // Fetch subscription ID
+       .eq("id", user.id)
+       .single();
+
+    if (subIdError || !subscriberData?.stripe_subscription_id) {
+       console.error(`Create Portal Link Error: No subscription ID found for user ${user.id}:`, subIdError);
+       return NextResponse.json({ error: "Active subscription not found." }, { status: 404 });
+    }
+    const subscriptionId = subscriberData.stripe_subscription_id;
+    console.log(`Create Portal Link: Found subscription ID ${subscriptionId} for user ${user.id}`);
+
+    // Fetch the subscription from Stripe to get the customer ID
+    let customerId: string | null = null;
+    try {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        if (!subscription.customer) {
+            throw new Error("No customer ID attached to subscription.");
+        }
+        customerId = subscription.customer as string; // Assuming customer is always a string ID here
+        console.log(`Create Portal Link: Retrieved customer ID ${customerId} from subscription ${subscriptionId}`);
+    } catch (stripeError) {
+        console.error(`Create Portal Link Error: Failed to retrieve subscription ${subscriptionId} from Stripe:`, stripeError);
+        return NextResponse.json({ error: "Could not retrieve subscription details from payment provider." }, { status: 500 });
+    }
+    // --- End of Alternative Logic ---
+
+
+    // 3. Create a Billing Portal Session
+    console.log(`Create Portal Link: Creating portal session for customer ID: ${customerId}`);
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: "https://firstserveseattle.com/members", // Ensure this URL matches your site and Stripe settings
     });
+    console.log(`Create Portal Link: Portal session created successfully for customer ID: ${customerId}`);
 
-     const cookieStore = await cookies();
-     const visitorId = cookieStore.get('datafast_visitor_id')?.value; // Type: string | undefined
-     const sessionId = cookieStore.get('datafast_session_id')?.value; // Type: string | undefined
-
-    // Prepare parameters for the Stripe Checkout Session
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
-      allow_promotion_codes: true,
-      success_url: SUCCESS_URL,
-      cancel_url: CANCEL_URL,
-      metadata: {
-        plan: selectedPlan,
-        // Use ?? null to convert undefined to null for Stripe metadata compatibility
-        visitorId: visitorId ?? null, // <<<< CHANGED undefined to null
-        sessionId: sessionId ?? null  // <<<< CHANGED undefined to null
-      },
-    };
-
-    // Apply the 50% off coupon AUTOMATICALLY for the MONTHLY plan
-    if (selectedPlan === "monthly") {
-      sessionParams.discounts = [{ coupon: FIRST_MONTH_50_OFF_COUPON_ID }];
-      console.log(`Applying coupon ${FIRST_MONTH_50_OFF_COUPON_ID} for monthly plan checkout.`);
-    }
-
-    // Create the Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create(sessionParams);
-
-    // Return the session URL to the frontend
-    return NextResponse.json({ url: session.url }, { status: 200 });
+    // 4. Return the portal URL to the client
+    return NextResponse.json({ url: portalSession.url });
 
   } catch (err: unknown) {
-    let message = "Unknown error creating checkout session.";
-    if (err instanceof Error) {
-      message = err.message;
-    } else if (typeof err === 'string') {
-        message = err;
-    }
-    console.error("Error creating Stripe checkout session:", message);
-    // Return a generic error message to the client
-    return NextResponse.json({ error: "Failed to initialize checkout process." }, { status: 500 });
+    console.error("Create Portal Link Error: Unhandled exception:", err);
+    // Avoid sending detailed internal errors to the client
+    return NextResponse.json({ error: "An error occurred while creating the customer portal link." }, { status: 500 });
   }
 }
