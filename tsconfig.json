@@ -1,3 +1,4 @@
+// tsconfig.json
 {
   "compilerOptions": {
     "target": "ES2017",
@@ -7,28 +8,24 @@
       "esnext"
     ],
     "allowJs": true,
-    "skipLibCheck": true, // <--- Added
+    "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler", // Or "node", check what you have
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-
-    // Important: The "baseUrl" is ".", so the "paths" are relative to your project root.
     "baseUrl": ".",
     "paths": {
-      // Existing aliases:
       "@/components/*": ["src/app/components/*"],
       "@/lib/*": ["src/lib/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      // NEW alias: So you can import from "@/app/supabaseClient"
-      "@/app/*": ["src/app/*"]
+      "@/hooks/*": ["src/hooks/*"], // Keep existing paths
+      "@/app/*": ["src/app/*"],     // Keep existing paths
+      "@/types/*": ["src/types/*"]  // Add if you created src/types
     },
-
     "plugins": [
       {
         "name": "next"
@@ -36,12 +33,16 @@
     ]
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
-  ],
+    ".next/types/**/*.ts",
+    "src/types/global.d.ts" // Ensure your type declaration is included
+    ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "supabase/functions" // <<< ADD THIS LINE TO EXCLUDE EDGE FUNCTIONS
+    // Add "supabase" instead if you want to exclude the whole folder
+    // "supabase"
   ]
 }
