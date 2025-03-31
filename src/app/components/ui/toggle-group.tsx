@@ -1,85 +1,67 @@
-"use client"
+/* src/app/api/create-checkout-session/route.ts */
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { cookies } from "next/headers";
 
-import * as React from "react"
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
-import { VariantProps, cva } from "class-variance-authority"
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
+const SUCCESS_URL = "https://www.firstserveseattle.com/members";
+const CANCEL_URL = "https://www.firstserveseattle.com/";
 
-import { cn } from "@/lib/utils"
+const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU"; // Verify this Price ID
+const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4"; // Verify this Price ID
 
-const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleGroupItemVariants>
->({
-  size: "default",
-  variant: "default",
-})
+const FIRST_MONTH_50_OFF_COUPON_ID = "8m1czvbe";
 
-const toggleGroupItemVariants = cva(
-  "inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground",
-  {
-    variants: {
-      variant: {
-        default: "bg-transparent",
-        outline:
-          "border-r border-input bg-transparent last:border-0 hover:bg-accent hover:text-accent-foreground",
+export async function POST(request: Request) {
+  try {
+    const { plan } = (await request.json()) as { plan?: string };
+
+    const selectedPlan = plan === "annual" ? "annual" : "monthly";
+    const priceId = selectedPlan === "annual" ? ANNUAL_ID : MONTHLY_ID;
+
+    if (!STRIPE_SECRET_KEY) {
+        throw new Error("Stripe secret key is not configured.");
+    }
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
+      // Use the required API version
+      apiVersion: '2025-02-24.acacia', // <<<< UPDATED API Version
+    });
+
+     const cookieStore = cookies();
+     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
+     const sessionId = cookieStore.get('datafast_session_id')?.value;
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      allow_promotion_codes: true,
+      success_url: SUCCESS_URL,
+      cancel_url: CANCEL_URL,
+      metadata: {
+        plan: selectedPlan,
+         visitorId: visitorId ?? undefined,
+         sessionId: sessionId ?? undefined
       },
-      size: {
-        default: "h-10 px-3",
-        sm: "h-9 px-2.5",
-        lg: "h-11 px-5",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    };
+
+    if (selectedPlan === "monthly") {
+      sessionParams.discounts = [{ coupon: FIRST_MONTH_50_OFF_COUPON_ID }];
+      console.log(`Applying coupon ${FIRST_MONTH_50_OFF_COUPON_ID} for monthly plan.`);
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    return NextResponse.json({ url: session.url }, { status: 200 });
+
+  } catch (err: unknown) {
+    let message = "Unknown error creating checkout session.";
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (typeof err === 'string') {
+        message = err;
+    }
+    console.error("Error creating Stripe checkout session:", message);
+    return NextResponse.json({ error: "Failed to initialize checkout." }, { status: 500 });
   }
-)
-
-const ToggleGroup = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
-    VariantProps<typeof toggleGroupItemVariants>
->(({ className, variant, size, children, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center overflow-hidden rounded-md border border-input bg-transparent shadow",
-      className
-    )}
-    {...props}
-  >
-    <ToggleGroupContext.Provider value={{ variant, size }}>
-      {children}
-    </ToggleGroupContext.Provider>
-  </ToggleGroupPrimitive.Root>
-))
-
-ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
-
-const ToggleGroupItem = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &
-    VariantProps<typeof toggleGroupItemVariants>
->(({ className, children, variant, size, ...props }, ref) => {
-  const context = React.useContext(ToggleGroupContext)
-
-  return (
-    <ToggleGroupPrimitive.Item
-      ref={ref}
-      className={cn(
-        toggleGroupItemVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
-        }),
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </ToggleGroupPrimitive.Item>
-  )
-})
-
-ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
-
-export { ToggleGroup, ToggleGroupItem }
+}
