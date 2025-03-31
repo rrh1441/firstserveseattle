@@ -74,7 +74,7 @@ function getHourAvailabilityColor(court: Court, hourSlot: string): string {
 }
 
 
-// --- CORRECTED AboutUsModal Component Definition ---
+// --- AboutUsModal Component Definition (with updates) ---
 function AboutUsModal({
   isOpen,
   onClose,
@@ -83,7 +83,6 @@ function AboutUsModal({
   onClose: () => void;
 }) {
 
-  // Body scroll lock/unlock effect
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -96,11 +95,8 @@ function AboutUsModal({
   }, [isOpen]);
 
 
-  // Early return if modal is not open
   if (!isOpen) return null;
 
-
-  // Modal JSX
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in-0 duration-300"
@@ -130,9 +126,9 @@ function AboutUsModal({
                 <h2 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
                     Spend Less Time Searching, <br /> More Time Playing!
                 </h2>
+                {/* UPDATED: Removed date from sub-headline */}
                 <p className="mt-2 text-base text-gray-600">
-                    {/* Using specific date */}
-                    Your daily guide to open courts in Seattle (Monday, March 31).
+                    Your daily guide to open courts in Seattle.
                 </p>
             </div>
             <div className="space-y-6">
@@ -141,7 +137,7 @@ function AboutUsModal({
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">How It Works</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                           First Serve Seattle checks the official Parks reservation system each morning to show you today&apos;s available public tennis and pickleball courts for walk-on play. No more guesswork!
+                           First Serve Seattle checks the official Parks reservation system each morning to show you today's available public tennis and pickleball courts for walk-on play. No more guesswork!
                         </p>
                     </div>
                 </div>
@@ -167,8 +163,9 @@ function AboutUsModal({
                             <span className="text-gray-600">Fully Reserved</span>
                         </div>
                     </div>
+                     {/* UPDATED: Disclaimer text */}
                     <p className="text-xs text-gray-500 mt-3 pt-2 border-t border-gray-200">
-                        Reflects schedule data fetched this morning. Does not guarantee availability against later bookings or unscheduled use.
+                        Availability based on schedule data checked this morning. Real-time court status may vary due to recent bookings or walk-ons.
                     </p>
                 </div>
                  <div className="flex items-start gap-3">
@@ -176,7 +173,7 @@ function AboutUsModal({
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">Booking Ahead?</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                            This app shows <span className="font-medium">today&apos;s</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
+                            This app shows <span className="font-medium">today's</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
                             <a href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                                 Seattle Parks Reservation Site
                             </a>.
@@ -273,7 +270,8 @@ export default function TennisCourtList() {
      }
      const address = court.address || court.title || 'Seattle Tennis Court';
      const encodedAddress = encodeURIComponent(address);
-     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`; // Use standard maps search URL
+      // Standard Google Maps search query URL
+     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
    };
 
   const filtered = courts.filter((court) => {
@@ -295,7 +293,13 @@ export default function TennisCourtList() {
     return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
 
-   const todayDate = "Monday, March 31"; // Specific date
+   // Use dynamic date fetching, but format it simply
+   const today = new Date();
+   const todayDate = today.toLocaleDateString("en-US", {
+        weekday: 'long', // e.g., Monday
+        month: 'long',   // e.g., March
+        day: 'numeric'   // e.g., 31
+   });
 
 
   if (isLoading) {
@@ -355,7 +359,7 @@ export default function TennisCourtList() {
                      })}
                  </div>
              </div>
-             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-end">
+             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start">
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
@@ -380,7 +384,8 @@ export default function TennisCourtList() {
               <div className="p-3 border-b border-gray-100 bg-gray-50/60">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold truncate text-gray-800 hover:text-blue-700 transition-colors">
+                    {/* UPDATED: Removed hover effect from h3 */}
+                    <h3 className="text-base font-semibold truncate text-gray-800">
                         {court.title}
                     </h3>
                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
@@ -396,24 +401,21 @@ export default function TennisCourtList() {
                      </div>
                   </div>
                   <div className="flex-shrink-0">
-                    {/* --- CORRECTED FAVORITE BUTTON --- */}
                     <Button
                       variant="ghost"
-                      // Removed invalid size="icon" prop
                       onClick={() => toggleFavorite(court.id)}
-                       className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150" // Applied size via className
+                       className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150"
                        aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
                     >
                       <Star
                          size={18}
                         className={`transition-colors duration-150 ${
                           favoriteCourts.includes(court.id)
-                            ? "fill-yellow-400 text-yellow-500" // Apply fill directly when favorited
-                            : "" // Rely on hover styles for non-favorited state
+                            ? "fill-yellow-400 text-yellow-500"
+                            : ""
                         }`}
                       />
                     </Button>
-                    {/* --- END CORRECTION --- */}
                   </div>
                 </div>
               </div>
@@ -421,7 +423,8 @@ export default function TennisCourtList() {
                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1.5">
                    {timesInOneHour.map((timeSlot, idx) => {
                      const colorClass = getHourAvailabilityColor(court, timeSlot);
-                     const simpleTime = timeSlot.replace(':00', '').replace(' AM', 'a').replace(' PM', 'p');
+                     // UPDATED: Time format e.g., "7am", "12pm", "2pm"
+                     const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
                      return (
                        <div
                          key={idx}
