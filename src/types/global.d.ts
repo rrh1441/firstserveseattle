@@ -1,11 +1,21 @@
 // src/types/global.d.ts
 
+// Define possible payload structures
+type DatafastSimplePayload = Record<string, string | number | boolean | null | undefined>;
+
+type DatafastEventPayload = {
+  name: string;
+  properties?: DatafastSimplePayload; // Allow nested properties object
+};
+
 // Extend the global Window interface
 interface Window {
-    // Declare datafast as an optional function property
-    // Use a more specific type for the payload instead of 'any' to satisfy ESLint
-    datafast?: (
-      action: string,
-      payload?: Record<string, string | number | boolean | null | undefined> // Replaced 'any' here
-    ) => void;
-  }
+  datafast?: (
+    action: string,
+    // Use a union type to allow different valid payload structures
+    payload?: DatafastSimplePayload | DatafastEventPayload
+  ) => void;
+}
+
+// Make sure this file is included in your tsconfig.json "include" array:
+// "include": [ ..., "src/types/global.d.ts" ]
