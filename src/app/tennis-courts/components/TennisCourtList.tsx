@@ -166,7 +166,7 @@ function AboutUsModal({
                         </div>
                     </div>
                     <p className="text-xs text-gray-500 mt-3 pt-2 border-t border-gray-200">
-                        Availability based on schedule data checked this morning. Real-time court status may vary due to recent bookings or walk-ons.
+                        Availability based on schedule data checked this morning. Real-time court status may vary due to walk-ons.
                     </p>
                 </div>
                 {/* Booking Ahead Section */}
