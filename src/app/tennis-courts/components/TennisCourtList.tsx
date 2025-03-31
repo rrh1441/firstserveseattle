@@ -1,10 +1,10 @@
 // src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
+// Make sure ALL necessary imports are here
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// Import all necessary icons
 import { Star, MapPin, Info, KeyRound, AlertTriangle, X } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
@@ -30,7 +30,6 @@ interface Court {
 
 
 // Helper functions (timeToMinutes, isRangeFree, getHourAvailabilityColor)
-// Converts a time string like "1:00 PM" into minutes since midnight.
 function timeToMinutes(str: string): number {
   if (!str) return -1;
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -48,38 +47,34 @@ function timeToMinutes(str: string): number {
   return adjustedHh * 60 + mm;
 }
 
-// Checks if a given time range is free for a court.
 function isRangeFree(court: Court, startM: number, endM: number): boolean {
   if (!Array.isArray(court.parsed_intervals)) return false;
   return court.parsed_intervals.some((interval) => {
     const intervalStart = timeToMinutes(interval.start);
     const intervalEnd = timeToMinutes(interval.end);
-    // Check if the *entire* 30-min slot is within a free interval
     return intervalStart <= startM && intervalEnd >= endM;
   });
 }
 
-// Determines the availability color for a 1-hour block based on 30-min intervals.
 function getHourAvailabilityColor(court: Court, hourSlot: string): string {
-  const startM = timeToMinutes(hourSlot); // e.g., 2:00 PM -> 840
-  const midM = startM + 30;              // e.g., 2:30 PM -> 870
-  const endM = startM + 60;              // e.g., 3:00 PM -> 900
+  const startM = timeToMinutes(hourSlot);
+  const midM = startM + 30;
+  const endM = startM + 60;
 
-  const half1Free = isRangeFree(court, startM, midM); // Check 2:00 - 2:30
-  const half2Free = isRangeFree(court, midM, endM);   // Check 2:30 - 3:00
+  const half1Free = isRangeFree(court, startM, midM);
+  const half2Free = isRangeFree(court, midM, endM);
 
   if (half1Free && half2Free) {
-    return "bg-green-500 text-white"; // Fully free for the hour
+    return "bg-green-500 text-white";
   } else if (!half1Free && !half2Free) {
-    return "bg-gray-400 text-gray-100"; // Fully booked for the hour (use slightly darker gray)
+    return "bg-gray-400 text-gray-100";
   } else {
-    // Partially booked (one half is free, the other isn't)
-    return "bg-orange-400 text-white"; // Use a distinct orange
+    return "bg-orange-400 text-white";
   }
 }
 
 
-// --- IMPROVED AboutUsModal Component Definition ---
+// --- CORRECTED AboutUsModal Component Definition ---
 function AboutUsModal({
   isOpen,
   onClose,
@@ -87,33 +82,40 @@ function AboutUsModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  if (!isOpen) return null;
 
-  // Prevent background scroll when modal is open
+  // --- FIX: Moved useEffect hook BEFORE the early return ---
+  // This hook handles body scroll lock/unlock
   useEffect(() => {
     if (isOpen) {
+      // Prevent scrolling on mount
       document.body.style.overflow = 'hidden';
     } else {
+      // Re-enable scrolling if modal was open but now isn't
       document.body.style.overflow = 'unset';
     }
-    // Cleanup function
+    // Cleanup function to re-enable scrolling when component unmounts
+    // or when isOpen becomes false
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen]); // Dependency array ensures this runs when isOpen changes
+  // --- END FIX ---
 
+
+  // Early return if modal is not open
+  if (!isOpen) return null;
+
+
+  // Modal JSX (remains the same as the previous good version)
   return (
-    // Overlay with backdrop blur
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in-0 duration-300"
-      onClick={onClose} // Close modal if overlay is clicked
+      onClick={onClose}
     >
-      {/* Modal Content Box - stop propagation so clicking inside doesn't close it */}
       <div
         className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-2xl border border-gray-200 animate-in zoom-in-95 fade-in-0 duration-300 max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
             onClick={onClose}
             className="absolute top-3 right-3 z-10 text-gray-400 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
@@ -121,36 +123,26 @@ function AboutUsModal({
           >
             <X size={22} />
         </button>
-
-        {/* Scrollable Content Area */}
         <div className="overflow-y-auto p-6 sm:p-8">
-            {/* Header Section */}
             <div className="text-center mb-6">
                 <div className="inline-block p-2 bg-green-100 rounded-full mb-3">
                     <Image
-                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg" // Logo
+                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
                         alt="First Serve Seattle Logo"
-                        width={48} // Slightly smaller logo inside circle
+                        width={48}
                         height={48}
                     />
                 </div>
-                {/* Value Prop Headline */}
                 <h2 className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
                     Spend Less Time Searching, <br /> More Time Playing!
                 </h2>
                 <p className="mt-2 text-base text-gray-600">
-                    {/* Using specific date */}
                     Your daily guide to open courts in Seattle (Monday, March 31).
                 </p>
             </div>
-
-            {/* Body Content Sections */}
             <div className="space-y-6">
-                {/* How It Works */}
                 <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1 text-blue-600">
-                        <Info size={20} />
-                    </div>
+                    <div className="flex-shrink-0 mt-1 text-blue-600"> <Info size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">How It Works</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
@@ -158,8 +150,6 @@ function AboutUsModal({
                         </p>
                     </div>
                 </div>
-
-                {/* Availability Key */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <KeyRound size={18} className="text-gray-600" />
@@ -186,12 +176,8 @@ function AboutUsModal({
                         Reflects schedule data fetched this morning. Does not guarantee availability against later bookings or unscheduled use.
                     </p>
                 </div>
-
-                {/* Important Note */}
                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1 text-orange-600">
-                        <AlertTriangle size={20} />
-                    </div>
+                    <div className="flex-shrink-0 mt-1 text-orange-600"> <AlertTriangle size={20} /> </div>
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">Booking Ahead?</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
@@ -204,12 +190,10 @@ function AboutUsModal({
                 </div>
             </div>
         </div>
-
-        {/* Footer - Call to Action */}
         <div className="p-6 pt-4 bg-gray-50 border-t border-gray-200 mt-auto">
             <Button
-                onClick={() => window.location.href = "/signup"} // Direct user to signup
-                className="w-full bg-[#0c372b] text-white hover:bg-[#0c372b]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-6 py-3 text-base font-semibold" // Consistent primary style
+                onClick={() => window.location.href = "/signup"}
+                className="w-full bg-[#0c372b] text-white hover:bg-[#0c372b]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-6 py-3 text-base font-semibold"
             >
                 Get Unlimited Court Checks
             </Button>
@@ -234,17 +218,14 @@ export default function TennisCourtList() {
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // State to control the modal visibility
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
 
-   // Time slots for the availability grid
    const timesInOneHour = [
         "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
         "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM",
         "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM"
     ];
 
-  // Fetch court data on mount
   useEffect(() => {
     setIsLoading(true);
     getTennisCourts()
@@ -259,8 +240,6 @@ export default function TennisCourtList() {
       });
   }, []);
 
-
-  // Load favorite courts from localStorage on mount
    useEffect(() => {
      const storedFavorites = localStorage.getItem("favoriteCourts");
      if (storedFavorites) {
@@ -268,12 +247,11 @@ export default function TennisCourtList() {
             setFavoriteCourts(JSON.parse(storedFavorites));
        } catch (e) {
            console.error("Failed to parse favorite courts from localStorage:", e);
-           localStorage.removeItem("favoriteCourts"); // Clear invalid data
+           localStorage.removeItem("favoriteCourts");
        }
      }
    }, []);
 
-  // --- Helper Functions ---
    const toggleFavorite = (courtId: number) => {
      const updated = favoriteCourts.includes(courtId)
        ? favoriteCourts.filter((id) => id !== courtId)
@@ -302,10 +280,7 @@ export default function TennisCourtList() {
      const encodedAddress = encodeURIComponent(address);
      return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`; // Use standard maps search URL
    };
-  // --- End Helper Functions ---
 
-
-  // Filtering and Sorting logic
   const filtered = courts.filter((court) => {
     const matchesSearch = court.title
       ?.toLowerCase()
@@ -313,7 +288,6 @@ export default function TennisCourtList() {
     const matchesFilters = Object.keys(filters).every((key) => {
       const filterKey = key as keyof typeof filters;
       if (!filters[filterKey]) return true;
-       // Ensure the court object actually has the key before accessing it
        return court.hasOwnProperty(filterKey) && court[filterKey as keyof Court];
     });
     return matchesSearch && matchesFilters;
@@ -322,15 +296,13 @@ export default function TennisCourtList() {
   const sorted = [...filtered].sort((a, b) => {
     const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
     const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
-    if (aFav !== bFav) return bFav - aFav; // Favorites first
-    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" }); // Then alphabetical
+    if (aFav !== bFav) return bFav - aFav;
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
 
-  // Get today's date string (Using specific date from context)
-   const todayDate = "Monday, March 31";
+   const todayDate = "Monday, March 31"; // Specific date
 
 
-  // --- Render Logic ---
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -348,22 +320,15 @@ export default function TennisCourtList() {
   }
 
   return (
-    // Main container for the list and controls
     <div className="bg-white text-black p-2 sm:p-0 space-y-4 relative">
-      {/* Render the Modal (it's positioned fixed, so location here doesn't matter much) */}
       <AboutUsModal
         isOpen={aboutModalOpen}
         onClose={() => setAboutModalOpen(false)}
       />
-
-      {/* Sticky Header Section */}
       <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-             {/* Left side: Date, Search, Filters */}
              <div className="flex-grow space-y-3">
-                 {/* Date Display */}
                  <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
-                 {/* Search Input */}
                  <input
                      type="text"
                      placeholder="Search courts by name..."
@@ -371,7 +336,6 @@ export default function TennisCourtList() {
                      onChange={(e) => setSearchTerm(e.target.value)}
                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
                   />
-                 {/* Filter Buttons */}
                  <div className="flex items-center gap-2 flex-wrap">
                     {(['lights', 'pickleball_lined', 'hitting_wall'] as const).map((filterKey) => {
                         const labels = { lights: 'Lights', pickleball_lined: 'Pickleball', hitting_wall: 'Wall' };
@@ -385,8 +349,8 @@ export default function TennisCourtList() {
                             size="sm"
                             className={`flex items-center justify-center gap-1.5 px-2.5 h-8 text-xs transition-colors shadow-sm ${
                               isActive
-                                ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300" // Added ring for active state
-                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50" // Subtle hover for inactive
+                                ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
+                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                           >
                             <Image src={icons[filterKey]} alt={labels[filterKey]} width={12} height={12} />
@@ -396,9 +360,7 @@ export default function TennisCourtList() {
                      })}
                  </div>
              </div>
-
-             {/* Right side: About Us / Key button */}
-             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-end">
+             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start">
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
@@ -412,24 +374,18 @@ export default function TennisCourtList() {
            </div>
       </div>
 
-
-      {/* Courts List or No Results Message */}
       {sorted.length === 0 ? (
         <div className="text-center text-base text-gray-600 py-10 px-4">
            {courts.length > 0 ? "No courts found matching your current filters." : "No court data available currently."}
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Map through sorted courts and render a Card for each */}
           {sorted.map((court) => (
             <Card key={court.id} className="shadow-md overflow-hidden border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200">
-              {/* Card Header Section */}
               <div className="p-3 border-b border-gray-100 bg-gray-50/60">
                 <div className="flex items-center justify-between gap-2">
-                  {/* Court Title and Amenities */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-semibold truncate text-gray-800 hover:text-blue-700 transition-colors">
-                        {/* Optionally link title to map or details */}
                         {court.title}
                     </h3>
                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
@@ -444,7 +400,6 @@ export default function TennisCourtList() {
                        )}
                      </div>
                   </div>
-                  {/* Favorite Button */}
                   <div className="flex-shrink-0">
                     <Button
                       variant="ghost"
@@ -458,21 +413,17 @@ export default function TennisCourtList() {
                         className={`transition-colors duration-150 ${
                           favoriteCourts.includes(court.id)
                             ? "fill-yellow-400 text-yellow-500"
-                            : "" // Let hover styles handle the color change
+                            : ""
                         }`}
                       />
                     </Button>
                   </div>
                 </div>
               </div>
-
-              {/* Card Content: Availability Grid & Map */}
               <CardContent className="p-3 space-y-3">
-                 {/* Availability Grid */}
                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1.5">
                    {timesInOneHour.map((timeSlot, idx) => {
                      const colorClass = getHourAvailabilityColor(court, timeSlot);
-                     // Simplify time display: "6a", "12p", "5p" etc.
                      const simpleTime = timeSlot.replace(':00', '').replace(' AM', 'a').replace(' PM', 'p');
                      return (
                        <div
@@ -487,8 +438,6 @@ export default function TennisCourtList() {
                      );
                    })}
                  </div>
-
-                {/* Location Button */}
                 <Button
                   onClick={() => toggleMapExpansion(court.id)}
                   variant="outline"
@@ -498,8 +447,6 @@ export default function TennisCourtList() {
                   <MapPin size={14} />
                   {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
                 </Button>
-
-                {/* Expanded Map/Address Section */}
                 {expandedMaps.includes(court.id) && (
                   <div className="mt-2 p-3 bg-gray-50/80 rounded border border-gray-200 animate-in fade-in-50 duration-300">
                     <p className="text-sm text-gray-700 mb-2">{court.address || "Address not available"}</p>
@@ -517,6 +464,6 @@ export default function TennisCourtList() {
           ))}
         </div>
       )}
-    </div> // End Main container
+    </div>
   );
 }
