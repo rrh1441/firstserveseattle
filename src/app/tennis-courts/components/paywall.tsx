@@ -1,96 +1,79 @@
+// src/app/tennis-courts/components/paywall.tsx
 "use client";
 
-import { useState } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { PlanSelector } from "@/components/PlanSelector"; // Import the new component
 
 const features = [
-  "Unlimited court searches",
-  "Favorite court tracking",
+  "See today's availability for ALL public courts",
+  "Filter courts by lights, pickleball lines, hitting walls",
+  "Save your favorite courts for quick access",
+  "Unlimited court views",
   "Priority customer support",
 ];
 
-const prices = {
-  monthly: 8,
-  annual: 64,
-};
-
-const valueProp = {
-  monthly: "Less than the cost of one court reservation",
-  annual: "Find free courts for a year",
-};
+// A/B Test Headlines
+const headlines = [
+    { group: 'A', text: "Stop guessing, start playing!" },
+    { group: 'B', text: "Never drive to a full court again!" }
+];
 
 export default function PaywallPage() {
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
+  const [assignedHeadline, setAssignedHeadline] = useState<{ group: string; text: string } | null>(null);
+
+  useEffect(() => {
+    // Assign headline randomly on mount
+    const randomIndex = Math.random() < 0.5 ? 0 : 1;
+    const selectedHeadline = headlines[randomIndex];
+    setAssignedHeadline(selectedHeadline);
+
+    // --- A/B Test Tracking ---
+    // You need to implement the actual tracking logic here.
+    // This might involve sending an event to Datafast (or your analytics tool)
+    // indicating which headline group this user/session was assigned.
+    // Example (conceptual):
+    if (window && typeof window.datafast === 'function') {
+       // Send an 'exposure' event - you might call it something else
+       // Ideally, only send this once per session or user exposure.
+       // You might need more sophisticated logic to prevent repeated sends.
+       // window.datafast('event', { name: 'PaywallHeadlineExposure', properties: { paywall_headline_group: selectedHeadline.group } });
+       console.log(`Assigned to Paywall Headline Group: ${selectedHeadline.group}`);
+    }
+    // -------------------------
+
+  }, []); // Empty dependency array ensures this runs only once on mount
+
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="flex items-center justify-center min-h-screen bg-white p-4">
       <Card className="w-full max-w-md border border-gray-200 shadow-lg">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold">You’ve reached your free limit</CardTitle>
+           {/* A/B Tested Headline */}
+           <CardTitle className="text-2xl font-bold">
+             {assignedHeadline ? assignedHeadline.text : "You've reached your free limit"}
+           </CardTitle>
           <CardDescription className="text-base text-gray-600">
-            Get unlimited access to all courts and features
+            Get unlimited access to all courts and features.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Plan selection */}
-          <div className="flex justify-center space-x-2">
-            <button
-              onClick={() => setPlan("monthly")}
-              className={`px-4 py-2 rounded-md font-semibold text-sm ${
-                plan === "monthly"
-                  ? "bg-gray-100 text-black"
-                  : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setPlan("annual")}
-              className={`px-4 py-2 rounded-md font-semibold text-sm ${
-                plan === "annual"
-                  ? "bg-gray-100 text-black"
-                  : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              Annual
-            </button>
-          </div>
 
-          {/* Pricing display */}
-          <div className="text-center space-y-2">
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-4xl font-bold">${prices[plan]}</span>
-              <span className="text-gray-500">
-                {plan === "monthly" ? "/month" : "/year"}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600">{valueProp[plan]}</p>
-          </div>
-
-          {/* Features */}
-          <div className="space-y-2 rounded-lg bg-gray-50 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles className="h-4 w-4 text-yellow-400" />
-              Everything you get:
-            </div>
-            <ul className="grid gap-2 text-sm">
-              {features.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Use the PlanSelector component */}
+          <PlanSelector
+            selectedPlan={plan}
+            onPlanSelect={setPlan}
+            features={features}
+          />
 
           {/* CTA: sends user to /signup with ?plan=xxx */}
           <Link
-            href={`/signup?plan=${plan}`}
-            className="w-full block text-center bg-black text-white py-2 text-lg rounded-md hover:bg-gray-800"
+             href={`/signup?plan=${plan}${assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ''}`} // Pass headline group if needed later
+            className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >
-            Create Account and Subscribe
+            Choose {plan === 'monthly' ? 'Monthly' : 'Annual'} & Create Account
           </Link>
 
           <p className="text-xs text-center text-gray-500">
