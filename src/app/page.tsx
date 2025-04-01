@@ -65,7 +65,7 @@ export default function HomePage() {
     try {
       // Call the combined API route using POST
       // console.log(`[page.tsx] POSTing to /api/update-and-check-views for ${userId}`);
-      const res = await fetch(`/api/update-and-check-views`, { // Ensure this path is correct
+      const res = await fetch(`/api/update-and-check-session`, { // Ensure this path is correct
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
