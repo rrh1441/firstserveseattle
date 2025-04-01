@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Paywall from "./tennis-courts/components/paywall";
-// REMOVE: import { updateUserSession } from "@/lib/updateUserSessions"; // No longer needed here
+// No longer importing updateUserSession
 import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 import ViewsCounter from "./tennis-courts/components/counter";
 import { ExternalLink } from "lucide-react";
@@ -28,7 +28,7 @@ export default function HomePage() {
   const [viewData, setViewData] = useState<{ count: number; showPaywall: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Effect 1: Set or get userId - Runs once on mount or if path changes drastically (unlikely here)
+  // Effect 1: Set or get userId
   useEffect(() => {
     if (exemptPaths.includes(pathname)) {
       setIsLoading(false);
@@ -50,12 +50,10 @@ export default function HomePage() {
   }, [pathname]);
 
 
-  // Effect 2: Update session count AND check paywall status via the NEW API route
+  // Effect 2: Update session count AND check paywall status via API
   const updateAndCheckViewStatus = useCallback(async () => {
     if (!userId || exemptPaths.includes(pathname)) {
       console.log(`[page.tsx] Skipping view update/check. userId: ${userId}, pathname: ${pathname}`);
-      // If userId is null but path isn't exempt, we might still be 'loading' conceptually
-      // Only set loading false if we are certain no check is needed (exempt path or userId stable)
       if (exemptPaths.includes(pathname)) setIsLoading(false);
       return;
     }
@@ -65,28 +63,27 @@ export default function HomePage() {
     setError(null);
 
     try {
-      // --- MODIFIED FETCH CALL ---
-      // 1. Call the NEW combined API route using POST
+      // Call the combined API route using POST
       console.log(`[page.tsx] POSTing to /api/update-and-check-views for ${userId}`); // UPDATE ROUTE NAME IF DIFFERENT
       const res = await fetch(`/api/update-and-check-views`, { // <-- Make sure this is your new API route path
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userId: userId }), // Send userId in the body
+          body: JSON.stringify({ userId: userId }),
       });
-      // --- END MODIFICATION ---
 
       console.log(`[page.tsx] API Response Status: ${res.status} for ${userId}`);
 
       if (!res.ok) {
           const errorText = await res.text();
-          // Attempt to parse error JSON if possible
           let detail = errorText;
           try {
               const errorJson = JSON.parse(errorText);
               detail = errorJson.error || errorJson.message || errorText;
-          } catch (parseError) {
+          // --- FIX: Rename unused variable ---
+          } catch (_parseError) { // Renamed parseError to _parseError
+          // --- END FIX ---
               // Keep original text if not JSON
           }
           throw new Error(`Failed to update/check view status (${res.status}): ${detail}`);
@@ -111,52 +108,41 @@ export default function HomePage() {
       setIsLoading(false);
       console.log(`[page.tsx] Finished view update/check cycle for ${userId}. Loading set to false.`);
     }
-  }, [userId, pathname]); // Rerun when userId or pathname changes
+  }, [userId, pathname]);
 
 
   useEffect(() => {
-      // Trigger the API call when userId is available and not an exempt path
       if(userId && !exemptPaths.includes(pathname)){
           updateAndCheckViewStatus();
       } else if (!userId && !exemptPaths.includes(pathname)) {
-          // If userId is still null after initial effect, maybe set loading?
-          // This case might indicate an issue with useEffect 1, but generally
-          // the dependency on userId in updateAndCheckViewStatus handles this.
           console.log("[page.tsx] Waiting for userId before checking view status.");
-          setIsLoading(true); // Ensure loading is true while waiting for userId
+          setIsLoading(true);
       }
-  }, [userId, pathname, updateAndCheckViewStatus]); // Depend on the callback
+  }, [userId, pathname, updateAndCheckViewStatus]);
 
 
-  // --- Render Logic (remains the same) ---
-  console.log(`[page.tsx] Rendering decision: isLoading=${isLoading}, viewData=`, viewData, `pathname=${pathname}`);
+  // --- Render Logic ---
+  // (Console logs for debugging - can be removed later)
+  // console.log(`[page.tsx] Rendering decision: isLoading=${isLoading}, viewData=`, viewData, `pathname=${pathname}`);
 
   if (exemptPaths.includes(pathname)) {
-    console.log("[page.tsx] Rendering null for exempt path:", pathname);
     return null;
   }
-
   if (isLoading) {
-    console.log("[page.tsx] Rendering LoadingIndicator.");
     return <LoadingIndicator />;
   }
-
   if (error) {
-     console.log("[page.tsx] Rendering error message.");
      return (
         <div className="container mx-auto p-4 text-center">
             <p className="text-red-600 bg-red-50 p-4 rounded border border-red-200">{error}</p>
         </div>
      );
   }
-
   if (viewData?.showPaywall) {
-    console.log("[page.tsx] Rendering Paywall component.");
     return <Paywall />;
   }
 
   if (viewData && pathname === '/') {
-     console.log(`[page.tsx] Rendering main content: ViewsCounter (count=${viewData.count}) and TennisCourtList.`);
     return (
         <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
           <header className="flex flex-col md:flex-row items-center justify-between mb-8">
@@ -214,6 +200,7 @@ export default function HomePage() {
               <span className="text-gray-400 hidden md:inline">|</span>
               <a href="/terms-of-service" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap">Terms of Service</a>
               <span className="text-gray-400 hidden md:inline">|</span>
+              {/* Check carefully around here (line ~176) in your code for any stray apostrophes */}
               <Button asChild variant="link" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto">
                 <a href="mailto:support@firstserveseattle.com">Questions?</a>
               </Button>
@@ -223,6 +210,5 @@ export default function HomePage() {
       );
   }
 
-   console.log("[page.tsx] Rendering null as fallback.");
-  return null;
+  return null; // Fallback
 }
