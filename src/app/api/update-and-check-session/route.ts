@@ -133,6 +133,7 @@ export async function POST(request: Request) {
 }
 
 // Optional: Add a GET handler if needed for testing, but POST is primary
-export async function GET(request: Request) {
+// Removed unused 'request' parameter to satisfy eslint (@typescript-eslint/no-unused-vars)
+export async function GET() {
      return NextResponse.json({ error: "Method Not Allowed. Use POST." }, { status: 405 });
 }
