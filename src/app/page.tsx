@@ -34,7 +34,7 @@ export default function HomePage() {
       setIsLoading(false);
       setViewData(null);
       setUserId(null);
-      console.log("[page.tsx] Exempt path, skipping user ID and view check.");
+      // console.log("[page.tsx] Exempt path, skipping user ID and view check.");
       return;
     }
 
@@ -42,9 +42,9 @@ export default function HomePage() {
     if (!storedId) {
       storedId = crypto.randomUUID();
       localStorage.setItem("userId", storedId);
-      console.log("[page.tsx] New userId generated:", storedId);
+      // console.log("[page.tsx] New userId generated:", storedId);
     } else {
-      console.log("[page.tsx] Found userId:", storedId);
+      // console.log("[page.tsx] Found userId:", storedId);
     }
     setUserId(storedId);
   }, [pathname]);
@@ -53,19 +53,19 @@ export default function HomePage() {
   // Effect 2: Update session count AND check paywall status via API
   const updateAndCheckViewStatus = useCallback(async () => {
     if (!userId || exemptPaths.includes(pathname)) {
-      console.log(`[page.tsx] Skipping view update/check. userId: ${userId}, pathname: ${pathname}`);
+      // console.log(`[page.tsx] Skipping view update/check. userId: ${userId}, pathname: ${pathname}`);
       if (exemptPaths.includes(pathname)) setIsLoading(false);
       return;
     }
 
-    console.log(`[page.tsx] Starting view update/check via API for userId: ${userId}`);
+    // console.log(`[page.tsx] Starting view update/check via API for userId: ${userId}`);
     setIsLoading(true);
     setError(null);
 
     try {
       // Call the combined API route using POST
-      console.log(`[page.tsx] POSTing to /api/update-and-check-views for ${userId}`); // UPDATE ROUTE NAME IF DIFFERENT
-      const res = await fetch(`/api/update-and-check-views`, { // <-- Make sure this is your new API route path
+      // console.log(`[page.tsx] POSTing to /api/update-and-check-views for ${userId}`);
+      const res = await fetch(`/api/update-and-check-views`, { // Ensure this path is correct
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export default function HomePage() {
           body: JSON.stringify({ userId: userId }),
       });
 
-      console.log(`[page.tsx] API Response Status: ${res.status} for ${userId}`);
+      // console.log(`[page.tsx] API Response Status: ${res.status} for ${userId}`);
 
       if (!res.ok) {
           const errorText = await res.text();
@@ -81,20 +81,20 @@ export default function HomePage() {
           try {
               const errorJson = JSON.parse(errorText);
               detail = errorJson.error || errorJson.message || errorText;
-          // --- FIX: Rename unused variable ---
-          } catch (_parseError) { // Renamed parseError to _parseError
-          // --- END FIX ---
+          // Ignore unused variable error for the catch block variable
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_parseError) {
               // Keep original text if not JSON
           }
           throw new Error(`Failed to update/check view status (${res.status}): ${detail}`);
       }
 
       const data = await res.json();
-      console.log(`[page.tsx] API Response Data for ${userId}:`, data);
+      // console.log(`[page.tsx] API Response Data for ${userId}:`, data);
 
       if (data && typeof data.viewsCount !== 'undefined' && typeof data.showPaywall !== 'undefined') {
           setViewData({ count: data.viewsCount, showPaywall: data.showPaywall });
-          console.log(`[page.tsx] State Updated for ${userId}: viewsCount=${data.viewsCount}, showPaywall=${data.showPaywall}`);
+          // console.log(`[page.tsx] State Updated for ${userId}: viewsCount=${data.viewsCount}, showPaywall=${data.showPaywall}`);
       } else {
            throw new Error("Invalid data received from view update/check API.");
       }
@@ -106,7 +106,7 @@ export default function HomePage() {
       setViewData(null);
     } finally {
       setIsLoading(false);
-      console.log(`[page.tsx] Finished view update/check cycle for ${userId}. Loading set to false.`);
+      // console.log(`[page.tsx] Finished view update/check cycle for ${userId}. Loading set to false.`);
     }
   }, [userId, pathname]);
 
@@ -115,14 +115,13 @@ export default function HomePage() {
       if(userId && !exemptPaths.includes(pathname)){
           updateAndCheckViewStatus();
       } else if (!userId && !exemptPaths.includes(pathname)) {
-          console.log("[page.tsx] Waiting for userId before checking view status.");
+          // console.log("[page.tsx] Waiting for userId before checking view status.");
           setIsLoading(true);
       }
   }, [userId, pathname, updateAndCheckViewStatus]);
 
 
   // --- Render Logic ---
-  // (Console logs for debugging - can be removed later)
   // console.log(`[page.tsx] Rendering decision: isLoading=${isLoading}, viewData=`, viewData, `pathname=${pathname}`);
 
   if (exemptPaths.includes(pathname)) {
@@ -153,14 +152,17 @@ export default function HomePage() {
                 width={80}
                 height={80}
                 className="w-20 h-20"
+                priority // Prioritize loading logo
               />
               <div>
                 <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
                   <span>First Serve</span> <span>Seattle</span>
                 </h1>
+                {/* --- FIX: Escaped apostrophe --- */}
                 <p className="text-base md:text-lg font-semibold">
-                  Today's Open Tennis and Pickleball Courts
+                  Today&apos;s Open Tennis and Pickleball Courts
                 </p>
+                {/* --- END FIX --- */}
               </div>
             </div>
           </header>
@@ -200,7 +202,7 @@ export default function HomePage() {
               <span className="text-gray-400 hidden md:inline">|</span>
               <a href="/terms-of-service" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap">Terms of Service</a>
               <span className="text-gray-400 hidden md:inline">|</span>
-              {/* Check carefully around here (line ~176) in your code for any stray apostrophes */}
+              {/* This area should now be clear of lint errors */}
               <Button asChild variant="link" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto">
                 <a href="mailto:support@firstserveseattle.com">Questions?</a>
               </Button>
