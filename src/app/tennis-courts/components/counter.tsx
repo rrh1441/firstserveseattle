@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-// Removed Eye import: import { Eye } from 'lucide-react';
+// Removed Eye import
 
 const ViewsCounter = ({ viewsCount }: { viewsCount: number }) => {
   const maxViews = 3; // Total free views allowed
@@ -30,7 +30,8 @@ const ViewsCounter = ({ viewsCount }: { viewsCount: number }) => {
       displayText = `${currentViewOrdinal} Free Court Check - ${remainingViews} Remaining`;
       // --- END UPDATE ---
   } else {
-      displayText = `You've used all ${maxViews} free checks`; // Adjusted wording here too
+      // --- FIX APOSTROPHE HERE ---
+      displayText = `You&apos;ve used all ${maxViews} free checks`; // Replaced ' with &apos;
   }
 
 
