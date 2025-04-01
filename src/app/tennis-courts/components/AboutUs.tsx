@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import Image from "next/image";
 import { Button } from "@/components/ui/button"; // Adjust path if needed
-import { X, Info, KeyRound, AlertTriangle } from "lucide-react";
+import { X, Info, KeyRound, AlertTriangle } from "lucide-react"; // Keep imports needed here
 
 interface AboutUsProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export default function AboutUs({ isOpen, onClose }: AboutUsProps) {
   // Don't render the modal if it's not open
   if (!isOpen) return null;
 
-  // Modal JSX (copied and adapted from TennisCourtList.tsx)
+  // Modal JSX
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in-0 duration-300"
@@ -45,7 +45,7 @@ export default function AboutUs({ isOpen, onClose }: AboutUsProps) {
             className="absolute top-3 right-3 z-10 text-gray-400 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="Close modal"
           >
-            <X size={22} />
+            <X size={22} /> {/* X is used here */}
           </button>
         {/* Scrollable Content */}
         <div className="overflow-y-auto p-6 sm:p-8">
@@ -69,21 +69,23 @@ export default function AboutUs({ isOpen, onClose }: AboutUsProps) {
             <div className="space-y-6">
                 {/* How It Works */}
                 <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1 text-blue-600"> <Info size={20} /> </div>
+                    <div className="flex-shrink-0 mt-1 text-blue-600"> <Info size={20} /> </div>{/* Info is used here */}
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">How It Works</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                            First Serve Seattle checks the official Parks reservation system each morning to show you today's available public tennis and pickleball courts for walk-on play. No more guesswork!
+                            {/* LINT FIX: Replaced ' with &apos; */}
+                            First Serve Seattle checks the official Parks reservation system each morning to show you today&apos;s available public tennis and pickleball courts for walk-on play. No more guesswork!
                         </p>
                     </div>
                 </div>
                 {/* Availability Key */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4">
                     <div className="flex items-center gap-2 mb-3">
-                        <KeyRound size={18} className="text-gray-600" />
+                        <KeyRound size={18} className="text-gray-600" /> {/* KeyRound is used here */}
                         <h3 className="font-semibold text-gray-800">Availability Key</h3>
                     </div>
                     <div className="space-y-2 text-sm">
+                        {/* Key items... */}
                         <div className="flex items-center">
                             <span className="w-3.5 h-3.5 rounded-full bg-green-500 border border-green-600/50 mr-2 flex-shrink-0"></span>
                             <span className="font-medium text-gray-700 w-16">Green:</span>
@@ -106,11 +108,12 @@ export default function AboutUs({ isOpen, onClose }: AboutUsProps) {
                 </div>
                  {/* Booking Ahead */}
                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1 text-orange-600"> <AlertTriangle size={20} /> </div>
+                    <div className="flex-shrink-0 mt-1 text-orange-600"> <AlertTriangle size={20} /> </div> {/* AlertTriangle is used here */}
                     <div>
                         <h3 className="font-semibold text-gray-800 mb-1">Booking Ahead?</h3>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                            This app shows <span className="font-medium">today's</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
+                            {/* LINT FIX: Replaced ' with &apos; */}
+                            This app shows <span className="font-medium">today&apos;s</span> walk-on potential. To reserve courts for future dates, please use the official{" "}
                             <a href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">
                                 Seattle Parks Reservation Site
                             </a>.
@@ -122,7 +125,6 @@ export default function AboutUs({ isOpen, onClose }: AboutUsProps) {
         {/* Modal Footer */}
         <div className="p-6 pt-4 bg-gray-50 border-t border-gray-200 mt-auto">
             <Button
-                // Link to signup page - consider using NextLink if appropriate
                 onClick={() => window.location.href = "/signup"}
                 className="w-full bg-[#0c372b] text-white hover:bg-[#0c372b]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 px-6 py-3 text-base font-semibold"
             >
