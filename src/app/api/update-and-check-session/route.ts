@@ -21,7 +21,8 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   },
 });
 
-const PAYWALL_LIMIT = 3; // Define the view limit
+// Define the view limit before paywall
+const PAYWALL_LIMIT = 3;
 
 export async function POST(request: Request) {
   let userId: string | undefined;
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     userId = body.userId;
 
+    // Validate userId presence
     if (!userId) {
       console.warn("[API update-and-check] Missing userId in request body");
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
@@ -40,35 +42,38 @@ export async function POST(request: Request) {
     // --- Upsert and Increment Logic ---
     let currentViews = 0;
 
-    // 1. Check if user exists
+    // 1. Check if user session exists
     const { data: existingUser, error: selectError } = await supabaseAdmin
       .from("user_sessions")
       .select("id, views_count") // Select primary key 'id' and 'views_count'
       .eq("user_id", userId)
-      .maybeSingle(); // Use maybeSingle to handle null if not found
+      .maybeSingle(); // Handles case where user doesn't exist yet (returns null)
 
+    // Handle database errors during select
     if (selectError) {
       console.error(
         `[API update-and-check] Error selecting user ${userId}:`,
         selectError
       );
-      // Don't expose detailed DB errors to client
       return NextResponse.json(
         { error: "Database error checking user session." },
         { status: 500 }
       );
     }
 
-    // 2. Increment or Insert
+    // 2. Increment existing session or Insert new session
     if (existingUser) {
-      // User exists, increment count
+      // User exists: Increment view count and update timestamp
       currentViews = (existingUser.views_count ?? 0) + 1;
       const { error: updateError } = await supabaseAdmin
         .from("user_sessions")
-        // *** CORRECTED HERE: changed last_viewed_at to updated_at ***
-        .update({ views_count: currentViews, updated_at: new Date().toISOString() })
+        .update({
+           views_count: currentViews,
+           updated_at: new Date().toISOString() // Use correct column name 'updated_at'
+          })
         .eq("id", existingUser.id); // Match on the primary key 'id'
 
+      // Handle database errors during update
       if (updateError) {
         console.error(
           `[API update-and-check] Error updating user ${userId} (ID: ${existingUser.id}):`,
@@ -82,25 +87,26 @@ export async function POST(request: Request) {
       console.log(`[API update-and-check] Incremented views for ${userId} to ${currentViews}`);
 
     } else {
-      // User does not exist, insert new record
-      currentViews = 1; // First view
+      // User does not exist: Insert new record with view count 1
+      currentViews = 1;
       const { error: insertError } = await supabaseAdmin
         .from("user_sessions")
         .insert({
             user_id: userId,
             views_count: currentViews,
             created_at: new Date().toISOString(),
-            // *** CORRECTED HERE: changed last_viewed_at to updated_at ***
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString() // Use correct column name 'updated_at'
           });
 
+      // Handle database errors during insert
       if (insertError) {
+        // Log the specific error from Supabase that was causing the 400/500
         console.error(
           `[API update-and-check] Error inserting user ${userId}:`,
           insertError
         );
-        // This was the block causing the specific 500 error message you saw
         return NextResponse.json(
+          // Return the consistent error message
           { error: "Database error creating user session." },
           { status: 500 }
         );
@@ -109,34 +115,34 @@ export async function POST(request: Request) {
     }
     // --- End Upsert Logic ---
 
-    // 3. Determine paywall status
+    // 3. Determine if paywall should be shown
     const showPaywall = currentViews > PAYWALL_LIMIT;
     console.log(`[API update-and-check] User ${userId}: Views=${currentViews}, ShowPaywall=${showPaywall}`);
 
-
-    // 4. Return the result
+    // 4. Return the result to the client
     return NextResponse.json({
       showPaywall: showPaywall,
-      viewsCount: currentViews,
+      viewsCount: currentViews, // Return the current (potentially incremented) view count
     });
 
   } catch (error: unknown) {
-     // Catch errors from JSON parsing or unexpected issues
-    console.error("[API update-and-check] Unhandled error:", error);
+     // Catch errors from JSON parsing or other unexpected issues
+    console.error("[API update-and-check] Unhandled error in POST handler:", error);
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
      // Log the userId if available even in case of error
     if (userId) {
-        console.error(`[API update-and-check] Error occurred for userId: ${userId}`);
+        console.error(`[API update-and-check] Error occurred processing userId: ${userId}`);
     }
+    // Return a generic server error response
     return NextResponse.json(
-      { error: "Internal server error.", details: errorMessage }, // Keep details generic for client
+      { error: "Internal server error.", details: errorMessage },
       { status: 500 }
     );
   }
 }
 
-// Optional: Add a GET handler if needed for testing, but POST is primary
-// Removed unused 'request' parameter to satisfy eslint (@typescript-eslint/no-unused-vars)
+// GET handler (optional, returns 405 Method Not Allowed)
 export async function GET() {
+     console.log("[API update-and-check] Received GET request (Not Allowed)");
      return NextResponse.json({ error: "Method Not Allowed. Use POST." }, { status: 405 });
 }
