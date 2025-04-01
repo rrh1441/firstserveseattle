@@ -5,15 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 // Removed Eye import: import { Eye } from 'lucide-react';
 
 const ViewsCounter = ({ viewsCount }: { viewsCount: number }) => {
-  const maxViews = 5; // Total free views allowed
+  const maxViews = 3; // Total free views allowed
 
   // Map numbers to ordinal words
   const ordinalMap: { [key: number]: string } = {
     1: 'First',
     2: 'Second',
-    3: 'Third',
-    4: 'Fourth',
-    5: 'Fifth'
+    3: 'Third'
   };
 
   // Calculate the current view number (1-based index)

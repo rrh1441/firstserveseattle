@@ -1,7 +1,6 @@
 // src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
-// Make sure ALL necessary imports are here
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -291,8 +290,7 @@ export default function TennisCourtList() {
   });
 
    const today = new Date();
-   // Use Seattle timezone if possible, otherwise fallback to system timezone
-   const timeZone = 'America/Los_Angeles';
+   const timeZone = 'America/Los_Angeles'; // Seattle Timezone
    const todayDate = today.toLocaleDateString("en-US", {
         weekday: 'long',
         month: 'long',
@@ -418,18 +416,16 @@ export default function TennisCourtList() {
                 </div>
               </div>
               <CardContent className="p-3 space-y-3">
-                 {/* --- UPDATED GRID CLASSES --- */}
+                 {/* Grid with 3 cols default, 4 cols on sm+ */}
                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                 {/* --- END GRID CLASS UPDATE --- */}
                    {timesInOneHour.map((timeSlot, idx) => {
                      const colorClass = getHourAvailabilityColor(court, timeSlot);
-                     // Use format like "7am", "12pm", "2pm"
                      const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
                      return (
                        <div
                          key={idx}
-                         // Adjusted text size slightly for potentially longer "10am" etc.
-                         className={`text-center py-1.5 px-0.5 rounded text-[10px] sm:text-xs ${colorClass} font-medium shadow-sm transition-colors duration-150`}
+                         // UPDATED: Increased py and text sizes
+                         className={`text-center py-2 px-1 rounded text-xs sm:text-sm ${colorClass} font-medium shadow-sm transition-colors duration-150`}
                          title={`Availability ${timeSlot} - ${
                             colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved'
                          }`}
