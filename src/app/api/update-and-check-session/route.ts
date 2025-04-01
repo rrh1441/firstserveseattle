@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     // 1. Check if user exists
     const { data: existingUser, error: selectError } = await supabaseAdmin
       .from("user_sessions")
-      .select("views_count")
+      .select("id, views_count") // Select primary key 'id' and 'views_count'
       .eq("user_id", userId)
       .maybeSingle(); // Use maybeSingle to handle null if not found
 
@@ -65,12 +65,13 @@ export async function POST(request: Request) {
       currentViews = (existingUser.views_count ?? 0) + 1;
       const { error: updateError } = await supabaseAdmin
         .from("user_sessions")
-        .update({ views_count: currentViews, last_viewed_at: new Date().toISOString() }) // Also update last viewed time
-        .eq("user_id", userId); // Match on user_id
+        // *** CORRECTED HERE: changed last_viewed_at to updated_at ***
+        .update({ views_count: currentViews, updated_at: new Date().toISOString() })
+        .eq("id", existingUser.id); // Match on the primary key 'id'
 
       if (updateError) {
         console.error(
-          `[API update-and-check] Error updating user ${userId}:`,
+          `[API update-and-check] Error updating user ${userId} (ID: ${existingUser.id}):`,
           updateError
         );
         return NextResponse.json(
@@ -86,10 +87,11 @@ export async function POST(request: Request) {
       const { error: insertError } = await supabaseAdmin
         .from("user_sessions")
         .insert({
-           user_id: userId,
-           views_count: currentViews,
-           created_at: new Date().toISOString(),
-           last_viewed_at: new Date().toISOString()
+            user_id: userId,
+            views_count: currentViews,
+            created_at: new Date().toISOString(),
+            // *** CORRECTED HERE: changed last_viewed_at to updated_at ***
+            updated_at: new Date().toISOString()
           });
 
       if (insertError) {
@@ -97,6 +99,7 @@ export async function POST(request: Request) {
           `[API update-and-check] Error inserting user ${userId}:`,
           insertError
         );
+        // This was the block causing the specific 500 error message you saw
         return NextResponse.json(
           { error: "Database error creating user session." },
           { status: 500 }
