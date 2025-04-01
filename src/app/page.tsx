@@ -7,7 +7,7 @@ import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Paywall from "./tennis-courts/components/paywall";
-// REMOVE: import { updateUserSession } from "@/lib/updateUserSessions"; // No longer needed here
+// No longer importing updateUserSession directly
 import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 import ViewsCounter from "./tennis-courts/components/counter";
 
@@ -145,9 +145,11 @@ export default function HomePage() {
                 <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
                   <span>First Serve</span> <span>Seattle</span>
                 </h1>
+                {/* ===================== FIX HERE ===================== */}
                 <p className="text-base md:text-lg font-semibold">
-                  Today's Open Tennis and Pickleball Courts
+                  Today&apos;s Open Tennis and Pickleball Courts
                 </p>
+                {/* ==================================================== */}
               </div>
             </div>
             {/* <<<< The Button component previously here is now REMOVED >>>> */}
