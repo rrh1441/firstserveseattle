@@ -14,7 +14,7 @@ const features = [
   "Priority customer support",
 ];
 
-// A/B Test Headlines
+// A/B T est Headlines
 const headlines = [
     { group: 'A', text: "Stop guessing, start playing!" },
     { group: 'B', text: "Never drive to a full court again!" }
