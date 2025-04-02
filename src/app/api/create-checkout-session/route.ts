@@ -1,7 +1,7 @@
 /* src/app/api/create-checkout-session/route.ts */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers"; // Make sure this import is present
+import { cookies } from "next/headers"; // Ensure this import is present
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 // Ensure these URLs are correct for your production environment
@@ -34,47 +34,41 @@ export async function POST(request: Request) {
     // Check for Stripe secret key configuration
     if (!STRIPE_SECRET_KEY) {
         console.error("Stripe secret key environment variable is not configured.");
-        // Do not expose detailed errors to the client
         throw new Error("Server configuration error related to payment processing.");
     }
 
-    // =============================== FIX ===============================
     // Initialize Stripe client WITHOUT explicit apiVersion
     const stripe = new Stripe(STRIPE_SECRET_KEY);
-    // ===================================================================
 
+    // =============================== FIX ===============================
      // Retrieve cookies for potential metadata (using await)
-     const cookieStore = cookies(); // Use the imported 'cookies' function
-     const visitorId = cookieStore.get('datafast_visitor_id')?.value; // Type: string | undefined
-     const sessionId = cookieStore.get('datafast_session_id')?.value; // Type: string | undefined
+     const cookieStore = await cookies(); // <<< Use await here
+     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
+     const sessionId = cookieStore.get('datafast_session_id')?.value;
+    // ===================================================================
 
     // Prepare parameters for the Stripe Checkout Session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      allow_promotion_codes: true, // Allow other promo codes if needed
+      allow_promotion_codes: true,
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       metadata: {
         plan: selectedPlan,
-        // Use nullish coalescing to provide null if undefined, matching Stripe's allowed types
         visitorId: visitorId ?? null,
         sessionId: sessionId ?? null
-        // Add any other metadata you need
       },
-      // Ensure other parameters like payment_method_types are added if required by your Stripe setup
-      // payment_method_types: ['card'], // Example: Uncomment if needed
     };
 
     // Apply the 50% off coupon AUTOMATICALLY only for the MONTHLY plan
     if (selectedPlan === "monthly") {
-      // Ensure the coupon ID is correct
       sessionParams.discounts = [{ coupon: FIRST_MONTH_50_OFF_COUPON_ID }];
       console.log(`Applying coupon ${FIRST_MONTH_50_OFF_COUPON_ID} for monthly plan checkout.`);
     }
 
     // Create the Stripe Checkout Session
-    console.log("Attempting to create Stripe checkout session with params:", JSON.stringify(sessionParams, null, 2)); // Log params for debugging
+    console.log("Attempting to create Stripe checkout session with params:", JSON.stringify(sessionParams, null, 2));
     const session = await stripe.checkout.sessions.create(sessionParams);
     console.log("Stripe checkout session created successfully:", session.id);
 
@@ -88,20 +82,18 @@ export async function POST(request: Request) {
     if (err instanceof Stripe.errors.StripeError) {
         message = `Stripe Error: ${err.message}`;
         stripeErrorCode = err.code;
-        console.error("Stripe Error Details:", err); // Log the full Stripe error
+        console.error("Stripe Error Details:", err);
     } else if (err instanceof Error) {
-        message = err.message; // Log the actual error server-side
+        message = err.message;
     } else if (typeof err === 'string') {
         message = err;
     }
 
-    // Log the detailed error on the server for debugging
     console.error("Error creating Stripe checkout session:", message);
-    // Return a generic error message to the client for security
     return NextResponse.json({
         error: "Failed to initialize the checkout process. Please try again later.",
-        details: message, // Keep internal details potentially useful but generic error msg
-        code: stripeErrorCode // Optionally pass code if  needed client-side (use carefully)
+        details: message,
+        code: stripeErrorCode
        }, { status: 500 });
   }
 }
