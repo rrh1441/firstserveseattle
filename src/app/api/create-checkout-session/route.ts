@@ -1,7 +1,7 @@
 /* src/app/api/create-checkout-session/route.ts */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers";
+import { cookies } from "next/headers"; // Make sure this import is present
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 // Ensure these URLs are correct for your production environment
@@ -38,13 +38,13 @@ export async function POST(request: Request) {
         throw new Error("Server configuration error related to payment processing.");
     }
 
-    // Initialize Stripe client with the correct API version
-    const stripe = new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: '2025-02-24.acacia', // Use the version required by the library
-    });
+    // =============================== FIX ===============================
+    // Initialize Stripe client WITHOUT explicit apiVersion
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
+    // ===================================================================
 
      // Retrieve cookies for potential metadata (using await)
-     const cookieStore = await cookies();
+     const cookieStore = cookies(); // Use the imported 'cookies' function
      const visitorId = cookieStore.get('datafast_visitor_id')?.value; // Type: string | undefined
      const sessionId = cookieStore.get('datafast_session_id')?.value; // Type: string | undefined
 
@@ -60,7 +60,10 @@ export async function POST(request: Request) {
         // Use nullish coalescing to provide null if undefined, matching Stripe's allowed types
         visitorId: visitorId ?? null,
         sessionId: sessionId ?? null
+        // Add any other metadata you need
       },
+      // Ensure other parameters like payment_method_types are added if required by your Stripe setup
+      // payment_method_types: ['card'], // Example: Uncomment if needed
     };
 
     // Apply the 50% off coupon AUTOMATICALLY only for the MONTHLY plan
@@ -71,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     // Create the Stripe Checkout Session
-    console.log("Attempting to create Stripe checkout session with params:", sessionParams);
+    console.log("Attempting to create Stripe checkout session with params:", JSON.stringify(sessionParams, null, 2)); // Log params for debugging
     const session = await stripe.checkout.sessions.create(sessionParams);
     console.log("Stripe checkout session created successfully:", session.id);
 
@@ -80,14 +83,25 @@ export async function POST(request: Request) {
 
   } catch (err: unknown) {
     let message = "Unknown error occurred while creating checkout session.";
-    if (err instanceof Error) {
-      message = err.message; // Log the actual error server-side
+    let stripeErrorCode: string | undefined;
+
+    if (err instanceof Stripe.errors.StripeError) {
+        message = `Stripe Error: ${err.message}`;
+        stripeErrorCode = err.code;
+        console.error("Stripe Error Details:", err); // Log the full Stripe error
+    } else if (err instanceof Error) {
+        message = err.message; // Log the actual error server-side
     } else if (typeof err === 'string') {
         message = err;
     }
+
     // Log the detailed error on the server for debugging
     console.error("Error creating Stripe checkout session:", message);
     // Return a generic error message to the client for security
-    return NextResponse.json({ error: "Failed to initialize the checkout process. Please try again later." }, { status: 500 });
+    return NextResponse.json({
+        error: "Failed to initialize the checkout process. Please try again later.",
+        details: message, // Keep internal details potentially useful but generic error msg
+        code: stripeErrorCode // Optionally pass code if  needed client-side (use carefully)
+       }, { status: 500 });
   }
 }
