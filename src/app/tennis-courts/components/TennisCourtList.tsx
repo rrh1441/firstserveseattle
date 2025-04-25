@@ -25,111 +25,72 @@ interface Court {
   facility_type: string;
   address: string | null;
   // Ensure this matches the name used in getTennisCourts and mapping
-  // If getTennisCourts maps to `Maps_url`, use that here.
-  // If it maps to `Maps_url`, use `Maps_url`. Let's assume `Maps_url` based on getTennisCourts.
-  Maps_url?: string | null; // Renamed for clarity, adjust if needed
+  Maps_url?: string | null; // Use the name consistent with getTennisCourts
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
-  ball_machine: boolean; // <-- Add ball machine property
+  ball_machine: boolean; // ball machine property
   parsed_intervals: ParsedInterval[];
 }
 
 // --- Helper functions (timeToMinutes, isRangeFree, getHourAvailabilityColor) ---
-// ... (Keep existing helper functions as they are) ...
+// Keep the robust helper functions from previous steps
 function timeToMinutes(str: string): number {
   if (!str) return -1;
-  // Robust split: handles potential extra spaces around AM/PM
   const parts = str.toUpperCase().split(/\s+/);
-  if (parts.length !== 2) return -1; // Expecting "TIME AMPM"
-
+  if (parts.length !== 2) return -1;
   const [time, ampm] = parts;
   if (!time || !ampm || (ampm !== "AM" && ampm !== "PM")) return -1;
-
   const [hhStr, mmStr] = time.split(":");
   if (!hhStr || !mmStr) return -1;
-
-  // Use parseFloat and check for NaN for more robust parsing
   const hh = parseFloat(hhStr);
   const mm = parseFloat(mmStr);
-
-  if (isNaN(hh) || isNaN(mm) || hh < 1 || hh > 12 || mm < 0 || mm > 59) return -1; // Validate hours (1-12) and minutes (0-59)
-
-  // Careful with integer conversion after validation
+  if (isNaN(hh) || isNaN(mm) || hh < 1 || hh > 12 || mm < 0 || mm > 59) return -1;
   const hhInt = Math.floor(hh);
   const mmInt = Math.floor(mm);
-
-
   const adjustedHh =
     ampm === "PM" && hhInt < 12
       ? hhInt + 12
       : ampm === "AM" && hhInt === 12
-      ? 0 // Midnight case (12 AM)
-      : hhInt; // Handles 1 AM to 11 AM and 12 PM correctly
-
-  // Handle potential edge case: 12 PM should be 12 * 60, not (12+12)*60
-  // The logic above already handles this, 12 PM becomes adjustedHh = 12.
-
+      ? 0
+      : hhInt;
   return adjustedHh * 60 + mmInt;
 }
 
 function isRangeFree(court: Court, startM: number, endM: number): boolean {
-  // Add check for empty parsed_intervals
   if (!Array.isArray(court.parsed_intervals) || court.parsed_intervals.length === 0 || startM === -1 || endM === -1) {
      return false;
   }
-
   return court.parsed_intervals.some((interval) => {
-    // Ensure interval has start and end times before parsing
     if (!interval || !interval.start || !interval.end) return false;
-
     const intervalStart = timeToMinutes(interval.start);
     const intervalEnd = timeToMinutes(interval.end);
-
-    // Skip if interval times are invalid
     if (intervalStart === -1 || intervalEnd === -1) {
-      // Optional: Log warning about invalid interval data for the court
-      // console.warn(`Invalid time found in interval for court ${court.id}:`, interval);
       return false;
     }
-
-    // Check for overlap: Interval includes the requested [startM, endM] slot
-    // Note: This logic assumes intervals represent *available* time.
-    // If intervals represent *booked* time, the logic needs inversion.
-    // Assuming intervals = available time slots based on function name "isRangeFree"
     return intervalStart <= startM && intervalEnd >= endM;
   });
 }
 
-
 function getHourAvailabilityColor(court: Court, hourSlot: string): string {
   const startM = timeToMinutes(hourSlot);
-  // If the hour slot itself is invalid, return gray
   if (startM === -1) return "bg-gray-200 text-gray-400";
-
-  const midM = startM + 30; // Check 30 min into the hour
-  const endM = startM + 60; // Check the end of the hour slot
-
-  // Check if the first half [startM, midM) and second half [midM, endM) are free
+  const midM = startM + 30;
+  const endM = startM + 60;
   const half1Free = isRangeFree(court, startM, midM);
   const half2Free = isRangeFree(court, midM, endM);
-
   if (half1Free && half2Free) {
-    return "bg-green-500 text-white"; // Fully available for the hour
+    return "bg-green-500 text-white"; // Fully available
   } else if (!half1Free && !half2Free) {
-    // If neither half is free according to parsed_intervals, it's fully reserved/unavailable
-    return "bg-gray-400 text-gray-100"; // Fully reserved / unavailable data
+    return "bg-gray-400 text-gray-100"; // Fully reserved/unavailable
   } else {
-    // If one half is free but the other isn't, it's partially available
     return "bg-orange-400 text-white"; // Partially available
   }
 }
 
 
 // --- Skeleton Loader Components ---
-// ... (CourtCardSkeleton and CourtListSkeleton remain the same) ...
 function CourtCardSkeleton() {
-  // Mimics the structure and height of a single court card
   return (
     <Card className="shadow-md overflow-hidden border border-gray-200 rounded-lg animate-pulse">
       {/* Skeleton Header */}
@@ -138,10 +99,10 @@ function CourtCardSkeleton() {
           <div className="flex-1 min-w-0 space-y-2">
             <div className="h-4 bg-gray-200 rounded w-3/4 mb-1.5"></div> {/* Skeleton Title */}
             <div className="flex flex-wrap gap-x-3 gap-y-1">
-              {/* Adjust width/number based on average visible attributes */}
               <div className="h-3 bg-gray-200 rounded w-12"></div>
               <div className="h-3 bg-gray-200 rounded w-16"></div>
               <div className="h-3 bg-gray-200 rounded w-10"></div>
+              <div className="h-3 bg-gray-200 rounded w-14"></div> {/* Added for Ball Machine possibility */}
             </div>
           </div>
           <div className="flex-shrink-0">
@@ -159,7 +120,7 @@ function CourtCardSkeleton() {
         </div>
         {/* Skeleton Map Button */}
         <div className="h-8 bg-gray-200 rounded w-full mt-3"></div>
-        {/* Optional: Skeleton for potential Ball Machine Button */}
+        {/* Skeleton Ball Machine Button */}
         <div className="h-8 bg-gray-200 rounded w-full mt-2"></div>
       </CardContent>
     </Card>
@@ -167,7 +128,6 @@ function CourtCardSkeleton() {
 }
 
 function CourtListSkeleton({ count = 5 }: { count?: number }) {
-  // Renders multiple skeleton cards to approximate list height
   return (
     <div className="space-y-4">
       {Array.from({ length: count }).map((_, index) => (
@@ -187,7 +147,7 @@ export default function TennisCourtList() {
     lights: false,
     hitting_wall: false,
     pickleball_lined: false,
-    ball_machine: false, // <-- Add ball_machine filter state
+    ball_machine: false, // ball_machine filter state
   });
   const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,26 +167,22 @@ export default function TennisCourtList() {
     setError(null);
     getTennisCourts()
       .then((data) => {
-        // More robust check: is it an array?
         if (!Array.isArray(data)) {
            console.error("Received invalid court data format:", data);
            setError("Failed to load court data: Invalid format received.");
-           setCourts([]); // Set to empty array on invalid data
+           setCourts([]);
         } else {
-           // Optional: Further validation of array items if needed
-           // e.g., data.every(item => typeof item === 'object' && item !== null && 'id' in item)
            setCourts(data);
         }
       })
       .catch((err) => {
         console.error("Failed to fetch tennis courts:", err);
-        // Provide a user-friendly error message
         setError(`Failed to load court data. ${err.message || 'Please check connection or try refreshing.'}`);
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, []); // Empty dependency array: runs once on mount
+  }, []);
 
   // --- Load favorites ---
   useEffect(() => {
@@ -241,13 +197,11 @@ export default function TennisCourtList() {
                 localStorage.removeItem("favoriteCourts");
             }
         }
-    // Use specific catch if needed, otherwise generic is fine
     } catch (e) {
         console.error("Failed to parse favorite courts from localStorage.", e);
-        // Clear potentially corrupted data
         localStorage.removeItem("favoriteCourts");
     }
-  }, []); // Empty dependency array
+  }, []);
 
   // --- Handler Functions ---
   const toggleFavorite = (courtId: number) => {
@@ -260,13 +214,11 @@ export default function TennisCourtList() {
           localStorage.setItem("favoriteCourts", JSON.stringify(updated));
       } catch (e) {
           console.error("Failed to save favorites to localStorage.", e);
-          // Optional: Notify user of persistence failure?
       }
       return updated;
     });
   };
 
-  // Type the filter key correctly
   const toggleFilter = (filter: keyof typeof filters) => {
     setFilters((prev) => ({ ...prev, [filter]: !prev[filter] }));
   };
@@ -281,33 +233,26 @@ export default function TennisCourtList() {
 
   // Safely get Google Maps URL
   const getGoogleMapsUrl = (court: Court): string => {
-    // Use the potentially renamed property `Maps_url`
     if (court.Maps_url && court.Maps_url.trim().startsWith('http')) {
       return court.Maps_url;
     }
-    // Use address OR title as fallback query
-    // Ensure title/address are not null/empty before encoding
     const query = court.address?.trim() || court.title?.trim() || 'Seattle Tennis Court';
     const encodedQuery = encodeURIComponent(query);
-    // Use standard Google Maps search URL
-    return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`; // Use https and standard search query param
+    // Corrected Google Maps Search URL
+    return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
   };
 
 
   // --- Filtering and Sorting ---
   const filteredCourts = courts.filter((court) => {
-      // Match search term (case-insensitive) in title
       const lowerSearchTerm = searchTerm.toLowerCase();
       const matchesSearch = !lowerSearchTerm || (court.title && court.title.toLowerCase().includes(lowerSearchTerm));
 
-      // Match active filters
-      // This logic automatically includes the new 'ball_machine' filter
       const matchesFilters = (Object.keys(filters) as Array<keyof typeof filters>).every((filterKey) => {
-          // If the filter is off (filters[filterKey] is false), it always matches.
           if (!filters[filterKey]) return true;
-          // If the filter is on, the corresponding court property must be explicitly true.
-          // Use bracket notation for dynamic access. Ensure the property exists and is boolean.
-          return court[filterKey] === true; // Check for explicit true
+          // Ensure the property exists on the court object before checking
+          // Although our Court type definition mandates these keys, data could potentially be malformed
+          return court.hasOwnProperty(filterKey) && court[filterKey] === true;
       });
 
       return matchesSearch && matchesFilters;
@@ -316,12 +261,9 @@ export default function TennisCourtList() {
   const sortedCourts = [...filteredCourts].sort((a, b) => {
       const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
       const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
-      // Sort favorites to the top
-      if (aFav !== bFav) return bFav - aFav; // Higher fav score comes first
-      // Then sort alphabetically by title (case-insensitive, handles nulls)
+      if (aFav !== bFav) return bFav - aFav;
       const titleA = a.title || '';
       const titleB = b.title || '';
-      // localeCompare is good for alphabetical sorting, handles different characters
       return titleA.localeCompare(titleB, undefined, { sensitivity: "base" });
   });
 
@@ -330,6 +272,7 @@ export default function TennisCourtList() {
   const timeZone = 'America/Los_Angeles'; // Seattle Timezone
   let todayDate = 'Loading date...';
   try {
+      // Make sure Intl is supported, or use a library like date-fns for wider compatibility if needed
       todayDate = today.toLocaleDateString("en-US", {
           weekday: 'long',
           month: 'long',
@@ -338,19 +281,17 @@ export default function TennisCourtList() {
       });
   } catch (e) {
       console.error("Error formatting date.", e);
-      todayDate = "Date Error"; // More specific fallback
+      todayDate = "Date Error"; // Fallback
   }
 
   // --- Define Filter Keys, Labels, and Icons ---
-  // Use 'as const' for type safety with filter keys
   const filterConfig = {
     lights: { label: 'Lights', icon: '/icons/lighticon.png' },
     pickleball_lined: { label: 'Pickleball', icon: '/icons/pickleballicon.png' },
     hitting_wall: { label: 'Wall', icon: '/icons/wallicon.png' },
-    ball_machine: { label: 'Ball Machine', icon: '/icons/ballmachine.png' }, // <-- Add config for ball machine
-  } as const; // Make keys readonly and specific
+    ball_machine: { label: 'Ball Machine', icon: '/icons/ballmachine.png' }, // config for ball machine
+  } as const;
 
-  // Type for filter keys derived from the config object
   type FilterKey = keyof typeof filterConfig;
 
 
@@ -363,10 +304,10 @@ export default function TennisCourtList() {
         {aboutModalOpen && <AboutUs isOpen={aboutModalOpen} onClose={() => setAboutModalOpen(false)} />}
         {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
-          {/* Header Content (Date, Search, Filters, Info Button) */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"> {/* Align items-start for better wrapping */}
+          {/* Header Content */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
              {/* Left Side */}
-             <div className="flex-grow space-y-3 w-full sm:w-auto"> {/* Allow left side to take width */}
+             <div className="flex-grow space-y-3 w-full sm:w-auto">
                 <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
                 <input
                     type="text"
@@ -376,8 +317,7 @@ export default function TennisCourtList() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
                     aria-label="Search courts by name"
                 />
-                <div className="flex items-center gap-2 flex-wrap"> {/* Allow filters to wrap */}
-                   {/* Map over the filter keys from the config object */}
+                <div className="flex items-center gap-2 flex-wrap">
                    {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
                        const { label, icon } = filterConfig[filterKey];
                        const isActive = filters[filterKey];
@@ -386,7 +326,7 @@ export default function TennisCourtList() {
                                key={filterKey}
                                onClick={() => toggleFilter(filterKey)}
                                variant="outline"
-                               size="sm"
+                               size="sm" // Use 'sm' size for filter buttons
                                className={`flex items-center justify-center gap-1.5 px-2.5 h-8 text-xs transition-colors duration-150 shadow-sm ${
                                 isActive
                                 ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
@@ -394,7 +334,6 @@ export default function TennisCourtList() {
                                }`}
                                aria-pressed={isActive}
                            >
-                              {/* Use Next Image for optimization, ensure public path is correct */}
                               <Image src={icon} alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
                               {label}
                            </Button>
@@ -403,12 +342,11 @@ export default function TennisCourtList() {
                 </div>
             </div>
             {/* Right Side: Info Button */}
-            {/* Add sm:ml-4 for spacing on larger screens */}
-            <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
+             <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
-                    size="sm"
+                    size="sm" // Use 'sm' size for info button
                     className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-8 text-xs flex items-center gap-1.5 shadow-sm"
                     aria-label="Open Information and Key"
                 >
@@ -431,8 +369,6 @@ export default function TennisCourtList() {
         <div className="text-center p-6 bg-red-50 border border-red-200 rounded-lg shadow-sm">
             <h3 className="text-lg font-semibold text-red-800 mb-2">Oops! Something went wrong.</h3>
             <p className="text-base text-red-700">{error}</p>
-            {/* Optional: Add a retry button */}
-             {/* <Button onClick={() => window.location.reload()} className="mt-4">Try Again</Button> */}
         </div>
       </div>
     );
@@ -445,7 +381,7 @@ export default function TennisCourtList() {
 
         {/* Sticky Header with Filters */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
-           {/* Header Content - Reuse the same structure as in loading state */}
+           {/* Header Content */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
              {/* Left Side */}
              <div className="flex-grow space-y-3 w-full sm:w-auto">
@@ -467,7 +403,7 @@ export default function TennisCourtList() {
                                key={filterKey}
                                onClick={() => toggleFilter(filterKey)}
                                variant="outline"
-                               size="sm"
+                               size="sm" // Use 'sm' size
                                className={`flex items-center justify-center gap-1.5 px-2.5 h-8 text-xs transition-colors duration-150 shadow-sm ${
                                 isActive
                                 ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
@@ -487,7 +423,7 @@ export default function TennisCourtList() {
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
-                    size="sm"
+                    size="sm" // Use 'sm' size
                     className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-8 text-xs flex items-center gap-1.5 shadow-sm"
                     aria-label="Open Information and Key"
                 >
@@ -501,7 +437,6 @@ export default function TennisCourtList() {
         {/* Court List or No Results Message */}
         {sortedCourts.length === 0 ? (
             <div className="text-center text-base text-gray-600 py-10 px-4 min-h-[200px] flex items-center justify-center">
-                 {/* Check if courts were loaded but filters/search yielded no results */}
                  {courts.length > 0 ? "No courts found matching your current search or filters." : "No court data available at this time."}
             </div>
         ) : (
@@ -513,11 +448,9 @@ export default function TennisCourtList() {
                            <div className="flex items-center justify-between gap-2">
                                {/* Court Title and Attributes */}
                                <div className="flex-1 min-w-0">
-                                   {/* Use text-lg for title? Adjust based on design */}
                                    <h3 className="text-base sm:text-lg font-semibold truncate text-gray-800" title={court.title ?? "Unknown Court"}>
                                        {court.title?.replace(/'/g, "'") || "Unknown Court"}
                                    </h3>
-                                   {/* Group attributes together */}
                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
                                       {court.lights && (
                                           <div className="flex items-center gap-1" title="Lights available">
@@ -534,7 +467,7 @@ export default function TennisCourtList() {
                                               <Image src="/icons/wallicon.png" alt="Wall" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Wall
                                           </div>
                                       )}
-                                      {/* Add Ball Machine attribute display if needed - distinct from the button */}
+                                      {/* Optional: Display Ball Machine attribute text if desired */}
                                       {/* {court.ball_machine && (
                                           <div className="flex items-center gap-1" title="Ball machine rental nearby">
                                               <Image src="/icons/ballmachine.png" alt="Ball Machine" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Machine Nearby
@@ -542,23 +475,23 @@ export default function TennisCourtList() {
                                       )} */}
                                    </div>
                                </div>
-                               {/* Favorite Button */}
+                               {/* Favorite Button --- CORRECTION APPLIED HERE --- */}
                                <div className="flex-shrink-0">
                                   <Button
                                     variant="ghost"
-                                    size="icon" // Make it a square icon button
+                                    // REMOVED size="icon"
                                     onClick={() => toggleFavorite(court.id)}
-                                    className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150"
+                                    // Use className for dimensions and padding
+                                    className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150 flex items-center justify-center"
                                     aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
                                   >
                                     <Star
-                                       size={18} // Adjust size as needed
-                                       // Use fill rule for better solid star appearance
+                                       size={18} // Icon size
                                        fill={favoriteCourts.includes(court.id) ? "currentColor" : "none"}
                                        className={`transition-colors duration-150 ${
                                         favoriteCourts.includes(court.id)
-                                        ? "text-yellow-400" // Star color when favorite
-                                        : "text-gray-400" // Default star outline color
+                                        ? "text-yellow-400" // Color when favorite
+                                        : "text-gray-400" // Default outline color
                                        }`}
                                     />
                                   </Button>
@@ -575,7 +508,7 @@ export default function TennisCourtList() {
                                    const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved/Unavailable';
                                    return (
                                        <div
-                                           key={`${court.id}-time-${idx}`} // More specific key
+                                           key={`${court.id}-time-${idx}`} // Unique key
                                            className={`text-center py-2 px-1 rounded text-xs sm:text-sm ${colorClass} font-medium shadow-sm transition-colors duration-150`}
                                            title={`${availabilityText} at ${timeSlot}`}
                                        >
@@ -586,15 +519,14 @@ export default function TennisCourtList() {
                             </div>
 
                            {/* Map Toggle Button */}
-                           {/* Conditionally render map button only if there's an address or URL */}
                            {(court.address || court.Maps_url) && (
                               <Button
                                 onClick={() => toggleMapExpansion(court.id)}
                                 variant="outline"
-                                size="sm"
+                                size="sm" // Use 'sm' size
                                 className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs h-8 bg-white border-gray-200 hover:bg-gray-50 text-gray-700 shadow-sm"
                                 aria-expanded={expandedMaps.includes(court.id)}
-                                aria-controls={`map-details-${court.id}`} // Link button to the content it controls
+                                aria-controls={`map-details-${court.id}`}
                               >
                                   <MapPin size={14} aria-hidden="true" />
                                   {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
@@ -604,18 +536,16 @@ export default function TennisCourtList() {
                            {/* Expanded Map View */}
                             {expandedMaps.includes(court.id) && (
                                 <div
-                                    id={`map-details-${court.id}`} // ID for aria-controls
+                                    id={`map-details-${court.id}`}
                                     className="mt-2 p-3 bg-gray-50/80 rounded border border-gray-200 animate-in fade-in-50 duration-300"
                                 >
-                                    {/* Display address safely */}
                                     <p className="text-sm text-gray-700 mb-2">
                                        {court.address?.replace(/'/g, "'") || "Address not available"}
                                     </p>
-                                    {/* Ensure URL exists before rendering button */}
                                     {(court.Maps_url || court.address || court.title) && (
                                         <Button
                                             onClick={() => window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")}
-                                            size="sm"
+                                            size="sm" // Use 'sm' size
                                             className="w-full bg-blue-600 text-white hover:bg-blue-700 h-8 text-xs shadow-sm"
                                         >
                                            Open in Google Maps
@@ -628,12 +558,11 @@ export default function TennisCourtList() {
                             {court.ball_machine && (
                                 <Button
                                     onClick={() => window.open("https://seattleballmachine.com", "_blank", "noopener,noreferrer")}
-                                    size="sm"
-                                    // Define US Open Blue (approx. using Tailwind, or define custom color)
-                                    // Example using a darker blue: bg-blue-800 hover:bg-blue-900
-                                    // For exact color #003168, you'd need to add it to your tailwind.config.js
+                                    size="sm" // Use 'sm' size
+                                    // Approx US Open Blue. Define #003168 in tailwind.config.js for exact color
                                     className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm"
                                 >
+                                    {/* Ensure icon path is correct */}
                                     <Image src="/icons/ballmachine.png" alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
                                     Ball Machine Rental
                                 </Button>
