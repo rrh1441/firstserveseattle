@@ -1,18 +1,32 @@
 // src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactElement } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Info, Users, Zap, Snowflake, HelpCircle } from "lucide-react";
+import {
+  Star,
+  MapPin,
+  Info,
+  Users,
+  Zap,
+  Snowflake,
+  HelpCircle,
+} from "lucide-react";
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-type FilterKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
+/* ─── Local types ────────────────────────────────────────── */
+
+type FilterKey =
+  | "lights"
+  | "hitting_wall"
+  | "pickleball_lined"
+  | "ball_machine";
 
 interface PopularityTier {
   label: string;
@@ -21,19 +35,23 @@ interface PopularityTier {
   icon: typeof Users | typeof Zap | typeof Snowflake | typeof HelpCircle;
 }
 
-function getPopularityTier(score: number | null | undefined): PopularityTier {
+/* ─── Popularity helper ─────────────────────────────────── */
+
+function getPopularityTier(
+  score: number | null | undefined
+): PopularityTier {
   if (score == null) {
     return {
       label: "N/A",
-      tooltip: "Popularity data unavailable.",
+      tooltip: "Popularity data unavailable",
       colorClass: "bg-gray-100 text-gray-600 border-gray-300",
       icon: HelpCircle,
     };
   }
   if (score === 0) {
     return {
-      label: "Walk-on Only",
-      tooltip: "Reservations not available.",
+      label: "Walk-on",
+      tooltip: "Reservations not available",
       colorClass: "bg-gray-200 text-gray-700 border-gray-400",
       icon: Users,
     };
@@ -41,7 +59,7 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   if (score <= 45) {
     return {
       label: "Chill",
-      tooltip: "Light-moderate traffic over the last week.",
+      tooltip: "Light-moderate traffic last week",
       colorClass: "bg-blue-100 text-blue-800 border-blue-300",
       icon: Snowflake,
     };
@@ -49,48 +67,61 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   if (score <= 70) {
     return {
       label: "Busy",
-      tooltip: "Often busy over the last week, reservation advised.",
+      tooltip: "Often busy—reserve if possible",
       colorClass: "bg-orange-100 text-orange-800 border-orange-300",
       icon: Users,
     };
   }
   return {
     label: "Hot",
-    tooltip: "High demand over the last week, reservation recommended.",
+    tooltip: "High demand—reservation recommended",
     colorClass: "bg-red-100 text-red-800 border-red-300",
     icon: Zap,
   };
 }
 
+/* ─── Time / availability helpers ───────────────────────── */
+
 function timeToMinutes(str: string): number {
   const [time, ampm] = str.toUpperCase().split(" ");
   if (!time || !ampm) return -1;
-  const [h, m] = time.split(":").map((n) => parseInt(n, 10));
+  const [h, m] = time.split(":").map(Number);
   if (isNaN(h) || isNaN(m)) return -1;
   let hour = h % 12;
   if (ampm === "PM") hour += 12;
   return hour * 60 + m;
 }
 
-function isRangeFree(c: TennisCourt, start: number, end: number): boolean {
-  return c.parsed_intervals.some(({ start: s, end: e }) => {
-    const a = timeToMinutes(s), b = timeToMinutes(e);
+function isRangeFree(
+  court: TennisCourt,
+  start: number,
+  end: number
+): boolean {
+  return court.parsed_intervals.some(({ start: s, end: e }) => {
+    const a = timeToMinutes(s),
+      b = timeToMinutes(e);
     return a <= start && b >= end;
   });
 }
 
-function getHourAvailabilityColor(c: TennisCourt, slot: string): string {
+function getHourAvailabilityColor(
+  court: TennisCourt,
+  slot: string
+): string {
   const s = timeToMinutes(slot);
   if (s < 0) return "bg-gray-200 text-gray-400";
-  const m = s + 30, e = s + 60;
-  const f1 = isRangeFree(c, s, m), f2 = isRangeFree(c, m, e);
-  if (f1 && f2) return "bg-green-500 text-white";
-  if (!f1 && !f2) return "bg-gray-400 text-gray-100";
+  const m = s + 30,
+    e = s + 60;
+  const first = isRangeFree(court, s, m);
+  const second = isRangeFree(court, m, e);
+  if (first && second) return "bg-green-500 text-white";
+  if (!first && !second) return "bg-gray-400 text-gray-100";
   return "bg-orange-400 text-white";
 }
 
-// Skeletons
-function CourtCardSkeleton() {
+/* ─── Skeletons ─────────────────────────────────────────── */
+
+function CourtCardSkeleton(): ReactElement {
   return (
     <Card className="shadow-md border border-gray-200 rounded-lg animate-pulse">
       <div className="p-3 border-b bg-gray-50/60">
@@ -113,7 +144,7 @@ function CourtCardSkeleton() {
   );
 }
 
-function CourtListSkeleton({ count = 5 }: { count?: number }) {
+function CourtListSkeleton({ count = 3 }: { count?: number }): ReactElement {
   return (
     <div className="space-y-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -123,7 +154,9 @@ function CourtListSkeleton({ count = 5 }: { count?: number }) {
   );
 }
 
-export default function TennisCourtList() {
+/* ─── Main component ────────────────────────────────────── */
+
+export default function TennisCourtList(): ReactElement {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [search, setSearch] = useState("");
@@ -139,39 +172,52 @@ export default function TennisCourtList() {
   const [aboutOpen, setAboutOpen] = useState(false);
 
   const times = [
-    "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
-    "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
-    "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
+    "6:00 AM",
+    "7:00 AM",
+    "8:00 AM",
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
+    "7:00 PM",
+    "8:00 PM",
+    "9:00 PM",
+    "10:00 PM",
   ];
 
-  // Load courts
+  /* data fetch & favourites load */
   useEffect(() => {
     getTennisCourts()
-      .then((d) => setCourts(d))
+      .then(setCourts)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  // Load favorites
   useEffect(() => {
     try {
       const raw = localStorage.getItem("favoriteCourts");
       if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) setFavorites(arr);
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) setFavorites(list);
       }
     } catch {
       localStorage.removeItem("favoriteCourts");
     }
   }, []);
 
-  const toggleFav = (id: number) => {
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      localStorage.setItem("favoriteCourts", JSON.stringify(next));
-      return next;
+  /* helpers */
+  const toggleFav = (id: number) =>
+    setFavorites((p) => {
+      const n = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
+      localStorage.setItem("favoriteCourts", JSON.stringify(n));
+      return n;
     });
-  };
 
   const toggleFilter = (k: FilterKey) =>
     setFilters((f) => ({ ...f, [k]: !f[k] }));
@@ -179,28 +225,35 @@ export default function TennisCourtList() {
   const toggleMap = (id: number) =>
     setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
-  const filterConfig: Record<FilterKey, { label: string; icon: string }> = {
+  const mapsUrl = (c: TennisCourt) =>
+    c.Maps_url?.startsWith("http")
+      ? c.Maps_url!
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          c.address ?? c.title
+        )}`;
+
+  /* filter button config */
+  const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
     pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  // Filters + sort
-  const filtered = courts
+  /* derived list */
+  const list = courts
     .filter((c) =>
       search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
     )
     .filter((c) =>
       (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
-    );
-
-  const sorted = filtered.sort((a, b) => {
-    const af = favorites.includes(a.id) ? 1 : 0;
-    const bf = favorites.includes(b.id) ? 1 : 0;
-    if (af !== bf) return bf - af;
-    return a.title.localeCompare(b.title);
-  });
+    )
+    .sort((a, b) => {
+      const af = favorites.includes(a.id) ? 1 : 0;
+      const bf = favorites.includes(b.id) ? 1 : 0;
+      if (af !== bf) return bf - af;
+      return a.title.localeCompare(b.title);
+    });
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -209,87 +262,115 @@ export default function TennisCourtList() {
     timeZone: "America/Los_Angeles",
   });
 
+  /* ─── render ──────────────────────────────────────────── */
+
   if (loading) {
     return (
       <div className="p-4 space-y-4">
-        {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
-        <CourtListSkeleton count={3} />
+        {aboutOpen && (
+          <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+        )}
+        <CourtListSkeleton />
       </div>
     );
   }
 
-  if (error) {
-    return <div className="p-6 text-red-600">Error: {error}</div>;
-  }
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
     <div className="p-4 space-y-4">
-      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
+      {aboutOpen && (
+        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+      )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-        <div className="space-y-2">
-          <div className="text-xl font-semibold">{today}</div>
-          <input
-            type="text"
-            placeholder="Search courts..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
+      {/* ── sticky header ─────────────────────────────── */}
+      <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
+        {/* date / search / info */}
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-4 pt-4">
+          <div className="space-y-2 w-full sm:w-auto">
+            <div className="text-xl font-semibold flex items-center gap-1">
+              {today}
+              {/* plain-HTML tooltip (no extra dep) */}
+              <HelpCircle
+                size={16}
+                className="text-gray-400 cursor-help"
+                title={
+                  "Popularity badge key:\n" +
+                  "N/A – No data\n" +
+                  "Walk-on – Reservations not available\n" +
+                  "Chill – Light traffic (≤45)\n" +
+                  "Busy – Often busy (≤70)\n" +
+                  "Hot – High demand (>70)"
+                }
+              />
+            </div>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search courts…"
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <Button variant="outline" onClick={() => setAboutOpen(true)}>
+            <Info size={16} /> Info
+          </Button>
         </div>
-        <Button onClick={() => setAboutOpen(true)} variant="outline">
-          <Info size={16} /> Info
-        </Button>
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {(Object.entries(filterConfig) as [FilterKey, { label: string; icon: string }][]).map(
-          ([k, { label, icon }]) => (
+        {/* filter buttons */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {(Object.entries(filterCfg) as [
+            FilterKey,
+            { label: string; icon: string }
+          ][]).map(([k, { label, icon }]) => (
             <Button
               key={k}
               onClick={() => toggleFilter(k)}
               variant={filters[k] ? "secondary" : "outline"}
+              className="flex items-center gap-1"
             >
-              <Image src={icon} alt="" width={14} height={14} /> {label}
+              <Image src={icon} alt="" width={14} height={14} />
+              {label}
             </Button>
-          )
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* Court Cards */}
-      {sorted.length === 0 ? (
+      {/* list */}
+      {list.length === 0 ? (
         <div>No courts found.</div>
       ) : (
-        sorted.map((court) => {
+        list.map((court) => {
           const tier = getPopularityTier(court.avg_busy_score_7d);
           return (
             <Card key={court.id} className="border rounded-lg shadow-sm">
-              {/* Header */}
-              <div className="flex justify-between items-center p-3 bg-gray-50">
-                <h3 className="font-semibold">{court.title}</h3>
-                <Badge
-                  variant="outline"
-                  className={`${tier.colorClass} inline-flex items-center text-xs h-5 px-1.5`}
-                  title={tier.tooltip}
-                >
-                  <tier.icon size={10} className="mr-1" />
-                  {tier.label}
-                </Badge>
+              {/* card header */}
+              <div className="flex justify-between items-start p-3 bg-gray-50">
+                <div>
+                  <h3 className="font-semibold">{court.title}</h3>
+                  <Badge
+                    variant="outline"
+                    className={`${tier.colorClass} h-5 px-1.5 text-xs inline-flex items-center mt-1`}
+                    title={tier.tooltip}
+                  >
+                    <tier.icon size={10} className="mr-1" />
+                    {tier.label}
+                  </Badge>
+                </div>
                 <Button variant="ghost" onClick={() => toggleFav(court.id)}>
                   <Star
+                    size={18}
                     fill={favorites.includes(court.id) ? "currentColor" : "none"}
                   />
                 </Button>
               </div>
 
-              {/* Content */}
+              {/* card body */}
               <CardContent className="space-y-3 p-3">
+                {/* availability grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
-                  {times.map((slot, i) => (
+                  {times.map((slot) => (
                     <div
-                      key={i}
+                      key={slot}
                       className={`text-center py-1 rounded text-xs ${getHourAvailabilityColor(
                         court,
                         slot
@@ -299,29 +380,50 @@ export default function TennisCourtList() {
                     </div>
                   ))}
                 </div>
+
+                {/* location button */}
                 {(court.address || court.Maps_url) && (
-                  <Button size="sm" onClick={() => toggleMap(court.id)}>
-                    <MapPin size={14} className="mr-1" />
-                    {expanded.includes(court.id) ? "Hide" : "Show"} Map
+                  <Button
+                    size="sm"
+                    className="w-full bg-white border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-1.5"
+                    onClick={() => toggleMap(court.id)}
+                  >
+                    <MapPin size={14} />
+                    {expanded.includes(court.id) ? "Hide Location" : "Show Location"}
                   </Button>
                 )}
-                {expanded.includes(court.id) && court.address && (
-                  <iframe
-                    src={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      court.address
-                    )}`}
-                    className="w-full h-40 rounded"
-                    loading="lazy"
-                  />
+
+                {/* expanded location */}
+                {expanded.includes(court.id) && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-700 mb-2">
+                      {court.address ?? "Address unavailable"}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => window.open(mapsUrl(court), "_blank")}
+                    >
+                      Open in Google Maps
+                    </Button>
+                  </div>
                 )}
+
+                {/* ball machine */}
                 {court.ball_machine && (
                   <Button
                     size="sm"
+                    className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
                     onClick={() =>
                       window.open("https://seattleballmachine.com", "_blank")
                     }
-                    className="w-full"
                   >
+                    <Image
+                      src="/icons/ballmachine.png"
+                      alt=""
+                      width={12}
+                      height={12}
+                    />
                     Ball Machine Rental
                   </Button>
                 )}
