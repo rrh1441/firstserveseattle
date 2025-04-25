@@ -20,7 +20,7 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ── popularity helper ────────────────────────────────── */
+/* ── popularity tier helper ───────────────────────────── */
 
 type FilterKey =
   | "lights"
@@ -53,8 +53,7 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   if (score <= 45)
     return {
       label: "Chill",
-      tooltip:
-        "Score ≤45 – usually light traffic; walk-on same day is fine.",
+      tooltip: "Score ≤45 – usually light traffic; walk-on same day is fine.",
       colorClass: "bg-blue-100 text-blue-800 border-blue-300",
       icon: Snowflake,
     };
@@ -75,7 +74,7 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   };
 }
 
-/* ── time helpers ─────────────────────────────────────── */
+/* ── time/helpers ─────────────────────────────────────── */
 
 function timeToMinutes(str: string): number {
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -199,7 +198,7 @@ export default function TennisCourtList(): ReactElement {
           c.address ?? c.title
         )}`;
 
-  /* filter buttons cfg */
+  /* filter config */
   const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -251,7 +250,6 @@ export default function TennisCourtList(): ReactElement {
       {/* ── sticky header ────────────────────────────── */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
         <div className="space-y-3 pt-4">
-          {/* date + tooltip */}
           <div className="text-xl font-semibold flex items-center gap-1">
             {today}
             <span
@@ -263,13 +261,14 @@ export default function TennisCourtList(): ReactElement {
                 "Busy – Often busy (≤70)\n" +
                 "Hot – High demand (>70)"
               }
+              className="inline-flex h-4 w-4 items-center justify-center rounded-full border bg-gray-100 text-[10px] text-gray-600 cursor-help select-none"
             >
-              <HelpCircle size={16} className="text-gray-400 cursor-help" />
+              i
             </span>
           </div>
 
-          {/* search + mobile info button */}
-          <div className="flex gap-2">
+          {/* search row with one responsive Info button */}
+          <div className="flex gap-2 items-center">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -278,22 +277,15 @@ export default function TennisCourtList(): ReactElement {
             />
             <Button
               variant="outline"
-              size="sm"              /* <- valid size */
-              className="sm:hidden p-2" /* square icon btn */
+              size="sm"
+              className="p-2 flex items-center gap-0 sm:px-3 sm:gap-1"
               onClick={() => setAboutOpen(true)}
             >
               <Info size={18} />
+              <span className="hidden sm:inline">Info</span>
             </Button>
           </div>
 
-          {/* desktop info button */}
-          <div className="hidden sm:flex justify-end">
-            <Button variant="outline" onClick={() => setAboutOpen(true)}>
-              <Info size={16} className="mr-1" /> Info
-            </Button>
-          </div>
-
-          {/* filter buttons */}
           <div className="flex flex-wrap gap-2">
             {(Object.entries(filterCfg) as [
               FilterKey,
@@ -333,8 +325,8 @@ export default function TennisCourtList(): ReactElement {
                       <tier.icon size={10} className="mr-1" />
                       {tier.label}
                     </Badge>
-                    <span title={tier.tooltip} className="cursor-help ml-1">
-                      <Info size={10} className="text-gray-400" />
+                    <span title={tier.tooltip} className="cursor-help ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-gray-100 text-[10px] text-gray-600 select-none">
+                      i
                     </span>
                   </div>
                 </div>
@@ -395,7 +387,7 @@ export default function TennisCourtList(): ReactElement {
                   ))}
                 </div>
 
-                {/* location */}
+                {/* location button */}
                 {(court.address || court.Maps_url) && (
                   <Button
                     size="sm"
@@ -432,7 +424,12 @@ export default function TennisCourtList(): ReactElement {
                       window.open("https://seattleballmachine.com", "_blank")
                     }
                   >
-                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
+                    <Image
+                      src="/icons/ballmachine.png"
+                      alt=""
+                      width={12}
+                      height={12}
+                    />
                     Ball Machine Rental
                   </Button>
                 )}
