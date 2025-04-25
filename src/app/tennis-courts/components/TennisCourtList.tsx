@@ -8,7 +8,6 @@ import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import * as Tooltip from "@radix-ui/react-tooltip";
 import {
   Info,
   Star,
@@ -21,7 +20,8 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ────────────── popularity tiers ────────────── */
+/* ───── popularity tier helper ───── */
+
 type FilterKey =
   | "lights"
   | "hitting_wall"
@@ -29,8 +29,7 @@ type FilterKey =
   | "ball_machine";
 
 interface Tier {
-  label: string;
-  tooltip: string;
+  text: string;
   color: string;
   icon: typeof Users | typeof Zap | typeof Snowflake | typeof HelpCircle;
 }
@@ -38,47 +37,45 @@ interface Tier {
 function tierFor(score: number | null | undefined): Tier {
   if (score == null)
     return {
-      label: "N/A",
-      tooltip: "No recent popularity data.",
+      text: "N/A – No recent popularity data",
       color: "bg-gray-100 text-gray-600 border-gray-300",
       icon: HelpCircle,
     };
   if (score === 0)
     return {
-      label: "Walk-on",
-      tooltip: "Score 0 – first-come, first-served only.",
+      text: "Walk-on – First-come, first-served only",
       color: "bg-gray-200 text-gray-700 border-gray-400",
       icon: Users,
     };
   if (score <= 45)
     return {
-      label: "Chill",
-      tooltip: "Score ≤ 45 – usually light traffic; walk-on is fine.",
+      text: "Chill – Light traffic, walk-on fine",
       color: "bg-blue-100 text-blue-800 border-blue-300",
       icon: Snowflake,
     };
   if (score <= 70)
     return {
-      label: "Busy",
-      tooltip: "Score 46-70 – often busy; booking ahead helps.",
+      text: "Busy – Often reserved, consider booking ahead",
       color: "bg-orange-100 text-orange-800 border-orange-300",
       icon: Users,
     };
   return {
-    label: "Hot",
-    tooltip: "Score > 70 – high demand; reserve several days ahead.",
+    text: "Hot – Extremely popular court, recommend booking ahead",
     color: "bg-red-100 text-red-800 border-red-300",
     icon: Zap,
   };
 }
 
-/* ────────────── helpers ────────────── */
+/* ───── helper: Google Maps URL ───── */
+
 const mapsUrl = (court: TennisCourt) =>
   court.Maps_url?.startsWith("http")
     ? court.Maps_url
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         court.address ?? court.title
       )}`;
+
+/* ───── time helpers ───── */
 
 const timeSlots = [
   "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
@@ -107,7 +104,8 @@ const slotColor = (court: TennisCourt, slot: string) => {
   return "bg-orange-400 text-white";
 };
 
-/* ────────────── skeletons ────────────── */
+/* ───── skeletons ───── */
+
 const CardSkeleton = () => (
   <Card className="border rounded-lg shadow-md animate-pulse">
     <div className="h-10 bg-gray-50/60 border-b" />
@@ -129,7 +127,8 @@ const ListSkeleton = () => (
   </div>
 );
 
-/* ────────────── component ────────────── */
+/* ───── component ───── */
+
 export default function TennisCourtList() {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [favorites, setFav] = useState<number[]>([]);
@@ -153,7 +152,7 @@ export default function TennisCourtList() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* favourites */
+  /* load favourites */
   useEffect(() => {
     const raw = localStorage.getItem("favoriteCourts");
     if (raw) {
@@ -173,12 +172,14 @@ export default function TennisCourtList() {
       localStorage.setItem("favoriteCourts", JSON.stringify(n));
       return n;
     });
+
   const toggleFilter = (k: FilterKey) =>
     setFilters((f) => ({ ...f, [k]: !f[k] }));
+
   const toggleMap = (id: number) =>
     setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
-  /* filter buttons cfg */
+  /* filter cfg */
   const cfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -189,7 +190,9 @@ export default function TennisCourtList() {
   /* filtered list */
   const list = courts
     .filter((c) => (search ? c.title.toLowerCase().includes(search.toLowerCase()) : true))
-    .filter((c) => (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k]))
+    .filter((c) =>
+      (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
+    )
     .sort((a, b) => {
       const af = favorites.includes(a.id) ? 1 : 0;
       const bf = favorites.includes(b.id) ? 1 : 0;
@@ -198,8 +201,13 @@ export default function TennisCourtList() {
     });
 
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", timeZone: "America/Los_Angeles",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
   });
+
+  /* ───── render ───── */
 
   if (loading)
     return (
@@ -210,11 +218,13 @@ export default function TennisCourtList() {
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
-    <Tooltip.Provider delayDuration={200}>
-      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
+    <div className="p-4 space-y-4">
+      {aboutOpen && (
+        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+      )}
 
       {/* header */}
-      <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4 p-4 pt-6 space-y-3">
+      <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4 pt-6 space-y-3">
         <div className="text-xl font-semibold">{today}</div>
 
         <div className="flex gap-2 items-center">
@@ -257,34 +267,19 @@ export default function TennisCourtList() {
           <div>No courts found.</div>
         ) : (
           list.map((court) => {
-            const t = tierFor(court.avg_busy_score_7d);
+            const tier = tierFor(court.avg_busy_score_7d);
             return (
               <Card key={court.id} className="border rounded-lg shadow-sm">
-                {/* header */}
+                {/* card header */}
                 <div className="flex justify-between items-start p-3 bg-gray-50">
                   <div>
                     <h3 className="font-semibold">{court.title}</h3>
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <Badge
-                          variant="outline"
-                          className={`${t.color} pointer-events-auto h-5 px-1.5 text-xs inline-flex items-center mt-1`}
-                        >
-                          <t.icon size={12} className="mr-1" />
-                          {t.label}
-                        </Badge>
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          side="top"
-                          align="center"
-                          className="select-none rounded bg-gray-900 px-2 py-1 text-xs text-white shadow"
-                        >
-                          {t.tooltip}
-                          <Tooltip.Arrow className="fill-gray-900" />
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
+                    <Badge
+                      variant="outline"
+                      className={`${tier.color} h-auto mt-1 text-[11px] leading-tight py-0.5 px-1.5 whitespace-pre-line`}
+                    >
+                      {tier.text}
+                    </Badge>
                   </div>
                   <Button variant="ghost" onClick={() => toggleFav(court.id)}>
                     <Star
@@ -294,10 +289,10 @@ export default function TennisCourtList() {
                   </Button>
                 </div>
 
-                {/* body */}
+                {/* card body */}
                 <CardContent className="space-y-3 p-3">
-                  {/* attributes grid */}
-                  <div className="grid grid-cols-2 w-full gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
+                  {/* attribute grid */}
+                  <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                     {court.lights && (
                       <div className="flex items-center gap-1">
                         <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
@@ -386,6 +381,6 @@ export default function TennisCourtList() {
           })
         )}
       </div>
-    </Tooltip.Provider>
+    </div>
   );
 }
