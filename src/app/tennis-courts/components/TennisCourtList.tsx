@@ -5,8 +5,9 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-// Tooltip component imports removed
-import { Star, MapPin, Info, Users, Zap, Snowflake, SlashCircle } from "lucide-react"; // Added SlashCircle
+// Removed Tooltip imports
+// Corrected icon imports: Removed SlashCircle, Added HelpCircle
+import { Star, MapPin, Info, Users, Zap, Snowflake, HelpCircle } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
@@ -37,7 +38,7 @@ interface Court {
   // is_closed_today removed based on user feedback
 }
 
-// --- Popularity Tier Logic (Final Version) ---
+// --- Popularity Tier Logic based on avg_busy_score_7d ---
 interface PopularityTier {
   label: string;
   tooltip: string;
@@ -47,13 +48,14 @@ interface PopularityTier {
 
 function getPopularityTier(score: number | null | undefined): PopularityTier | null {
   if (score === null || typeof score === 'undefined') {
-     // N/A Tier
-    return { label: "N/A", tooltip: "Popularity data unavailable.", colorClass: "bg-gray-100 text-gray-600 border-gray-300", icon: SlashCircle };
+     // N/A Tier - CORRECTED ICON
+    return { label: "N/A", tooltip: "Popularity data unavailable.", colorClass: "bg-gray-100 text-gray-600 border-gray-300", icon: HelpCircle };
   }
 
   // Walk-on Only Tier
   if (score === 0) {
-      return { label: "Walk-on Only", tooltip: "Reservations not available.", colorClass: "bg-gray-200 text-gray-700 border-gray-400", icon: Users}; // Neutral color
+      // CORRECTED Tooltip
+      return { label: "Walk-on Only", tooltip: "Reservations not available.", colorClass: "bg-gray-200 text-gray-700 border-gray-400", icon: Users};
   }
 
   // Reservable Tiers (Score > 0) - Using adjusted thresholds
@@ -410,7 +412,7 @@ export default function TennisCourtList() {
 
         {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
-           {/* Header Content */}
+           {/* Header Content including filters */}
            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               {/* Left Side */}
               <div className="flex-grow space-y-3 w-full sm:w-auto">
@@ -493,8 +495,9 @@ export default function TennisCourtList() {
 
                                     {/* Popularity Tag Logic */}
                                     <div className="mt-2">
-                                      {popularityTier && ( // Only render if a tier exists (handles N/A via the function)
-                                           <Badge
+                                      {/* is_closed_today logic removed */}
+                                      {popularityTier && (
+                                          <Badge
                                              variant="outline"
                                              className={`text-xs h-5 px-1.5 cursor-default inline-flex items-center ${popularityTier.colorClass}`}
                                              title={popularityTier.tooltip} // Tooltip text here
@@ -503,6 +506,7 @@ export default function TennisCourtList() {
                                              {popularityTier.label}
                                           </Badge>
                                       )}
+                                      {/* If popularityTier is null (N/A case handled in function), this Badge won't render */}
                                     </div>
                                     {/* End Popularity Tag */}
 
@@ -522,14 +526,14 @@ export default function TennisCourtList() {
                           </div>
                           {/* Card Content */}
                           <CardContent className="p-3 space-y-3">
-                            {/* Availability Grid (Always shown now) */}
+                            {/* Availability Grid (Always shown) */}
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                               {timesInOneHour.map((timeSlot, idx) => {
                                  const colorClass = getHourAvailabilityColor(court, timeSlot);
                                  const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
-                                 const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved'; // Removed '/Unavailable'
-                                 const displayColor = colorClass; // Removed is_closed_today check
-                                 const displayAvailabilityText = availabilityText; // Removed is_closed_today check
+                                 const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved';
+                                 const displayColor = colorClass;
+                                 const displayAvailabilityText = availabilityText;
 
                                  return (
                                     <div
