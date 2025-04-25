@@ -1,9 +1,9 @@
-/* ─────────────────────────────────────────────────────
+/* ────────────────────────────────────────────────────
    src/app/tennis-courts/components/TennisCourtList.tsx
-   ───────────────────────────────────────────────────── */
+   ────────────────────────────────────────────────────*/
    "use client";
 
-   import React, { useState, useEffect, useMemo } from "react";
+   import React, { useEffect, useMemo, useState } from "react";
    import dynamic from "next/dynamic";
    import Image from "next/image";
    import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -12,24 +12,16 @@
    import { Badge } from "@/components/ui/badge";
    import { Info, Star, MapPin } from "lucide-react";
    
+   /* lazy-loaded modal */
    const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
    
-   /* ─────────── helper types ─────────── */
-   
-   type FilterKey =
-     | "lights"
-     | "hitting_wall"
-     | "pickleball_lined"
-     | "ball_machine";
+   /* ──────────────── badge presets ──────────────── */
    
    interface Tier {
      text: string;
      color: string;
    }
-   
-   /* ─────────── badge color + copy ─────────── */
-   
-   const TIER_STYLES: Record<"N/A" | "Walk" | "Hot" | "Busy" | "Chill", Tier> = {
+   const TIER: Record<"N/A" | "Walk" | "Hot" | "Busy" | "Chill", Tier> = {
      "N/A": {
        text: "N/A – No recent popularity data",
        color: "bg-gray-100 text-gray-600 border-gray-300",
@@ -52,7 +44,15 @@
      },
    };
    
-   /* ─────────── maps URL helper ─────────── */
+   /* ──────────────── helper types ──────────────── */
+   
+   type FilterKey =
+     | "lights"
+     | "hitting_wall"
+     | "pickleball_lined"
+     | "ball_machine";
+   
+   /* ──────────────── maps URL ──────────────── */
    
    const mapsUrl = (c: TennisCourt) =>
      c.Maps_url?.startsWith("http")
@@ -61,20 +61,18 @@
            c.address ?? c.title
          )}`;
    
-   /* ─────────── time helpers (unchanged) ─────────── */
+   /* ──────────────── time helpers ──────────────── */
    
-   const timeSlots = [
+   const TIME = [
      "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
      "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
      "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
    ];
-   
    const toMin = (t: string) => {
-     const [clock, ap] = t.toUpperCase().split(" ");
-     const [h, m] = clock.split(":").map(Number);
+     const [hhmm, ap] = t.toUpperCase().split(" ");
+     const [h, m] = hhmm.split(":").map(Number);
      return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
    };
-   
    const slotClr = (court: TennisCourt, t: string) => {
      const s = toMin(t), mid = s + 30;
      const free = (a: number, b: number) =>
@@ -88,7 +86,7 @@
      return "bg-orange-400 text-white";
    };
    
-   /* ─────────── skeletons (short) ─────────── */
+   /* ──────────────── skeleton (brief) ──────────────── */
    
    const CardSkeleton = () => (
      <Card className="border rounded-lg shadow-md animate-pulse">
@@ -103,7 +101,7 @@
      </Card>
    );
    
-   /* ─────────── main component ─────────── */
+   /* ──────────────── main component ──────────────── */
    
    export default function TennisCourtList() {
      /* state */
@@ -126,14 +124,13 @@
          .finally(() => setLoading(false));
      }, []);
    
-     /* favorites (localStorage) */
+     /* favorites LS */
      useEffect(() => {
        try {
          const raw = localStorage.getItem("favoriteCourts");
          if (raw) setFav(JSON.parse(raw));
-       } catch { /* ignore */ }
+       } catch {/* ignore */}
      }, []);
-   
      const toggleFav = (id: number) =>
        setFav((prev) => {
          const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
@@ -141,29 +138,26 @@
          return next;
        });
    
-     /* percentile boundaries – memoised after courts load */
+     /* percentile cut-offs (exclude 0) */
      const { p15, p50 } = useMemo(() => {
-       const scores = courts
+       const s = courts
          .map((c) => c.avg_busy_score_7d)
          .filter((x): x is number => x !== null && x > 0)
          .sort((a, b) => a - b);
-       if (scores.length === 0) return { p15: 0, p50: 0 };
-       const idx = (pct: number) => Math.floor(pct * scores.length);
-       return {
-         p15: scores[idx(0.15)],
-         p50: scores[idx(0.50)],
-       };
+       if (!s.length) return { p15: 0, p50: 0 };
+       const idx = (p: number) => Math.floor(p * s.length);
+       return { p15: s[idx(0.15)], p50: s[idx(0.50)] };
      }, [courts]);
    
      const tierFor = (score: number | null): Tier => {
-       if (score === null) return TIER_STYLES["N/A"];
-       if (score === 0)    return TIER_STYLES["Walk"];
-       if (score <= p15)   return TIER_STYLES["Hot"];
-       if (score <= p50)   return TIER_STYLES["Busy"];
-       return TIER_STYLES["Chill"];
+       if (score === null) return TIER["N/A"];
+       if (score === 0)    return TIER["Walk"];
+       if (score <= p15)   return TIER["Hot"];
+       if (score <= p50)   return TIER["Busy"];
+       return TIER["Chill"];
      };
    
-     /* filter & sort */
+     /* filter + sort memo */
      const list = useMemo(() => {
        return courts
          .filter((c) =>
@@ -180,15 +174,11 @@
          });
      }, [courts, search, filters, fav]);
    
-     /* render */
-     if (loading) return <div className="p-4"><CardSkeleton /></div>;
-     if (error)   return <div className="p-6 text-red-600">Error: {error}</div>;
-   
+     /* header helpers */
      const today = new Date().toLocaleDateString("en-US", {
        weekday: "long", month: "long", day: "numeric",
        timeZone: "America/Los_Angeles",
      });
-   
      const cfg: Record<FilterKey, { label: string; icon: string }> = {
        lights: { label: "Lights", icon: "/icons/lighticon.png" },
        hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -196,14 +186,17 @@
        ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
      };
    
+     /* render */
+     if (loading) return <div className="p-4"><CardSkeleton /></div>;
+     if (error)   return <div className="p-6 text-red-600">Error: {error}</div>;
+   
      return (
        <div className="p-4 space-y-4">
          {about && <AboutUs isOpen={about} onClose={() => setAbout(false)} />}
    
-         {/* header */}
+         {/* ───── top bar ───── */}
          <div className="sticky top-0 z-10 bg-white border-b pb-3 pt-6 space-y-3">
            <div className="text-xl font-semibold">{today}</div>
-   
            <div className="flex gap-2 items-center">
              <input
                value={search}
@@ -221,7 +214,6 @@
                <span className="hidden sm:inline">Info</span>
              </Button>
            </div>
-   
            <div className="flex flex-wrap gap-2">
              {(Object.entries(cfg) as [FilterKey, { label: string; icon: string }][])
                .map(([k, { label, icon }]) => (
@@ -237,7 +229,7 @@
            </div>
          </div>
    
-         {/* list */}
+         {/* ───── list ───── */}
          {list.length === 0 ? (
            <div>No courts found.</div>
          ) : (
@@ -266,8 +258,8 @@
    
                  {/* body */}
                  <CardContent className="space-y-3 p-3">
-                   {/* amenities */}
-                   <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3">
+                   {/* amenities • now stable 2×2 */}
+                   <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3">
                      {court.lights && (
                        <div className="flex items-center gap-1">
                          <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
@@ -292,7 +284,7 @@
    
                    {/* availability */}
                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
-                     {timeSlots.map((t) => (
+                     {TIME.map((t) => (
                        <div
                          key={t}
                          className={`text-center py-1 rounded text-xs ${slotClr(court, t)}`}
@@ -331,7 +323,7 @@
                      </div>
                    )}
    
-                   {/* ball machine link */}
+                   {/* ball machine */}
                    {court.ball_machine && (
                      <Button
                        size="sm"
