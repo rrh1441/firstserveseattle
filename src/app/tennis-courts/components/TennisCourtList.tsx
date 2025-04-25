@@ -110,16 +110,16 @@ function getHourAvailabilityColor(
 ): string {
   const s = timeToMinutes(slot);
   if (s < 0) return "bg-gray-200 text-gray-400";
-  const m = s + 30,
-    e = s + 60;
-  const first = isRangeFree(court, s, m);
-  const second = isRangeFree(court, m, e);
+  const mid = s + 30,
+    end = s + 60;
+  const first = isRangeFree(court, s, mid);
+  const second = isRangeFree(court, mid, end);
   if (first && second) return "bg-green-500 text-white";
   if (!first && !second) return "bg-gray-400 text-gray-100";
   return "bg-orange-400 text-white";
 }
 
-/* ─── Skeletons ─────────────────────────────────────────── */
+/* ─── Skeleton components ──────────────────────────────── */
 
 function CourtCardSkeleton(): ReactElement {
   return (
@@ -144,7 +144,7 @@ function CourtCardSkeleton(): ReactElement {
   );
 }
 
-function CourtListSkeleton({ count = 3 }: { count?: number }): ReactElement {
+function CourtListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="space-y-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -172,26 +172,12 @@ export default function TennisCourtList(): ReactElement {
   const [aboutOpen, setAboutOpen] = useState(false);
 
   const times = [
-    "6:00 AM",
-    "7:00 AM",
-    "8:00 AM",
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-    "5:00 PM",
-    "6:00 PM",
-    "7:00 PM",
-    "8:00 PM",
-    "9:00 PM",
-    "10:00 PM",
+    "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
+    "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
+    "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
   ];
 
-  /* data fetch & favourites load */
+  /* Fetch courts */
   useEffect(() => {
     getTennisCourts()
       .then(setCourts)
@@ -199,6 +185,7 @@ export default function TennisCourtList(): ReactElement {
       .finally(() => setLoading(false));
   }, []);
 
+  /* Load favourites */
   useEffect(() => {
     try {
       const raw = localStorage.getItem("favoriteCourts");
@@ -211,19 +198,21 @@ export default function TennisCourtList(): ReactElement {
     }
   }, []);
 
-  /* helpers */
+  /* small helpers */
   const toggleFav = (id: number) =>
     setFavorites((p) => {
-      const n = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
-      localStorage.setItem("favoriteCourts", JSON.stringify(n));
-      return n;
+      const next = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
+      localStorage.setItem("favoriteCourts", JSON.stringify(next));
+      return next;
     });
 
   const toggleFilter = (k: FilterKey) =>
     setFilters((f) => ({ ...f, [k]: !f[k] }));
 
   const toggleMap = (id: number) =>
-    setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
+    setExpanded((e) =>
+      e.includes(id) ? e.filter((x) => x !== id) : [...e, id]
+    );
 
   const mapsUrl = (c: TennisCourt) =>
     c.Maps_url?.startsWith("http")
@@ -232,7 +221,7 @@ export default function TennisCourtList(): ReactElement {
           c.address ?? c.title
         )}`;
 
-  /* filter button config */
+  /* filter config */
   const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -240,14 +229,10 @@ export default function TennisCourtList(): ReactElement {
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  /* derived list */
+  /* Filtered list */
   const list = courts
-    .filter((c) =>
-      search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
-    )
-    .filter((c) =>
-      (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
-    )
+    .filter((c) => (search ? c.title.toLowerCase().includes(search.toLowerCase()) : true))
+    .filter((c) => (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k]))
     .sort((a, b) => {
       const af = favorites.includes(a.id) ? 1 : 0;
       const bf = favorites.includes(b.id) ? 1 : 0;
@@ -262,38 +247,32 @@ export default function TennisCourtList(): ReactElement {
     timeZone: "America/Los_Angeles",
   });
 
-  /* ─── render ──────────────────────────────────────────── */
+  /* ─── Render ──────────────────────────────────────────── */
 
   if (loading) {
     return (
       <div className="p-4 space-y-4">
-        {aboutOpen && (
-          <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
-        )}
+        {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
         <CourtListSkeleton />
       </div>
     );
   }
 
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+  if (error)
+    return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
     <div className="p-4 space-y-4">
-      {aboutOpen && (
-        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
-      )}
+      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
 
-      {/* ── sticky header ─────────────────────────────── */}
+      {/* ── Sticky header ─────────────────────────────── */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
-        {/* date / search / info */}
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4 pt-4">
           <div className="space-y-2 w-full sm:w-auto">
             <div className="text-xl font-semibold flex items-center gap-1">
               {today}
-              {/* plain-HTML tooltip (no extra dep) */}
-              <HelpCircle
-                size={16}
-                className="text-gray-400 cursor-help"
+              {/* Native tooltip via span.wrapper */}
+              <span
                 title={
                   "Popularity badge key:\n" +
                   "N/A – No data\n" +
@@ -302,7 +281,9 @@ export default function TennisCourtList(): ReactElement {
                   "Busy – Often busy (≤70)\n" +
                   "Hot – High demand (>70)"
                 }
-              />
+              >
+                <HelpCircle size={16} className="text-gray-400 cursor-help" />
+              </span>
             </div>
             <input
               value={search}
@@ -316,7 +297,6 @@ export default function TennisCourtList(): ReactElement {
           </Button>
         </div>
 
-        {/* filter buttons */}
         <div className="flex flex-wrap gap-2 mt-3">
           {(Object.entries(filterCfg) as [
             FilterKey,
@@ -335,7 +315,7 @@ export default function TennisCourtList(): ReactElement {
         </div>
       </div>
 
-      {/* list */}
+      {/* ── Court cards ──────────────────────────────── */}
       {list.length === 0 ? (
         <div>No courts found.</div>
       ) : (
@@ -343,7 +323,7 @@ export default function TennisCourtList(): ReactElement {
           const tier = getPopularityTier(court.avg_busy_score_7d);
           return (
             <Card key={court.id} className="border rounded-lg shadow-sm">
-              {/* card header */}
+              {/* Card header */}
               <div className="flex justify-between items-start p-3 bg-gray-50">
                 <div>
                   <h3 className="font-semibold">{court.title}</h3>
@@ -364,9 +344,9 @@ export default function TennisCourtList(): ReactElement {
                 </Button>
               </div>
 
-              {/* card body */}
+              {/* Card body */}
               <CardContent className="space-y-3 p-3">
-                {/* availability grid */}
+                {/* Availability grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
                   {times.map((slot) => (
                     <div
@@ -381,7 +361,7 @@ export default function TennisCourtList(): ReactElement {
                   ))}
                 </div>
 
-                {/* location button */}
+                {/* Location button */}
                 {(court.address || court.Maps_url) && (
                   <Button
                     size="sm"
@@ -393,7 +373,7 @@ export default function TennisCourtList(): ReactElement {
                   </Button>
                 )}
 
-                {/* expanded location */}
+                {/* Expanded map */}
                 {expanded.includes(court.id) && (
                   <div className="mt-2">
                     <p className="text-sm text-gray-700 mb-2">
@@ -409,7 +389,7 @@ export default function TennisCourtList(): ReactElement {
                   </div>
                 )}
 
-                {/* ball machine */}
+                {/* Ball machine */}
                 {court.ball_machine && (
                   <Button
                     size="sm"
@@ -418,12 +398,7 @@ export default function TennisCourtList(): ReactElement {
                       window.open("https://seattleballmachine.com", "_blank")
                     }
                   >
-                    <Image
-                      src="/icons/ballmachine.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                    />
+                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
                     Ball Machine Rental
                   </Button>
                 )}
