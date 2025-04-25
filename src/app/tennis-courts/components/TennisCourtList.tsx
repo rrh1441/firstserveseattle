@@ -1,6 +1,6 @@
-/* ────────────────────────────────────────────────
+/* ──────────────────────────────────────────────────────
    src/app/tennis-courts/components/TennisCourtList.tsx
-   ────────────────────────────────────────────────*/
+   ──────────────────────────────────────────────────────*/
    "use client";
 
    import React, { useEffect, useMemo, useState } from "react";
@@ -9,47 +9,19 @@
    import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
    import { Card, CardContent } from "@/components/ui/card";
    import { Button } from "@/components/ui/button";
-   import { Badge } from "@/components/ui/badge";
-   import { Info, Star, MapPin } from "lucide-react";
+   import { Info, Star, MapPin, ChevronDown, ChevronUp } from "lucide-react";
    
    const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
    
-   /* ───────── badge presets ───────── */
-   
-   interface Tier {
-     text: string;
-     color: string;
-   }
-   const TIER: Record<"N/A" | "Walk" | "Hot" | "Busy" | "Chill", Tier> = {
-     "N/A": {
-       text: "N/A – No recent popularity data",
-       color: "bg-gray-100 text-gray-600 border-gray-300",
-     },
-     Walk: {
-       text: "Walk-on – First-come, first-served only",
-       color: "bg-gray-200 text-gray-700 border-gray-400",
-     },
-     Hot: {
-       text: "Hot – Extremely popular court, recommend booking ahead",
-       color: "bg-red-100 text-red-800 border-red-300",
-     },
-     Busy: {
-       text: "Busy – Often reserved, consider booking ahead",
-       color: "bg-orange-100 text-orange-800 border-orange-300",
-     },
-     Chill: {
-       text: "Chill – Light traffic, walk-on fine",
-       color: "bg-blue-100 text-blue-800 border-blue-300",
-     },
-   };
-   
    /* ───────── helper types ───────── */
    
-   type FilterKey =
+   type AmenityKey =
      | "lights"
      | "hitting_wall"
      | "pickleball_lined"
      | "ball_machine";
+   
+   type PopFilter = "walk" | "low" | "high" | null;
    
    /* ───────── Google Maps URL ───────── */
    
@@ -106,13 +78,15 @@
      const [courts, setCourts] = useState<TennisCourt[]>([]);
      const [fav, setFav] = useState<number[]>([]);
      const [search, setSearch] = useState("");
-     const [filters, setFilters] = useState<Record<FilterKey, boolean>>({
+     const [amenities, setAmenities] = useState<Record<AmenityKey, boolean>>({
        lights: false, hitting_wall: false, pickleball_lined: false, ball_machine: false,
      });
+     const [popFilter, setPopFilter] = useState<PopFilter>(null);
+     const [showExtra, setShowExtra] = useState(false);
      const [expanded, setExpanded] = useState<number[]>([]);
      const [loading, setLoading] = useState(true);
-     const [error, setError] = useState<string | null>(null);
-     const [about, setAbout] = useState(false);
+     const [error, setError]   = useState<string | null>(null);
+     const [about, setAbout]   = useState(false);
    
      /* fetch courts */
      useEffect(() => {
@@ -147,37 +121,42 @@
        return { p15: s[idx(0.15)], p50: s[idx(0.50)] };
      }, [courts]);
    
-     const tierFor = (score: number | null): Tier => {
-       if (score === null) return TIER["N/A"];
-       if (score === 0)    return TIER["Walk"];
-       if (score <= p15)   return TIER["Hot"];
-       if (score <= p50)   return TIER["Busy"];
-       return TIER["Chill"];
-     };
-   
      /* filter + sort */
      const list = useMemo(() => {
        return courts
+         /* search */
          .filter((c) =>
            search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
          )
+         /* amenity filters */
          .filter((c) =>
-           (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
+           (Object.keys(amenities) as AmenityKey[]).every((k) => !amenities[k] || c[k])
          )
+         /* popularity filter */
+         .filter((c) => {
+           const score = c.avg_busy_score_7d;
+           if (popFilter === null) return true;
+           if (popFilter === "walk") return score === 0;
+           if (score === null || score === 0) return false;
+           if (popFilter === "high") return score <= p15;
+           /* popFilter === 'low' */
+           return score > p50;
+         })
+         /* favorites first, then name */
          .sort((a, b) => {
            const af = fav.includes(a.id) ? 1 : 0;
            const bf = fav.includes(b.id) ? 1 : 0;
            if (af !== bf) return bf - af;
            return a.title.localeCompare(b.title);
          });
-     }, [courts, search, filters, fav]);
+     }, [courts, search, amenities, popFilter, fav, p15, p50]);
    
      /* header helpers */
      const today = new Date().toLocaleDateString("en-US", {
        weekday: "long", month: "long", day: "numeric",
        timeZone: "America/Los_Angeles",
      });
-     const cfg: Record<FilterKey, { label: string; icon: string }> = {
+     const amenityCfg: Record<AmenityKey, { label: string; icon: string }> = {
        lights: { label: "Lights", icon: "/icons/lighticon.png" },
        hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
        pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
@@ -192,11 +171,10 @@
        <div className="p-4 space-y-4">
          {about && <AboutUs isOpen={about} onClose={() => setAbout(false)} />}
    
-         {/* ───── header ───── */}
+         {/* ───────── header ───────── */}
          <div className="sticky top-0 z-10 bg-white border-b pb-3 pt-6 space-y-3">
            <div className="text-xl font-semibold">{today}</div>
    
-           {/* search + info */}
            <div className="flex gap-2 items-center">
              <input
                value={search}
@@ -215,11 +193,11 @@
              </Button>
            </div>
    
-           {/* filters: 2×2 grid on mobile */}
+           {/* amenities row */}
            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-             {(Object.entries(cfg) as [FilterKey, { label: string; icon: string }][])
+             {(Object.entries(amenityCfg) as [AmenityKey, { label: string; icon: string }][])
                .map(([k, { label, icon }]) => {
-                 const active = filters[k];
+                 const active = amenities[k];
                  return (
                    <Button
                      key={k}
@@ -229,7 +207,7 @@
                          ? "bg-secondary text-secondary-foreground"
                          : "bg-transparent"
                      }`}
-                     onClick={() => setFilters((f) => ({ ...f, [k]: !f[k] }))}
+                     onClick={() => setAmenities((f) => ({ ...f, [k]: !f[k] }))}
                      aria-pressed={active}
                    >
                      <Image src={icon} alt="" width={14} height={14} />
@@ -238,123 +216,153 @@
                  );
                })}
            </div>
+   
+           {/* toggle extra filters */}
+           <div className="flex justify-end">
+             <Button
+               variant="ghost"
+               size="sm"
+               className="flex items-center gap-1 text-gray-600"
+               onClick={() => setShowExtra((v) => !v)}
+             >
+               {showExtra ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+               More filters
+             </Button>
+           </div>
+   
+           {/* popularity row (collapsible) */}
+           {showExtra && (
+             <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+               {([
+                 ["walk", "Walk-on only"],
+                 ["low",  "Less popular"],
+                 ["high", "High demand"],
+               ] as [PopFilter, string][]).map(([key, label]) => {
+                 const active = popFilter === key;
+                 return (
+                   <Button
+                     key={key}
+                     variant="outline"
+                     className={`justify-center text-sm ${
+                       active
+                         ? "bg-secondary text-secondary-foreground"
+                         : "bg-transparent"
+                     }`}
+                     onClick={() => setPopFilter(active ? null : (key as PopFilter))}
+                     aria-pressed={active}
+                   >
+                     {label}
+                   </Button>
+                 );
+               })}
+             </div>
+           )}
          </div>
    
-         {/* ───── court list ───── */}
+         {/* ───────── court list ───────── */}
          {list.length === 0 ? (
            <div>No courts found.</div>
          ) : (
-           list.map((court) => {
-             const tier = tierFor(court.avg_busy_score_7d);
-             return (
-               <Card key={court.id} className="border rounded-lg shadow-sm">
-                 {/* header */}
-                 <div className="flex justify-between items-start p-3 bg-gray-50">
-                   <div>
-                     <h3 className="font-semibold">{court.title}</h3>
-                     <Badge
-                       variant="outline"
-                       className={`${tier.color} h-auto mt-1 text-[11px] leading-tight py-0.5 px-1.5 whitespace-pre-line`}
-                     >
-                       {tier.text}
-                     </Badge>
-                   </div>
-                   <Button variant="ghost" onClick={() => toggleFav(court.id)}>
-                     <Star
-                       size={18}
-                       fill={fav.includes(court.id) ? "currentColor" : "none"}
-                     />
-                   </Button>
-                 </div>
+           list.map((court) => (
+             <Card key={court.id} className="border rounded-lg shadow-sm">
+               {/* header */}
+               <div className="flex justify-between items-start p-3 bg-gray-50">
+                 <h3 className="font-semibold">{court.title}</h3>
+                 <Button variant="ghost" onClick={() => toggleFav(court.id)}>
+                   <Star
+                     size={18}
+                     fill={fav.includes(court.id) ? "currentColor" : "none"}
+                   />
+                 </Button>
+               </div>
    
-                 {/* body */}
-                 <CardContent className="space-y-3 p-3">
-                   {/* amenities – one wrapping line */}
-                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
-                     {court.lights && (
-                       <div className="flex items-center gap-1">
-                         <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
-                       </div>
-                     )}
-                     {court.pickleball_lined && (
-                       <div className="flex items-center gap-1">
-                         <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} /> Pickleball
-                       </div>
-                     )}
-                     {court.hitting_wall && (
-                       <div className="flex items-center gap-1">
-                         <Image src="/icons/wallicon.png" alt="" width={12} height={12} /> Wall
-                       </div>
-                     )}
-                     {court.ball_machine && (
-                       <div className="flex items-center gap-1">
-                         <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Machine
-                       </div>
-                     )}
-                   </div>
-   
-                   {/* availability grid */}
-                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
-                     {TIME.map((t) => (
-                       <div
-                         key={t}
-                         className={`text-center py-1 rounded text-xs ${slotClr(court, t)}`}
-                       >
-                         {t.replace(":00", "")}
-                       </div>
-                     ))}
-                   </div>
-   
-                   {/* location toggle */}
-                   {(court.address || court.Maps_url) && (
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="w-full flex items-center justify-center gap-1.5"
-                       onClick={() =>
-                         setExpanded((e) =>
-                           e.includes(court.id)
-                             ? e.filter((x) => x !== court.id)
-                             : [...e, court.id]
-                         )
-                       }
-                     >
-                       <MapPin size={14} />
-                       {expanded.includes(court.id) ? "Hide Location" : "Show Location"}
-                     </Button>
-                   )}
-   
-                   {expanded.includes(court.id) && (
-                     <div className="mt-2">
-                       <p className="text-sm text-gray-700 mb-2">
-                         {court.address ?? "Address unavailable"}
-                       </p>
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         className="w-full"
-                         onClick={() => window.open(mapsUrl(court), "_blank")}
-                       >
-                         Open in Google Maps
-                       </Button>
+               {/* body */}
+               <CardContent className="space-y-3 p-3">
+                 {/* amenities line */}
+                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+                   {court.lights && (
+                     <div className="flex items-center gap-1">
+                       <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
                      </div>
                    )}
-   
-                   {/* ball machine */}
-                   {court.ball_machine && (
-                     <Button
-                       size="sm"
-                       className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
-                       onClick={() => window.open("https://seattleballmachine.com", "_blank")}
-                     >
-                       <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
-                       Ball Machine Rental
-                     </Button>
+                   {court.pickleball_lined && (
+                     <div className="flex items-center gap-1">
+                       <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} /> Pickleball
+                     </div>
                    )}
-                 </CardContent>
-               </Card>
-             );
-           })
+                   {court.hitting_wall && (
+                     <div className="flex items-center gap-1">
+                       <Image src="/icons/wallicon.png" alt="" width={12} height={12} /> Wall
+                     </div>
+                   )}
+                   {court.ball_machine && (
+                     <div className="flex items-center gap-1">
+                       <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Machine
+                     </div>
+                   )}
+                 </div>
+   
+                 {/* availability grid */}
+                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
+                   {TIME.map((t) => (
+                     <div
+                       key={t}
+                       className={`text-center py-1 rounded text-xs ${slotClr(court, t)}`}
+                     >
+                       {t.replace(":00", "")}
+                     </div>
+                   ))}
+                 </div>
+   
+                 {/* location toggle */}
+                 {(court.address || court.Maps_url) && (
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     className="w-full flex items-center justify-center gap-1.5"
+                     onClick={() =>
+                       setExpanded((e) =>
+                         e.includes(court.id)
+                           ? e.filter((x) => x !== court.id)
+                           : [...e, court.id]
+                       )
+                     }
+                   >
+                     <MapPin size={14} />
+                     {expanded.includes(court.id) ? "Hide Location" : "Show Location"}
+                   </Button>
+                 )}
+   
+                 {expanded.includes(court.id) && (
+                   <div className="mt-2">
+                     <p className="text-sm text-gray-700 mb-2">
+                       {court.address ?? "Address unavailable"}
+                     </p>
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       className="w-full"
+                       onClick={() => window.open(mapsUrl(court), "_blank")}
+                     >
+                       Open in Google Maps
+                     </Button>
+                   </div>
+                 )}
+   
+                 {/* ball machine button */}
+                 {court.ball_machine && (
+                   <Button
+                     size="sm"
+                     className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
+                     onClick={() => window.open("https://seattleballmachine.com", "_blank")}
+                   >
+                     <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
+                     Ball Machine Rental
+                   </Button>
+                 )}
+               </CardContent>
+             </Card>
+           ))
          )}
        </div>
      );
