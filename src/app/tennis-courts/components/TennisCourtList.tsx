@@ -332,7 +332,7 @@ export default function TennisCourtList(): ReactElement {
                   )}
                 </div>
 
-                {/* availability grid */}
+                {/* availability  grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
                   {[
                     "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
