@@ -1,6 +1,8 @@
 // src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
-// Removed date-fns import
+// NOTE: Removed date-fns import based on previous build errors.
+// Using vanilla JS for date formatting below. Consider adding date-fns for robustness.
+// import { format } from 'date-fns';
 
 // --- Interfaces ---
 
@@ -23,13 +25,13 @@ interface JoinedCourtData {
   lights: boolean | null;
   hitting_wall: boolean | null;
   pickleball_lined: boolean | null;
-  drive_time: number | null;
+  drive_time: number | null; // Assuming it exists
   ball_machine: boolean | null;
   // Joined data from v_court_popularity_7d (can be null or an empty array)
   v_court_popularity_7d: {
       avg_busy_score_7d: number | null;
       // days_in_avg: number | null; // Can include if needed
-  }[] | null; // Supabase returns joined related data as an array
+  }[] | null; // Supabase often returns joined related data as an array
 }
 
 // Final transformed type for the application
@@ -79,7 +81,7 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       return [];
     }
 
-    // *** CORRECTED: Use the specific row type for the type assertion ***
+    // *** CORRECTED FIX 1: Use the specific row type for the type assertion ***
     const rows = data as JoinedCourtData[] | null;
 
     if (!rows) {
@@ -87,7 +89,7 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       return [];
     }
 
-    // *** CORRECTED: Use the specific JoinedCourtData type for 'row' ***
+    // *** CORRECTED FIX 2: Use the specific JoinedCourtData type for 'row' ***
     const transformed = rows.map((row: JoinedCourtData): TennisCourt | null => {
        if (row.id === null || typeof row.id === 'undefined') {
          console.warn("[getTennisCourts] Skipping row with missing/null ID:", row);
@@ -99,9 +101,10 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
          : [];
 
        // Extract popularity score from the joined view data
+       // Check if v_court_popularity_7d is an array and has entries
        const popularityData = Array.isArray(row.v_court_popularity_7d) && row.v_court_popularity_7d.length > 0
          ? row.v_court_popularity_7d[0]
-         : null; // If join returns null or empty array, popularityData is null
+         : null; // Default to null if join failed or returned no data
 
        const mapsUrl = row.google_map_url ?? null;
 
