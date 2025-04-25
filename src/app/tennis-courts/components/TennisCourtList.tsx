@@ -9,7 +9,7 @@
    import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
    import { Card, CardContent } from "@/components/ui/card";
    import { Button } from "@/components/ui/button";
-   import { Info, Star, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+   import { Info, Star, MapPin, Footprints, Snowflake } from "lucide-react";
    
    const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
    
@@ -21,7 +21,7 @@
      | "pickleball_lined"
      | "ball_machine";
    
-   type PopFilter = "walk" | "low" | "high" | null;
+   type PopFilter = "walk" | "low" | null;
    
    /* ───────── Google Maps URL ───────── */
    
@@ -82,7 +82,6 @@
        lights: false, hitting_wall: false, pickleball_lined: false, ball_machine: false,
      });
      const [popFilter, setPopFilter] = useState<PopFilter>(null);
-     const [showExtra, setShowExtra] = useState(false);
      const [expanded, setExpanded] = useState<number[]>([]);
      const [loading, setLoading] = useState(true);
      const [error, setError]   = useState<string | null>(null);
@@ -110,46 +109,40 @@
          return next;
        });
    
-     /* percentile boundaries (exclude 0) */
-     const { p15, p50 } = useMemo(() => {
+     /* median percentile for “less popular” */
+     const median = useMemo(() => {
        const s = courts
          .map((c) => c.avg_busy_score_7d)
          .filter((x): x is number => x !== null && x > 0)
          .sort((a, b) => a - b);
-       if (!s.length) return { p15: 0, p50: 0 };
-       const idx = (p: number) => Math.floor(p * s.length);
-       return { p15: s[idx(0.15)], p50: s[idx(0.50)] };
+       if (!s.length) return 0;
+       return s[Math.floor(0.5 * s.length)];
      }, [courts]);
    
      /* filter + sort */
      const list = useMemo(() => {
        return courts
-         /* search */
          .filter((c) =>
            search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
          )
-         /* amenity filters */
          .filter((c) =>
            (Object.keys(amenities) as AmenityKey[]).every((k) => !amenities[k] || c[k])
          )
-         /* popularity filter */
          .filter((c) => {
            const score = c.avg_busy_score_7d;
            if (popFilter === null) return true;
            if (popFilter === "walk") return score === 0;
+           /* popFilter === "low" */
            if (score === null || score === 0) return false;
-           if (popFilter === "high") return score <= p15;
-           /* popFilter === 'low' */
-           return score > p50;
+           return score > median;
          })
-         /* favorites first, then name */
          .sort((a, b) => {
            const af = fav.includes(a.id) ? 1 : 0;
            const bf = fav.includes(b.id) ? 1 : 0;
            if (af !== bf) return bf - af;
            return a.title.localeCompare(b.title);
          });
-     }, [courts, search, amenities, popFilter, fav, p15, p50]);
+     }, [courts, search, amenities, popFilter, fav, median]);
    
      /* header helpers */
      const today = new Date().toLocaleDateString("en-US", {
@@ -175,6 +168,7 @@
          <div className="sticky top-0 z-10 bg-white border-b pb-3 pt-6 space-y-3">
            <div className="text-xl font-semibold">{today}</div>
    
+           {/* search + info */}
            <div className="flex gap-2 items-center">
              <input
                value={search}
@@ -193,8 +187,9 @@
              </Button>
            </div>
    
-           {/* amenities row */}
-           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+           {/* unified filter grid: 4 amenities + 2 popularity */}
+           <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+             {/* amenities */}
              {(Object.entries(amenityCfg) as [AmenityKey, { label: string; icon: string }][])
                .map(([k, { label, icon }]) => {
                  const active = amenities[k];
@@ -204,7 +199,7 @@
                      variant="outline"
                      className={`flex items-center justify-center gap-1 text-sm ${
                        active
-                         ? "bg-secondary text-secondary-foreground"
+                         ? "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-300"
                          : "bg-transparent"
                      }`}
                      onClick={() => setAmenities((f) => ({ ...f, [k]: !f[k] }))}
@@ -215,48 +210,33 @@
                    </Button>
                  );
                })}
-           </div>
    
-           {/* toggle extra filters */}
-           <div className="flex justify-end">
-             <Button
-               variant="ghost"
-               size="sm"
-               className="flex items-center gap-1 text-gray-600"
-               onClick={() => setShowExtra((v) => !v)}
-             >
-               {showExtra ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-               More filters
-             </Button>
+             {/* popularity: walk-on */}
+             {(["walk", "Walk-on only", Footprints] as const) //
+               && (["low",  "Less popular", Snowflake]   as const)}
+             {([
+               ["walk","Walk-on only",Footprints],
+               ["low","Less popular",Snowflake],
+             ] as const).map(([key, label, Icon]) => {
+               const active = popFilter === key;
+               return (
+                 <Button
+                   key={key}
+                   variant="outline"
+                   className={`flex items-center justify-center gap-1 text-sm ${
+                     active
+                       ? "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-300"
+                       : "bg-transparent"
+                   }`}
+                   onClick={() => setPopFilter(active ? null : (key as PopFilter))}
+                   aria-pressed={active}
+                 >
+                   <Icon size={14} />
+                   {label}
+                 </Button>
+               );
+             })}
            </div>
-   
-           {/* popularity row (collapsible) */}
-           {showExtra && (
-             <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-               {([
-                 ["walk", "Walk-on only"],
-                 ["low",  "Less popular"],
-                 ["high", "High demand"],
-               ] as [PopFilter, string][]).map(([key, label]) => {
-                 const active = popFilter === key;
-                 return (
-                   <Button
-                     key={key}
-                     variant="outline"
-                     className={`justify-center text-sm ${
-                       active
-                         ? "bg-secondary text-secondary-foreground"
-                         : "bg-transparent"
-                     }`}
-                     onClick={() => setPopFilter(active ? null : (key as PopFilter))}
-                     aria-pressed={active}
-                   >
-                     {label}
-                   </Button>
-                 );
-               })}
-             </div>
-           )}
          </div>
    
          {/* ───────── court list ───────── */}
