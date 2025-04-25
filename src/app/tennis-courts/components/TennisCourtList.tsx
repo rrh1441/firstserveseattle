@@ -7,19 +7,11 @@ import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Info,
-  Star,
-  MapPin,
-  Users,
-  Zap,
-  Snowflake,
-  HelpCircle,
-} from "lucide-react";
+import { Info, Star, MapPin } from "lucide-react"; // only icons we actually render
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ───────── popularity tier helper ───────── */
+/* ───────────── popularity tier helper ───────────── */
 
 type FilterKey =
   | "lights"
@@ -59,16 +51,16 @@ function tierFor(score: number | null | undefined): Tier {
   };
 }
 
-/* ───────── helper: Google Maps URL ───────── */
+/* ───────────── helper: Google Maps URL ───────────── */
 
-const mapsUrl = (c: TennisCourt) =>
-  c.Maps_url?.startsWith("http")
-    ? c.Maps_url
+const mapsUrl = (court: TennisCourt) =>
+  court.Maps_url?.startsWith("http")
+    ? court.Maps_url
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        c.address ?? c.title
+        court.address ?? court.title
       )}`;
 
-/* ───────── time & availability helpers ───────── */
+/* ───────────── time & availability helpers ───────── */
 
 const timeSlots = [
   "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
@@ -97,7 +89,7 @@ const slotColor = (court: TennisCourt, slot: string) => {
   return "bg-orange-400 text-white";
 };
 
-/* ───────── skeleton loaders ───────── */
+/* ───────────── skeleton loaders ───────────── */
 
 const CardSkeleton = () => (
   <Card className="border rounded-lg shadow-md animate-pulse">
@@ -120,7 +112,7 @@ const ListSkeleton = () => (
   </div>
 );
 
-/* ───────── main component ───────── */
+/* ───────────── main component ───────────── */
 
 export default function TennisCourtList() {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
@@ -172,7 +164,7 @@ export default function TennisCourtList() {
   const toggleMap = (id: number) =>
     setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
-  /* filter button config */
+  /* filter buttons */
   const cfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -263,7 +255,7 @@ export default function TennisCourtList() {
             const tier = tierFor(court.avg_busy_score_7d);
             return (
               <Card key={court.id} className="border rounded-lg shadow-sm">
-                {/* header */}
+                {/* card header */}
                 <div className="flex justify-between items-start p-3 bg-gray-50">
                   <div>
                     <h3 className="font-semibold">{court.title}</h3>
@@ -282,9 +274,9 @@ export default function TennisCourtList() {
                   </Button>
                 </div>
 
-                {/* body */}
+                {/* card body */}
                 <CardContent className="space-y-3 p-3">
-                  {/* amenities 2×2 mobile */}
+                  {/* amenities 2×2 on mobile */}
                   <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                     {court.lights && (
                       <div className="flex items-center gap-1">
@@ -323,7 +315,7 @@ export default function TennisCourtList() {
                     ))}
                   </div>
 
-                  {/* location */}
+                  {/* location toggle */}
                   {(court.address || court.Maps_url) && (
                     <Button
                       size="sm"
@@ -359,7 +351,12 @@ export default function TennisCourtList() {
                         window.open("https://seattleballmachine.com", "_blank")
                       }
                     >
-                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
+                      <Image
+                        src="/icons/ballmachine.png"
+                        alt=""
+                        width={12}
+                        height={12}
+                      />
                       Ball Machine Rental
                     </Button>
                   )}
