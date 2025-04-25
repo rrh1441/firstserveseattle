@@ -1,8 +1,6 @@
 // src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
-// NOTE: Removed date-fns import based on previous build errors.
-// Using vanilla JS for date formatting below. Consider adding date-fns for robustness.
-// import { format } from 'date-fns';
+// No date-fns needed here anymore as the view handles dates
 
 // --- Interfaces ---
 
@@ -12,26 +10,28 @@ interface ParsedInterval {
   end: string;
 }
 
-// Raw data shape from Supabase (ensure this matches your SELECT + JOIN results)
-interface SupabaseTennisCourtRow {
+// Define the structure returned by the join query
+// Includes all tennis_courts fields + avg_busy_score_7d from the view
+interface JoinedCourtData {
   id: number | null;
   title: string | null;
   facility_type: string | null;
   address: string | null;
   available_dates: string | null;
   last_updated: string | null;
-  google_map_url: string | null; // Your actual DB column name
+  google_map_url: string | null; // Your DB column name
   lights: boolean | null;
   hitting_wall: boolean | null;
   pickleball_lined: boolean | null;
-  drive_time: number | null; // Assuming it exists
+  drive_time: number | null;
   ball_machine: boolean | null;
-  // Joined data from court_daily_metrics (will be an array or null)
-  court_daily_metrics: {
-      busy_score: number;
-      is_closed_today: boolean;
-   }[] | null;
+  // Joined data from v_court_popularity_7d (may be null due to LEFT JOIN)
+  v_court_popularity_7d: {
+      avg_busy_score_7d: number | null;
+      // days_in_avg: number | null; // Can include if needed
+  }[] | null; // Supabase often returns joined table data as an array
 }
+
 
 // Final transformed type for the application
 interface TennisCourt {
@@ -45,51 +45,49 @@ interface TennisCourt {
   pickleball_lined: boolean;
   ball_machine: boolean;
   parsed_intervals: ParsedInterval[];
-  busy_score: number | null; // Today's busy score
-  is_closed_today: boolean;
+  avg_busy_score_7d: number | null; // The 7-day average score
 }
 
 /**
- * Fetch and transform data from the "tennis_courts" table in Supabase,
- * joining with today's metrics.
+ * Fetch and transform data from the "tennis_courts" table,
+ * joining with the 7-day popularity view.
  */
 export async function getTennisCourts(): Promise<TennisCourt[]> {
   try {
-    // --- Get today's date in YYYY-MM-DD format using vanilla JS ---
-    const dateObj = new Date();
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-    // --- End date formatting ---
-
-    // Select base columns and join court_daily_metrics for today
+    // Select all needed columns from tennis_courts and join the popularity view
     const columnsToSelect = `
-      id, title, facility_type, address, available_dates, last_updated,
-      google_map_url, lights, hitting_wall, pickleball_lined, drive_time,
-      ball_machine, court_daily_metrics ( busy_score, is_closed_today )
+      id,
+      title,
+      facility_type,
+      address,
+      available_dates,
+      last_updated,
+      google_map_url,
+      lights,
+      hitting_wall,
+      pickleball_lined,
+      drive_time,
+      ball_machine,
+      v_court_popularity_7d ( avg_busy_score_7d )
     `;
 
     const { data, error } = await supabase
       .from("tennis_courts")
-      .select(columnsToSelect)
-      .eq('court_daily_metrics.play_date', today);
+      .select(columnsToSelect); // Joining the view via Supabase relationship syntax
 
     if (error) {
-      console.error("[getTennisCourts] Supabase error:", error);
+      console.error("[getTennisCourts] Supabase error joining popularity view:", error);
       return [];
     }
 
-    // *** FIX: Use the specific row type for the type assertion ***
-    const rows = data as SupabaseTennisCourtRow[] | null;
+    const rows = data as any[] | null; // Use any for simplicity due to nested join result
 
     if (!rows) {
       console.log("[getTennisCourts] No data returned.");
       return [];
     }
 
-    // *** FIX: Use the specific SupabaseTennisCourtRow type for 'row' in the map function ***
-    const transformed = rows.map((row: SupabaseTennisCourtRow): TennisCourt | null => {
+    const transformed = rows.map((row): TennisCourt | null => {
        if (row.id === null || typeof row.id === 'undefined') {
          console.warn("[getTennisCourts] Skipping row with missing/null ID:", row);
          return null;
@@ -99,12 +97,11 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
          ? parseAvailableDates(row.available_dates)
          : [];
 
-       // Extract metrics for today
-       const todaysMetric = Array.isArray(row.court_daily_metrics) && row.court_daily_metrics.length > 0
-         ? row.court_daily_metrics[0]
+       // Extract popularity score from the joined view data
+       const popularityData = Array.isArray(row.v_court_popularity_7d) && row.v_court_popularity_7d.length > 0
+         ? row.v_court_popularity_7d[0]
          : null;
 
-       // Map DB's google_map_url to the component's expected Maps_url
        const mapsUrl = row.google_map_url ?? null;
 
        return {
@@ -112,14 +109,13 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
          title: row.title ?? "Unknown Court",
          facility_type: row.facility_type ?? "Unknown",
          address: row.address ?? null,
-         Maps_url: mapsUrl, // Assign to Maps_url
+         Maps_url: mapsUrl,
          lights: row.lights ?? false,
          hitting_wall: row.hitting_wall ?? false,
          pickleball_lined: row.pickleball_lined ?? false,
          ball_machine: row.ball_machine ?? false,
          parsed_intervals,
-         busy_score: todaysMetric?.busy_score ?? null,
-         is_closed_today: todaysMetric?.is_closed_today ?? false,
+         avg_busy_score_7d: popularityData?.avg_busy_score_7d ?? null, // Get score or null
        };
      }).filter((court): court is TennisCourt => court !== null);
 

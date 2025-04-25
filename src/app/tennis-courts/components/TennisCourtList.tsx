@@ -4,9 +4,9 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"; // Keep Badge
-// Removed Tooltip imports
-import { Star, MapPin, Info, Users, Zap, Snowflake } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+// Tooltip component imports removed
+import { Star, MapPin, Info, Users, Zap, Snowflake, SlashCircle } from "lucide-react"; // Added SlashCircle
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
@@ -21,23 +21,23 @@ interface ParsedInterval {
   end: string;
 }
 
-// Updated Interface to match expected data from getTennisCourts
+// Updated Interface to use avg_busy_score_7d
 interface Court {
   id: number;
   title: string;
   facility_type: string;
   address: string | null;
-  Maps_url?: string | null; // Matches interface in getTennisCourts output
+  Maps_url?: string | null;
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
   ball_machine: boolean;
   parsed_intervals: ParsedInterval[];
-  busy_score: number | null; // Use busy_score for popularity
-  is_closed_today: boolean;
+  avg_busy_score_7d: number | null; // Using the 7-day average score
+  // is_closed_today removed based on user feedback
 }
 
-// --- Popularity Tier Logic based on busy_score ---
+// --- Popularity Tier Logic (Final Version) ---
 interface PopularityTier {
   label: string;
   tooltip: string;
@@ -45,20 +45,24 @@ interface PopularityTier {
   icon?: React.ElementType; // Optional icon component
 }
 
-function getPopularityTier(score: number | null): PopularityTier | null {
-  if (score === null) {
-    return null; // No score data available
+function getPopularityTier(score: number | null | undefined): PopularityTier | null {
+  if (score === null || typeof score === 'undefined') {
+     // N/A Tier
+    return { label: "N/A", tooltip: "Popularity data unavailable.", colorClass: "bg-gray-100 text-gray-600 border-gray-300", icon: SlashCircle };
   }
 
-  // Tiers based on busy_score (Adjust thresholds as needed)
-  if (score <= 40) {
-      return { label: "Walk-on", tooltip: "Usually quiet, walk-on likely.", colorClass: "bg-green-100 text-green-800 border-green-300", icon: Users};
-  } else if (score <= 80) {
-      return { label: "Chill", tooltip: "Moderate traffic, check availability.", colorClass: "bg-blue-100 text-blue-800 border-blue-300", icon: Snowflake };
-  } else if (score <= 120) {
-      return { label: "Busy", tooltip: "Often booked, reservation advised.", colorClass: "bg-orange-100 text-orange-800 border-orange-300", icon: Users };
-  } else { // > 120
-      return { label: "Hot", tooltip: "High demand, reservation recommended.", colorClass: "bg-red-100 text-red-800 border-red-300", icon: Zap };
+  // Walk-on Only Tier
+  if (score === 0) {
+      return { label: "Walk-on Only", tooltip: "Reservations not available.", colorClass: "bg-gray-200 text-gray-700 border-gray-400", icon: Users}; // Neutral color
+  }
+
+  // Reservable Tiers (Score > 0) - Using adjusted thresholds
+  if (score <= 45) {
+      return { label: "Chill", tooltip: "Light-moderate traffic over the last week.", colorClass: "bg-blue-100 text-blue-800 border-blue-300", icon: Snowflake };
+  } else if (score <= 70) { // Adjusted threshold
+      return { label: "Busy", tooltip: "Often busy over the last week, reservation advised.", colorClass: "bg-orange-100 text-orange-800 border-orange-300", icon: Users };
+  } else { // > 70
+      return { label: "Hot", tooltip: "High demand over the last week, reservation recommended.", colorClass: "bg-red-100 text-red-800 border-red-300", icon: Zap };
   }
 }
 
@@ -258,13 +262,12 @@ export default function TennisCourtList() {
 
   // Safely get Google Maps URL
   const getGoogleMapsUrl = (court: Court): string => {
-    // Use the Maps_url property from the Court interface
     if (court.Maps_url && court.Maps_url.trim().startsWith('http')) {
       return court.Maps_url;
     }
     const query = court.address?.trim() || court.title?.trim() || 'Seattle Tennis Court';
     const encodedQuery = encodeURIComponent(query);
-    return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`; // Standard Google Maps search URL
+    return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
   };
 
 
@@ -311,7 +314,7 @@ export default function TennisCourtList() {
     lights: { label: 'Lights', icon: '/icons/lighticon.png' },
     pickleball_lined: { label: 'Pickleball', icon: '/icons/pickleballicon.png' },
     hitting_wall: { label: 'Wall', icon: '/icons/wallicon.png' },
-    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' }, // Label already updated
+    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' },
   } as const;
 
   type FilterKey = keyof typeof filterConfig;
@@ -407,60 +410,56 @@ export default function TennisCourtList() {
 
         {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
-            {/* Header Content */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-               {/* Left Side */}
-               <div className="flex-grow space-y-3 w-full sm:w-auto">
-                  <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
-                  <input
-                      type="text"
-                      placeholder="Search courts by name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
-                      aria-label="Search courts by name"
-                  />
-                  {/* Filter Container Layout */}
-                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-                     {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
-                         const { label, icon } = filterConfig[filterKey];
-                         const isActive = filters[filterKey];
-                         return (
-                             <Button
-                                 key={filterKey}
-                                 onClick={() => toggleFilter(filterKey)}
-                                 variant="outline"
-                                 // Filter Button Size/Padding/Text
-                                 className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${
-                                  isActive
-                                  ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
-                                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                                 }`}
-                                 aria-pressed={isActive}
-                             >
-                                {/* Filter Icon Size */}
-                                <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
-                                {label}
-                             </Button>
-                         );
-                        })}
-                  </div>
-               </div>
-               {/* Right Side: Info Button */}
-               <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
-                   <Button
-                       onClick={() => setAboutModalOpen(true)}
-                       variant="outline"
-                       // Info Button Size/Padding/Text
-                       className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
-                       aria-label="Open Information and Key"
-                   >
-                     {/* Info Icon Size */}
-                     <Info size={16} aria-hidden="true"/>
-                     Info / Key
-                   </Button>
-               </div>
-            </div>
+           {/* Header Content */}
+           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              {/* Left Side */}
+              <div className="flex-grow space-y-3 w-full sm:w-auto">
+                 <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
+                 <input
+                     type="text"
+                     placeholder="Search courts by name..."
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
+                     aria-label="Search courts by name"
+                 />
+                 {/* Filter Container Layout */}
+                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+                    {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
+                        const { label, icon } = filterConfig[filterKey];
+                        const isActive = filters[filterKey];
+                        return (
+                            <Button
+                                key={filterKey}
+                                onClick={() => toggleFilter(filterKey)}
+                                variant="outline"
+                                className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${
+                                 isActive
+                                 ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
+                                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                                }`}
+                                aria-pressed={isActive}
+                            >
+                              <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
+                              {label}
+                            </Button>
+                        );
+                       })}
+                 </div>
+              </div>
+              {/* Right Side: Info Button */}
+              <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
+                  <Button
+                      onClick={() => setAboutModalOpen(true)}
+                      variant="outline"
+                      className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
+                      aria-label="Open Information and Key"
+                  >
+                    <Info size={16} aria-hidden="true"/>
+                    Info / Key
+                  </Button>
+              </div>
+           </div>
         </div>
 
         {/* Court List or No Results Message */}
@@ -471,9 +470,9 @@ export default function TennisCourtList() {
         ) : (
             <div className="space-y-4">
                 {sortedCourts.map((court) => {
-                    // Get popularity tier based on busy_score
-                    const popularityTier = getPopularityTier(court.busy_score);
-                    const IconComponent = popularityTier?.icon; // Get the icon component if available
+                    // Get popularity tier based on avg_busy_score_7d
+                    const popularityTier = getPopularityTier(court.avg_busy_score_7d);
+                    const IconComponent = popularityTier?.icon;
 
                     return (
                       <Card key={court.id} className="shadow-md overflow-hidden border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200">
@@ -492,13 +491,10 @@ export default function TennisCourtList() {
                                          {court.hitting_wall && ( <div className="flex items-center gap-1" title="Hitting wall available"><Image src="/icons/wallicon.png" alt="Wall" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Wall</div> )}
                                     </div>
 
-                                    {/* Popularity Tag - Always attempt to show */}
+                                    {/* Popularity Tag Logic */}
                                     <div className="mt-2">
-                                      {court.is_closed_today ? (
-                                          <Badge variant="destructive" className="text-xs h-5 px-1.5">Closed Today</Badge>
-                                      ) : popularityTier ? (
-                                           // Use title attribute for basic browser tooltip
-                                          <Badge
+                                      {popularityTier && ( // Only render if a tier exists (handles N/A via the function)
+                                           <Badge
                                              variant="outline"
                                              className={`text-xs h-5 px-1.5 cursor-default inline-flex items-center ${popularityTier.colorClass}`}
                                              title={popularityTier.tooltip} // Tooltip text here
@@ -506,8 +502,6 @@ export default function TennisCourtList() {
                                              {IconComponent && <IconComponent size={10} className="mr-1"/> }
                                              {popularityTier.label}
                                           </Badge>
-                                      ) : (
-                                           <Badge variant="outline" className="text-xs h-5 px-1.5 bg-gray-100 text-gray-600 border-gray-300" title="Popularity data not available for today.">N/A</Badge>
                                       )}
                                     </div>
                                     {/* End Popularity Tag */}
@@ -533,9 +527,9 @@ export default function TennisCourtList() {
                               {timesInOneHour.map((timeSlot, idx) => {
                                  const colorClass = getHourAvailabilityColor(court, timeSlot);
                                  const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
-                                 const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved/Unavailable';
-                                 const displayColor = court.is_closed_today ? "bg-gray-400 text-gray-100" : colorClass;
-                                 const displayAvailabilityText = court.is_closed_today ? "Closed" : availabilityText;
+                                 const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved'; // Removed '/Unavailable'
+                                 const displayColor = colorClass; // Removed is_closed_today check
+                                 const displayAvailabilityText = availabilityText; // Removed is_closed_today check
 
                                  return (
                                     <div
