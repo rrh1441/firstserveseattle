@@ -1,6 +1,8 @@
 // src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
-// Removed: import { format } from 'date-fns'; // No longer needed
+// NOTE: Removed date-fns import based on previous build errors.
+// Using vanilla JS for date formatting below. Consider adding date-fns for robustness.
+// import { format } from 'date-fns';
 
 // --- Interfaces ---
 
@@ -10,7 +12,7 @@ interface ParsedInterval {
   end: string;
 }
 
-// Raw data shape from Supabase (adjust based on actual columns)
+// Raw data shape from Supabase (ensure this matches your SELECT + JOIN results)
 interface SupabaseTennisCourtRow {
   id: number | null;
   title: string | null;
@@ -37,8 +39,7 @@ interface TennisCourt {
   title: string;
   facility_type: string;
   address: string | null;
-  // NOTE: Using Maps_url here to match the TennisCourtList component's interface
-  Maps_url: string | null;
+  Maps_url: string | null; // Component-facing name
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
@@ -55,8 +56,6 @@ interface TennisCourt {
 export async function getTennisCourts(): Promise<TennisCourt[]> {
   try {
     // --- Get today's date in YYYY-MM-DD format using vanilla JS ---
-    // NOTE: This uses the local timezone of the server where this code runs.
-    // For more robust timezone handling, consider installing and using date-fns.
     const dateObj = new Date();
     const year = dateObj.getFullYear();
     const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
@@ -64,44 +63,33 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
     const today = `${year}-${month}-${day}`;
     // --- End date formatting ---
 
-    // Select columns from tennis_courts and join court_daily_metrics for today
-    // Ensure all column names match your actual schema
+    // Select base columns and join court_daily_metrics for today
     const columnsToSelect = `
-      id,
-      title,
-      facility_type,
-      address,
-      available_dates,
-      last_updated,
-      google_map_url,
-      lights,
-      hitting_wall,
-      pickleball_lined,
-      drive_time,
-      ball_machine,
-      court_daily_metrics ( busy_score, is_closed_today )
+      id, title, facility_type, address, available_dates, last_updated,
+      google_map_url, lights, hitting_wall, pickleball_lined, drive_time,
+      ball_machine, court_daily_metrics ( busy_score, is_closed_today )
     `;
 
     const { data, error } = await supabase
       .from("tennis_courts")
       .select(columnsToSelect)
-      // Filter the joined metrics for today's date
       .eq('court_daily_metrics.play_date', today);
-
 
     if (error) {
       console.error("[getTennisCourts] Supabase error:", error);
       return [];
     }
 
-     const rows = data as any[] | null; // Using any for simplicity, refine if needed
+    // *** FIX: Use the specific row type for the type assertion ***
+    const rows = data as SupabaseTennisCourtRow[] | null;
 
     if (!rows) {
       console.log("[getTennisCourts] No data returned.");
       return [];
     }
 
-    const transformed = rows.map((row): TennisCourt | null => {
+    // *** FIX: Use the specific SupabaseTennisCourtRow type for 'row' in the map function ***
+    const transformed = rows.map((row: SupabaseTennisCourtRow): TennisCourt | null => {
        if (row.id === null || typeof row.id === 'undefined') {
          console.warn("[getTennisCourts] Skipping row with missing/null ID:", row);
          return null;
@@ -124,7 +112,7 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
          title: row.title ?? "Unknown Court",
          facility_type: row.facility_type ?? "Unknown",
          address: row.address ?? null,
-         Maps_url: mapsUrl, // Map to Maps_url
+         Maps_url: mapsUrl, // Assign to Maps_url
          lights: row.lights ?? false,
          hitting_wall: row.hitting_wall ?? false,
          pickleball_lined: row.pickleball_lined ?? false,
