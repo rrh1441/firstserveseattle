@@ -1,4 +1,3 @@
-// src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -20,7 +19,7 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ───── popularity tier helper ───── */
+/* ───────── popularity tier helper ───────── */
 
 type FilterKey =
   | "lights"
@@ -31,7 +30,6 @@ type FilterKey =
 interface Tier {
   text: string;
   color: string;
-  icon: typeof Users | typeof Zap | typeof Snowflake | typeof HelpCircle;
 }
 
 function tierFor(score: number | null | undefined): Tier {
@@ -39,43 +37,38 @@ function tierFor(score: number | null | undefined): Tier {
     return {
       text: "N/A – No recent popularity data",
       color: "bg-gray-100 text-gray-600 border-gray-300",
-      icon: HelpCircle,
     };
   if (score === 0)
     return {
       text: "Walk-on – First-come, first-served only",
       color: "bg-gray-200 text-gray-700 border-gray-400",
-      icon: Users,
     };
-  if (score <= 45)
+  if (score <= 30)
     return {
-      text: "Chill – Light traffic, walk-on fine",
-      color: "bg-blue-100 text-blue-800 border-blue-300",
-      icon: Snowflake,
+      text: "Hot – Extremely popular court, recommend booking ahead",
+      color: "bg-red-100 text-red-800 border-red-300",
     };
-  if (score <= 70)
+  if (score <= 55)
     return {
       text: "Busy – Often reserved, consider booking ahead",
       color: "bg-orange-100 text-orange-800 border-orange-300",
-      icon: Users,
     };
   return {
-    text: "Hot – Extremely popular court, recommend booking ahead",
-    color: "bg-red-100 text-red-800 border-red-300",
-    icon: Zap,
+    text: "Chill – Light traffic, walk-on fine",
+    color: "bg-blue-100 text-blue-800 border-blue-300",
   };
 }
 
-/* ───── helper: Google Maps URL ───── */
+/* ───────── helper: Google Maps URL ───────── */
 
-const mapsUrl = (court: TennisCourt) =>
-  court.Maps_url?.startsWith("http")
-    ? court.Maps_url
+const mapsUrl = (c: TennisCourt) =>
+  c.Maps_url?.startsWith("http")
+    ? c.Maps_url
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        court.address ?? court.title
+        c.address ?? c.title
       )}`;
 
-/* ───── time helpers ───── */
+/* ───────── time & availability helpers ───────── */
 
 const timeSlots = [
   "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
@@ -104,7 +97,7 @@ const slotColor = (court: TennisCourt, slot: string) => {
   return "bg-orange-400 text-white";
 };
 
-/* ───── skeletons ───── */
+/* ───────── skeleton loaders ───────── */
 
 const CardSkeleton = () => (
   <Card className="border rounded-lg shadow-md animate-pulse">
@@ -127,7 +120,7 @@ const ListSkeleton = () => (
   </div>
 );
 
-/* ───── component ───── */
+/* ───────── main component ───────── */
 
 export default function TennisCourtList() {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
@@ -152,7 +145,7 @@ export default function TennisCourtList() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* load favourites */
+  /* load favorites */
   useEffect(() => {
     const raw = localStorage.getItem("favoriteCourts");
     if (raw) {
@@ -167,10 +160,10 @@ export default function TennisCourtList() {
 
   /* handlers */
   const toggleFav = (id: number) =>
-    setFav((p) => {
-      const n = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
-      localStorage.setItem("favoriteCourts", JSON.stringify(n));
-      return n;
+    setFav((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      localStorage.setItem("favoriteCourts", JSON.stringify(next));
+      return next;
     });
 
   const toggleFilter = (k: FilterKey) =>
@@ -179,7 +172,7 @@ export default function TennisCourtList() {
   const toggleMap = (id: number) =>
     setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
 
-  /* filter cfg */
+  /* filter button config */
   const cfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -189,7 +182,9 @@ export default function TennisCourtList() {
 
   /* filtered list */
   const list = courts
-    .filter((c) => (search ? c.title.toLowerCase().includes(search.toLowerCase()) : true))
+    .filter((c) =>
+      search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
+    )
     .filter((c) =>
       (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
     )
@@ -207,7 +202,7 @@ export default function TennisCourtList() {
     timeZone: "America/Los_Angeles",
   });
 
-  /* ───── render ───── */
+  /* ───────── render ───────── */
 
   if (loading)
     return (
@@ -219,9 +214,7 @@ export default function TennisCourtList() {
 
   return (
     <div className="p-4 space-y-4">
-      {aboutOpen && (
-        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
-      )}
+      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
 
       {/* header */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4 pt-6 space-y-3">
@@ -261,7 +254,7 @@ export default function TennisCourtList() {
         </div>
       </div>
 
-      {/* list */}
+      {/* court cards */}
       <div className="space-y-4">
         {list.length === 0 ? (
           <div>No courts found.</div>
@@ -270,7 +263,7 @@ export default function TennisCourtList() {
             const tier = tierFor(court.avg_busy_score_7d);
             return (
               <Card key={court.id} className="border rounded-lg shadow-sm">
-                {/* card header */}
+                {/* header */}
                 <div className="flex justify-between items-start p-3 bg-gray-50">
                   <div>
                     <h3 className="font-semibold">{court.title}</h3>
@@ -289,9 +282,9 @@ export default function TennisCourtList() {
                   </Button>
                 </div>
 
-                {/* card body */}
+                {/* body */}
                 <CardContent className="space-y-3 p-3">
-                  {/* attribute grid */}
+                  {/* amenities 2×2 mobile */}
                   <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                     {court.lights && (
                       <div className="flex items-center gap-1">
@@ -366,12 +359,7 @@ export default function TennisCourtList() {
                         window.open("https://seattleballmachine.com", "_blank")
                       }
                     >
-                      <Image
-                        src="/icons/ballmachine.png"
-                        alt=""
-                        width={12}
-                        height={12}
-                      />
+                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
                       Ball Machine Rental
                     </Button>
                   )}
