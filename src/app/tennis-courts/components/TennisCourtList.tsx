@@ -1,4 +1,3 @@
-// src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
 import React, { useState, useEffect, ReactElement } from "react";
@@ -20,7 +19,7 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ── popularity helper ───────────────────────────── */
+/* ── popularity tier helper ───────────────────────── */
 
 type FilterKey =
   | "lights"
@@ -35,7 +34,7 @@ interface PopularityTier {
   icon: typeof Users | typeof Zap | typeof Snowflake | typeof HelpCircle;
 }
 
-function getPopularityTier(score: number | null | undefined): PopularityTier {
+function tierFor(score: number | null | undefined): PopularityTier {
   if (score == null)
     return {
       label: "N/A",
@@ -60,15 +59,13 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   if (score <= 70)
     return {
       label: "Busy",
-      tooltip:
-        "Score 46-70 – often busy; booking ahead is helpful.",
+      tooltip: "Score 46-70 – often busy; booking ahead helps.",
       colorClass: "bg-orange-100 text-orange-800 border-orange-300",
       icon: Users,
     };
   return {
     label: "Hot",
-    tooltip:
-      "Score >70 – high demand; expect waits or reserve several days ahead.",
+    tooltip: "Score >70 – high demand; reserve several days ahead.",
     colorClass: "bg-red-100 text-red-800 border-red-300",
     icon: Zap,
   };
@@ -76,49 +73,45 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
 
 /* ── time / availability helpers ─────────────────── */
 
-function timeToMinutes(str: string): number {
-  const [time, ampm] = str.toUpperCase().split(" ");
-  if (!time || !ampm) return -1;
-  const [h, m] = time.split(":").map(Number);
+const times = [
+  "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
+  "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
+  "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
+];
+
+function timeToMin(str: string) {
+  const [t, ampm] = str.toUpperCase().split(" ");
+  if (!t || !ampm) return -1;
+  const [h, m] = t.split(":").map(Number);
   if (isNaN(h) || isNaN(m)) return -1;
   let hh = h % 12;
   if (ampm === "PM") hh += 12;
   return hh * 60 + m;
 }
-
-function isRangeFree(c: TennisCourt, start: number, end: number) {
-  return c.parsed_intervals.some(({ start: s, end: e }) => {
-    const a = timeToMinutes(s);
-    const b = timeToMinutes(e);
-    return a <= start && b >= end;
+function rangeFree(c: TennisCourt, s: number, e: number) {
+  return c.parsed_intervals.some(({ start, end }) => {
+    const a = timeToMin(start);
+    const b = timeToMin(end);
+    return a <= s && b >= e;
   });
 }
-
-function getHourColor(c: TennisCourt, slot: string) {
-  const s = timeToMinutes(slot);
+function slotColor(c: TennisCourt, slot: string) {
+  const s = timeToMin(slot);
   if (s < 0) return "bg-gray-200 text-gray-400";
-  const mid = s + 30;
-  const end = s + 60;
-  const f1 = isRangeFree(c, s, mid);
-  const f2 = isRangeFree(c, mid, end);
+  const mid = s + 30, e = s + 60;
+  const f1 = rangeFree(c, s, mid), f2 = rangeFree(c, mid, e);
   if (f1 && f2) return "bg-green-500 text-white";
   if (!f1 && !f2) return "bg-gray-400 text-gray-100";
   return "bg-orange-400 text-white";
 }
 
-/* ── skeleton loaders ────────────────────────────── */
+/* ── skeletons ───────────────────────────────────── */
 
-function CourtCardSkeleton(): ReactElement {
+function CardSkeleton(): ReactElement {
   return (
-    <Card className="shadow-md border border-gray-200 rounded-lg animate-pulse">
+    <Card className="border rounded-lg shadow-md animate-pulse">
       <div className="p-3 border-b bg-gray-50/60">
-        <div className="flex justify-between">
-          <div className="space-y-2 w-3/4">
-            <div className="h-4 bg-gray-200 rounded w-1/2" />
-            <div className="h-3 bg-gray-200 rounded w-1/3" />
-          </div>
-          <div className="h-8 w-8 bg-gray-200 rounded-full" />
-        </div>
+        <div className="h-4 bg-gray-200 rounded w-1/3" />
       </div>
       <CardContent className="p-3">
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
@@ -130,35 +123,31 @@ function CourtCardSkeleton(): ReactElement {
     </Card>
   );
 }
-
-function CourtListSkeleton({ count = 3 }: { count?: number }) {
+function ListSkeleton() {
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <CourtCardSkeleton key={i} />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <CardSkeleton key={i} />
       ))}
     </div>
   );
 }
 
-/* ── main component ──────────────────────────────── */
+/* ── main component ─────────────────────────────── */
 
-export default function TennisCourtList(): ReactElement {
+export default function TennisCourtList() {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFav] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<FilterKey, boolean>>({
-    lights: false,
-    hitting_wall: false,
-    pickleball_lined: false,
-    ball_machine: false,
+    lights: false, hitting_wall: false, pickleball_lined: false, ball_machine: false,
   });
   const [expanded, setExpanded] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
 
-  /* fetch data */
+  /* fetch courts */
   useEffect(() => {
     getTennisCourts()
       .then(setCourts)
@@ -166,42 +155,39 @@ export default function TennisCourtList(): ReactElement {
       .finally(() => setLoading(false));
   }, []);
 
-  /* load favorites */
+  /* favourites */
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("favoriteCourts");
-      if (raw) {
+    const raw = localStorage.getItem("favoriteCourts");
+    if (raw) {
+      try {
         const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) setFavorites(arr);
+        if (Array.isArray(arr)) setFav(arr);
+      } catch {
+        localStorage.removeItem("favoriteCourts");
       }
-    } catch {
-      localStorage.removeItem("favoriteCourts");
     }
   }, []);
 
   /* helpers */
   const toggleFav = (id: number) =>
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      localStorage.setItem("favoriteCourts", JSON.stringify(next));
-      return next;
+    setFav((p) => {
+      const n = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
+      localStorage.setItem("favoriteCourts", JSON.stringify(n));
+      return n;
     });
-
   const toggleFilter = (k: FilterKey) =>
     setFilters((f) => ({ ...f, [k]: !f[k] }));
-
   const toggleMap = (id: number) =>
     setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
-
   const mapsUrl = (c: TennisCourt) =>
     c.Maps_url?.startsWith("http")
-      ? c.Maps_url!
+      ? c.Maps_url
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
           c.address ?? c.title
         )}`;
 
-  /* filter config */
-  const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
+  /* filter cfg */
+  const cfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
     pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
@@ -210,10 +196,10 @@ export default function TennisCourtList(): ReactElement {
 
   /* filtered list */
   const list = courts
-    .filter((c) => (search ? c.title.toLowerCase().includes(search.toLowerCase()) : true))
     .filter((c) =>
-      (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
+      search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
     )
+    .filter((c) => (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k]))
     .sort((a, b) => {
       const af = favorites.includes(a.id) ? 1 : 0;
       const bf = favorites.includes(b.id) ? 1 : 0;
@@ -223,34 +209,30 @@ export default function TennisCourtList(): ReactElement {
 
   /* header date */
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    timeZone: "America/Los_Angeles",
+    weekday: "long", month: "long", day: "numeric", timeZone: "America/Los_Angeles",
   });
 
-  /* ── render ─────────────────────────────────────── */
+  /* ── render ────────────────────────────────────── */
 
   if (loading)
     return (
-      <div className="p-4 space-y-4">
+      <div className="p-4">
         {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
-        <CourtListSkeleton />
+        <ListSkeleton />
       </div>
     );
-  if (error)
-    return <div className="p-6 text-red-600">Error: {error}</div>;
+  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
   return (
     <div className="p-4 space-y-4">
       {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
 
-      {/* ── sticky header ─────────────────────────── */}
+      {/* sticky header */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
         <div className="space-y-3 pt-4">
           <div className="text-xl font-semibold">{today}</div>
 
-          {/* search + inline Info button */}
+          {/* search + inline info */}
           <div className="flex gap-2 items-center">
             <input
               value={search}
@@ -269,46 +251,47 @@ export default function TennisCourtList(): ReactElement {
             </Button>
           </div>
 
-          {/* filter buttons */}
+          {/* filters */}
           <div className="flex flex-wrap gap-2">
-            {(Object.entries(filterCfg) as [
-              FilterKey,
-              { label: string; icon: string }
-            ][]).map(([k, { label, icon }]) => (
-              <Button
-                key={k}
-                onClick={() => toggleFilter(k)}
-                variant={filters[k] ? "secondary" : "outline"}
-                className="flex items-center gap-1"
-              >
-                <Image src={icon} alt="" width={14} height={14} />
-                {label}
-              </Button>
-            ))}
+            {(Object.entries(cfg) as [FilterKey, { label: string; icon: string }][]).map(
+              ([k, { label, icon }]) => (
+                <Button
+                  key={k}
+                  onClick={() => toggleFilter(k)}
+                  variant={filters[k] ? "secondary" : "outline"}
+                  className="flex items-center gap-1"
+                >
+                  <Image src={icon} alt="" width={14} height={14} />
+                  {label}
+                </Button>
+              )
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── court cards ───────────────────────────── */}
+      {/* list */}
       {list.length === 0 ? (
         <div>No courts found.</div>
       ) : (
         list.map((court) => {
-          const tier = getPopularityTier(court.avg_busy_score_7d);
+          const tier = tierFor(court.avg_busy_score_7d);
           return (
             <Card key={court.id} className="border rounded-lg shadow-sm">
-              {/* card header */}
+              {/* header */}
               <div className="flex justify-between items-start p-3 bg-gray-50">
                 <div>
                   <h3 className="font-semibold">{court.title}</h3>
-                  <Badge
-                    variant="outline"
-                    title={tier.tooltip} /* Tooltip ON the badge */
-                    className={`${tier.colorClass} h-5 px-1.5 text-xs inline-flex items-center mt-1`}
-                  >
-                    <tier.icon size={10} className="mr-1" />
-                    {tier.label}
-                  </Badge>
+                  {/* tooltip wrapper */}
+                  <span title={tier.tooltip} className="inline-block cursor-help mt-1">
+                    <Badge
+                      variant="outline"
+                      className={`${tier.colorClass} h-5 px-1.5 text-xs inline-flex items-center pointer-events-none`}
+                    >
+                      <tier.icon size={10} className="mr-1" />
+                      {tier.label}
+                    </Badge>
+                  </span>
                 </div>
                 <Button variant="ghost" onClick={() => toggleFav(court.id)}>
                   <Star
@@ -318,56 +301,45 @@ export default function TennisCourtList(): ReactElement {
                 </Button>
               </div>
 
-              {/* card body */}
+              {/* body */}
               <CardContent className="space-y-3 p-3">
-                {/* attributes 2×2 on mobile */}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
+                {/* attribute chips: grid on mobile */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 w-full text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                   {court.lights && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/lighticon.png" alt="" width={12} height={12} />
-                      Lights
+                      <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
                     </div>
                   )}
                   {court.pickleball_lined && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} />
-                      Pickleball
+                      <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} /> Pickleball
                     </div>
                   )}
                   {court.hitting_wall && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/wallicon.png" alt="" width={12} height={12} />
-                      Wall
+                      <Image src="/icons/wallicon.png" alt="" width={12} height={12} /> Wall
                     </div>
                   )}
                   {court.ball_machine && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
-                      Machine
+                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Machine
                     </div>
                   )}
                 </div>
 
                 {/* availability grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
-                  {[
-                    "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
-                    "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
-                    "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
-                  ].map((slot) => (
+                  {times.map((slot) => (
                     <div
                       key={slot}
-                      className={`text-center py-1 rounded text-xs ${getHourColor(
-                        court,
-                        slot
-                      )}`}
+                      className={`text-center py-1 rounded text-xs ${slotColor(court, slot)}`}
                     >
                       {slot.replace(":00", "")}
                     </div>
                   ))}
                 </div>
 
-                {/* location button */}
+                {/* location */}
                 {(court.address || court.Maps_url) && (
                   <Button
                     size="sm"
@@ -403,8 +375,7 @@ export default function TennisCourtList(): ReactElement {
                       window.open("https://seattleballmachine.com", "_blank")
                     }
                   >
-                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
-                    Ball Machine Rental
+                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Ball Machine Rental
                   </Button>
                 )}
               </CardContent>
