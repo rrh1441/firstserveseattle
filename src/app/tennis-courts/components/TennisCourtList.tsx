@@ -72,38 +72,50 @@ function tierFor(score: number | null | undefined): Tier {
   };
 }
 
+/* ────────────── Utility: maps URL (hoisted) ───────── */
+
+const mapsUrl = (court: TennisCourt) =>
+  court.Maps_url?.startsWith("http")
+    ? court.Maps_url
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        court.address ?? court.title
+      )}`;
+
 /* ────────────── Time / availability helpers ───────── */
 
-const slots = [
+const timeSlots = [
   "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
   "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
   "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
 ];
 
-function tMin(s: string) {
-  const [t, ap] = s.toUpperCase().split(" ");
+function toMinutes(str: string): number {
+  const [t, ap] = str.toUpperCase().split(" ");
   const [h, m] = t.split(":").map(Number);
-  return ((ap === "PM" && h !== 12 ? h + 12 : ap === "AM" && h === 12 ? 0 : h) *
-    60) + m;
+  if (isNaN(h) || isNaN(m)) return -1;
+  let hh = h % 12;
+  if (ap === "PM") hh += 12;
+  return hh * 60 + m;
 }
 
-function free(c: TennisCourt, a: number, b: number) {
-  return c.parsed_intervals.some(({ start, end }) => {
-    const s = tMin(start), e = tMin(end);
-    return s <= a && e >= b;
+function rangeFree(court: TennisCourt, start: number, end: number) {
+  return court.parsed_intervals.some(({ start: s, end: e }) => {
+    const a = toMinutes(s);
+    const b = toMinutes(e);
+    return a <= start && b >= end;
   });
 }
 
-function slotClr(c: TennisCourt, slot: string) {
-  const s = tMin(slot);
-  const good1 = free(c, s, s + 30);
-  const good2 = free(c, s + 30, s + 60);
+function slotColor(court: TennisCourt, slot: string) {
+  const s = toMinutes(slot);
+  const good1 = rangeFree(court, s, s + 30);
+  const good2 = rangeFree(court, s + 30, s + 60);
   if (good1 && good2) return "bg-green-500 text-white";
   if (!good1 && !good2) return "bg-gray-400 text-gray-100";
   return "bg-orange-400 text-white";
 }
 
-/* ────────────── Skeletons ─────────────────────────── */
+/* ────────────── Skeleton loaders ─────────────────── */
 
 const CardSkeleton = () => (
   <Card className="border rounded-lg shadow-md animate-pulse">
@@ -153,14 +165,14 @@ export default function TennisCourtList() {
 
   /* load favourites */
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("favoriteCourts");
-      if (raw) {
+    const raw = localStorage.getItem("favoriteCourts");
+    if (raw) {
+      try {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) setFav(arr);
+      } catch {
+        localStorage.removeItem("favoriteCourts");
       }
-    } catch {
-      localStorage.removeItem("favoriteCourts");
     }
   }, []);
 
@@ -176,9 +188,11 @@ export default function TennisCourtList() {
     setFilters((f) => ({ ...f, [k]: !f[k] }));
 
   const toggleMap = (id: number) =>
-    setExpanded((e) => (e.includes(id) ? e.filter((x) => x !== id) : [...e, id]));
+    setExpanded((e) =>
+      e.includes(id) ? e.filter((x) => x !== id) : [...e, id]
+    );
 
-  /* filter cfg */
+  /* filter buttons config */
   const cfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -188,8 +202,12 @@ export default function TennisCourtList() {
 
   /* filtered list */
   const list = courts
-    .filter((c) => (search ? c.title.toLowerCase().includes(search.toLowerCase()) : true))
-    .filter((c) => (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k]))
+    .filter((c) =>
+      search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
+    )
+    .filter((c) =>
+      (Object.keys(filters) as FilterKey[]).every((k) => !filters[k] || c[k])
+    )
     .sort((a, b) => {
       const af = favorites.includes(a.id) ? 1 : 0;
       const bf = favorites.includes(b.id) ? 1 : 0;
@@ -199,10 +217,14 @@ export default function TennisCourtList() {
 
   /* header date */
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", timeZone: "America/Los_Angeles",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
   });
 
-  /* render */
+  /* ────────────── Render ─────────────────────────── */
+
   if (loading)
     return (
       <div className="p-4">
@@ -213,9 +235,11 @@ export default function TennisCourtList() {
 
   return (
     <div className="p-4 space-y-4">
-      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
+      {aboutOpen && (
+        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+      )}
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
         <div className="space-y-3 pt-4">
           <div className="text-xl font-semibold">{today}</div>
@@ -255,7 +279,7 @@ export default function TennisCourtList() {
         </div>
       </div>
 
-      {/* ── List ── */}
+      {/* Court cards */}
       {list.length === 0 ? (
         <div>No courts found.</div>
       ) : (
@@ -263,6 +287,7 @@ export default function TennisCourtList() {
           const t = tierFor(court.avg_busy_score_7d);
           return (
             <Card key={court.id} className="border rounded-lg shadow-sm">
+              {/* Card header */}
               <div className="flex justify-between items-start p-3 bg-gray-50">
                 <div>
                   <h3 className="font-semibold">{court.title}</h3>
@@ -271,7 +296,8 @@ export default function TennisCourtList() {
                     title={t.tooltip}
                     className={`${t.color} pointer-events-auto h-5 px-1.5 text-xs inline-flex items-center mt-1`}
                   >
-                    <t.icon size={12} className="mr-1" /> {t.label}
+                    <t.icon size={12} className="mr-1" />
+                    {t.label}
                   </Badge>
                 </div>
                 <Button variant="ghost" onClick={() => toggleFav(court.id)}>
@@ -282,44 +308,62 @@ export default function TennisCourtList() {
                 </Button>
               </div>
 
+              {/* Card body */}
               <CardContent className="space-y-3 p-3">
-                {/* attribute chips */}
+                {/* Attribute chips grid mobile*/}
                 <div className="grid grid-cols-2 w-full gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                   {court.lights && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/lighticon.png" alt="" width={12} height={12} /> Lights
+                      <Image src="/icons/lighticon.png" alt="" width={12} height={12} />
+                      Lights
                     </div>
                   )}
                   {court.pickleball_lined && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} /> Pickleball
+                      <Image
+                        src="/icons/pickleballicon.png"
+                        alt=""
+                        width={12}
+                        height={12}
+                      />
+                      Pickleball
                     </div>
                   )}
                   {court.hitting_wall && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/wallicon.png" alt="" width={12} height={12} /> Wall
+                      <Image src="/icons/wallicon.png" alt="" width={12} height={12} />
+                      Wall
                     </div>
                   )}
                   {court.ball_machine && (
                     <div className="flex items-center gap-1">
-                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Machine
+                      <Image
+                        src="/icons/ballmachine.png"
+                        alt=""
+                        width={12}
+                        height={12}
+                      />
+                      Machine
                     </div>
                   )}
                 </div>
 
-                {/* availability grid */}
+                {/* Availability grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
-                  {slots.map((slot) => (
+                  {timeSlots.map((slot) => (
                     <div
                       key={slot}
-                      className={`text-center py-1 rounded text-xs ${slotClr(court, slot)}`}
+                      className={`text-center py-1 rounded text-xs ${slotColor(
+                        court,
+                        slot
+                      )}`}
                     >
                       {slot.replace(":00", "")}
                     </div>
                   ))}
                 </div>
 
-                {/* location */}
+                {/* Location */}
                 {(court.address || court.Maps_url) && (
                   <Button
                     size="sm"
@@ -339,21 +383,29 @@ export default function TennisCourtList() {
                     <Button
                       size="sm"
                       className="w-full"
-                      onClick={() => window.open(court.Maps_url || mapsUrl(court), "_blank")}
+                      onClick={() => window.open(mapsUrl(court), "_blank")}
                     >
                       Open in Google Maps
                     </Button>
                   </div>
                 )}
 
-                {/* ball machine */}
+                {/* Ball machine */}
                 {court.ball_machine && (
                   <Button
                     size="sm"
                     className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
-                    onClick={() => window.open("https://seattleballmachine.com", "_blank")}
+                    onClick={() =>
+                      window.open("https://seattleballmachine.com", "_blank")
+                    }
                   >
-                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} /> Ball Machine Rental
+                    <Image
+                      src="/icons/ballmachine.png"
+                      alt=""
+                      width={12}
+                      height={12}
+                    />
+                    Ball Machine Rental
                   </Button>
                 )}
               </CardContent>
