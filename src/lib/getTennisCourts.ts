@@ -40,21 +40,21 @@ interface PopularityRow {
 }
 
 export async function getTennisCourts(): Promise<TennisCourt[]> {
-  // 1. Fetch base court info
+  // 1. Fetch base court info (two generics!)
   const { data: courtRows, error: courtError } = await supabase
-    .from<CourtRow>("tennis_courts")
-    .select(
-      `id,
-       title,
-       facility_type,
-       address,
-       available_dates,
-       google_map_url,
-       lights,
-       hitting_wall,
-       pickleball_lined,
-       ball_machine`
-    );
+    .from<CourtRow, CourtRow>("tennis_courts")
+    .select(`
+      id,
+      title,
+      facility_type,
+      address,
+      available_dates,
+      google_map_url,
+      lights,
+      hitting_wall,
+      pickleball_lined,
+      ball_machine
+    `);
 
   if (courtError) {
     console.error("[getTennisCourts] Error fetching courts:", courtError);
@@ -65,9 +65,9 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
     return [];
   }
 
-  // 2. Fetch 7-day rolling popularity
+  // 2. Fetch 7-day rolling popularity (two generics!)
   const { data: popRows, error: popError } = await supabase
-    .from<PopularityRow>("v_court_popularity_7d")
+    .from<PopularityRow, PopularityRow>("v_court_popularity_7d")
     .select("court_id, avg_busy_score_7d");
 
   if (popError) {
@@ -84,7 +84,6 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
   return courtRows.map((row) => {
     const parsed_intervals = parseAvailableDates(row.available_dates ?? "");
     const avg_busy_score_7d = popMap.get(row.id) ?? null;
-
     return {
       id: row.id,
       title: row.title ?? "Unknown Court",
@@ -103,12 +102,11 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
 
 // ─── Helpers ───────────────────────────────────────────────
 
-function parseAvailableDates(availableDatesStr: string): ParsedInterval[] {
-  if (!availableDatesStr) return [];
-
-  return availableDatesStr
+function parseAvailableDates(input: string): ParsedInterval[] {
+  if (!input) return [];
+  return input
     .split("\n")
-    .map((line) => line.trim())
+    .map((l) => l.trim())
     .filter(Boolean)
     .map((line) => {
       const [datePart, timeRange] = line.split(/\s+(.+)/);
@@ -119,7 +117,7 @@ function parseAvailableDates(availableDatesStr: string): ParsedInterval[] {
       if (!start || !end) return null;
       return { date: datePart, start, end };
     })
-    .filter((i): i is ParsedInterval => i !== null);
+    .filter((x): x is ParsedInterval => x !== null);
 }
 
 function convertToAMPM(raw: string): string {
@@ -128,7 +126,7 @@ function convertToAMPM(raw: string): string {
   const hh = parseInt(m[1], 10);
   const mm = parseInt(m[2], 10);
   const ampm = hh >= 12 ? "PM" : "AM";
-  const hour12 = hh % 12 === 0 ? 12 : hh % 12;
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
   const mmStr = mm.toString().padStart(2, "0");
-  return `${hour12}:${mmStr} ${ampm}`;
+  return `${h12}:${mmStr} ${ampm}`;
 }
