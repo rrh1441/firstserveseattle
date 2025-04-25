@@ -1,24 +1,11 @@
-// src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
+
+/* ---------- local types ---------- */
 
 export interface ParsedInterval {
   date: string;
   start: string;
   end: string;
-}
-
-export interface TennisCourt {
-  id: number;
-  title: string;
-  facility_type: string;
-  address: string | null;
-  Maps_url: string | null;
-  lights: boolean;
-  hitting_wall: boolean;
-  pickleball_lined: boolean;
-  ball_machine: boolean;
-  parsed_intervals: ParsedInterval[];
-  avg_busy_score_7d: number | null;
 }
 
 interface CourtRow {
@@ -39,10 +26,26 @@ interface PopularityRow {
   avg_busy_score_7d: number | null;
 }
 
+export interface TennisCourt {
+  id: number;
+  title: string;
+  facility_type: string;
+  address: string | null;
+  Maps_url: string | null;
+  lights: boolean;
+  hitting_wall: boolean;
+  pickleball_lined: boolean;
+  ball_machine: boolean;
+  parsed_intervals: ParsedInterval[];
+  avg_busy_score_7d: number | null;
+}
+
+/* ---------- main fetch ---------- */
+
 export async function getTennisCourts(): Promise<TennisCourt[]> {
-  // 1) Fetch base courts
-  const { data: courtRows, error: courtError } = await supabase
-    .from<"tennis_courts", CourtRow, CourtRow>("tennis_courts")
+  /* 1 ── base court data (no generics on `.from`) */
+  const { data: courtData, error: courtErr } = await supabase
+    .from("tennis_courts")
     .select(`
       id,
       title,
@@ -56,46 +59,49 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       ball_machine
     `);
 
-  if (courtError || !courtRows) {
-    console.error("[getTennisCourts] courts error:", courtError);
+  if (courtErr) {
+    console.error("[getTennisCourts] court fetch error:", courtErr);
     return [];
   }
 
-  // 2) Fetch popularity view
-  const { data: popRows, error: popError } = await supabase
-    .from<"v_court_popularity_7d", PopularityRow, PopularityRow>("v_court_popularity_7d")
+  /* 2 ── popularity view */
+  const { data: popData, error: popErr } = await supabase
+    .from("v_court_popularity_7d")
     .select("court_id, avg_busy_score_7d");
 
-  if (popError || !popRows) {
-    console.error("[getTennisCourts] popularity error:", popError);
+  if (popErr) {
+    console.error("[getTennisCourts] popularity fetch error:", popErr);
     return [];
   }
 
-  const popMap = new Map<number, number | null>();
-  popRows.forEach(({ court_id, avg_busy_score_7d }) => {
-    popMap.set(court_id, avg_busy_score_7d);
-  });
+  /* 3 ── normalize results */
+  const courts: CourtRow[] = (courtData ?? []) as CourtRow[];
+  const pops: PopularityRow[] = (popData ?? []) as PopularityRow[];
 
-  // 3) Merge & return
-  return courtRows.map((r) => ({
-    id: r.id,
-    title: r.title ?? "Unknown Court",
-    facility_type: r.facility_type ?? "Unknown",
-    address: r.address,
-    Maps_url: r.google_map_url,
-    lights: r.lights ?? false,
-    hitting_wall: r.hitting_wall ?? false,
-    pickleball_lined: r.pickleball_lined ?? false,
-    ball_machine: r.ball_machine ?? false,
-    parsed_intervals: parseAvailableDates(r.available_dates ?? ""),
-    avg_busy_score_7d: popMap.get(r.id) ?? null,
+  const popMap = new Map<number, number | null>();
+  pops.forEach(({ court_id, avg_busy_score_7d }) =>
+    popMap.set(court_id, avg_busy_score_7d)
+  );
+
+  return courts.map((c) => ({
+    id: c.id,
+    title: c.title ?? "Unknown Court",
+    facility_type: c.facility_type ?? "Unknown",
+    address: c.address,
+    Maps_url: c.google_map_url,
+    lights: c.lights ?? false,
+    hitting_wall: c.hitting_wall ?? false,
+    pickleball_lined: c.pickleball_lined ?? false,
+    ball_machine: c.ball_machine ?? false,
+    parsed_intervals: parseAvailableDates(c.available_dates ?? ""),
+    avg_busy_score_7d: popMap.get(c.id) ?? null,
   }));
 }
 
-// ─── Helpers ───────────────────────────────────────────────
+/* ---------- helpers ---------- */
 
-function parseAvailableDates(input: string): ParsedInterval[] {
-  return input
+function parseAvailableDates(src: string): ParsedInterval[] {
+  return src
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean)
@@ -103,20 +109,19 @@ function parseAvailableDates(input: string): ParsedInterval[] {
       const [datePart, timeRange] = line.split(/\s+(.+)/);
       if (!datePart || !timeRange) return null;
       const [startRaw, endRaw] = timeRange.split("-");
-      const start = convertToAMPM(startRaw.trim());
-      const end = convertToAMPM(endRaw.trim());
-      if (!start || !end) return null;
-      return { date: datePart, start, end };
+      const start = toAMPM(startRaw.trim());
+      const end = toAMPM(endRaw.trim());
+      return start && end ? { date: datePart, start, end } : null;
     })
     .filter((x): x is ParsedInterval => x !== null);
 }
 
-function convertToAMPM(raw: string): string {
+function toAMPM(raw: string): string {
   const m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (!m) return "";
-  const hh = parseInt(m[1], 10);
-  const mm = parseInt(m[2], 10);
-  const ampm = hh >= 12 ? "PM" : "AM";
-  const h12 = hh % 12 === 0 ? 12 : hh % 12;
-  return `${h12}:${mm.toString().padStart(2, "0")} ${ampm}`;
+  const hh = parseInt(m[1], 10),
+    mm = m[2],
+    ampm = hh >= 12 ? "PM" : "AM",
+    h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${mm} ${ampm}`;
 }
