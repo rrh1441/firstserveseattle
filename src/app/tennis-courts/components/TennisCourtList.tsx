@@ -1,3 +1,4 @@
+// src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
 import React, { useState, useEffect, ReactElement } from "react";
@@ -19,7 +20,7 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ── popularity-tier helper ───────────────────────────── */
+/* ── popularity helper ────────────────────────────────── */
 
 type FilterKey =
   | "lights"
@@ -52,7 +53,8 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   if (score <= 45)
     return {
       label: "Chill",
-      tooltip: "Score ≤45 – usually light traffic; walk-on is fine.",
+      tooltip:
+        "Score ≤45 – usually light traffic; walk-on same day is fine.",
       colorClass: "bg-blue-100 text-blue-800 border-blue-300",
       icon: Snowflake,
     };
@@ -73,7 +75,7 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   };
 }
 
-/* ── time / availability helpers ─────────────────────── */
+/* ── time helpers ─────────────────────────────────────── */
 
 function timeToMinutes(str: string): number {
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -157,7 +159,7 @@ export default function TennisCourtList(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
 
-  /* data fetch */
+  /* fetch courts */
   useEffect(() => {
     getTennisCourts()
       .then(setCourts)
@@ -165,7 +167,7 @@ export default function TennisCourtList(): ReactElement {
       .finally(() => setLoading(false));
   }, []);
 
-  /* favourites */
+  /* load favourites */
   useEffect(() => {
     try {
       const raw = localStorage.getItem("favoriteCourts");
@@ -178,6 +180,7 @@ export default function TennisCourtList(): ReactElement {
     }
   }, []);
 
+  /* helpers */
   const toggleFav = (id: number) =>
     setFavorites((p) => {
       const n = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
@@ -196,7 +199,7 @@ export default function TennisCourtList(): ReactElement {
           c.address ?? c.title
         )}`;
 
-  /* config */
+  /* filter buttons cfg */
   const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -204,7 +207,7 @@ export default function TennisCourtList(): ReactElement {
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  /* list ↓ */
+  /* filtered list */
   const list = courts
     .filter((c) =>
       search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
@@ -245,10 +248,10 @@ export default function TennisCourtList(): ReactElement {
         <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
       )}
 
-      {/* sticky header */}
+      {/* ── sticky header ────────────────────────────── */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
         <div className="space-y-3 pt-4">
-          {/* date line */}
+          {/* date + tooltip */}
           <div className="text-xl font-semibold flex items-center gap-1">
             {today}
             <span
@@ -265,7 +268,7 @@ export default function TennisCourtList(): ReactElement {
             </span>
           </div>
 
-          {/* search + tiny info btn mobile */}
+          {/* search + mobile info button */}
           <div className="flex gap-2">
             <input
               value={search}
@@ -275,22 +278,22 @@ export default function TennisCourtList(): ReactElement {
             />
             <Button
               variant="outline"
-              size="icon"
-              className="sm:hidden"
+              size="sm"              /* <- valid size */
+              className="sm:hidden p-2" /* square icon btn */
               onClick={() => setAboutOpen(true)}
             >
               <Info size={18} />
             </Button>
           </div>
 
-          {/* big info btn desktop */}
+          {/* desktop info button */}
           <div className="hidden sm:flex justify-end">
             <Button variant="outline" onClick={() => setAboutOpen(true)}>
               <Info size={16} className="mr-1" /> Info
             </Button>
           </div>
 
-          {/* filters */}
+          {/* filter buttons */}
           <div className="flex flex-wrap gap-2">
             {(Object.entries(filterCfg) as [
               FilterKey,
@@ -310,7 +313,7 @@ export default function TennisCourtList(): ReactElement {
         </div>
       </div>
 
-      {/* courts */}
+      {/* ── court cards ─────────────────────────────── */}
       {list.length === 0 ? (
         <div>No courts found.</div>
       ) : (
@@ -404,6 +407,7 @@ export default function TennisCourtList(): ReactElement {
                   </Button>
                 )}
 
+                {/* expanded map */}
                 {expanded.includes(court.id) && (
                   <div className="mt-2">
                     <p className="text-sm text-gray-700 mb-2">
