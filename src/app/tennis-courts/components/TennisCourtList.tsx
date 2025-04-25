@@ -1,4 +1,3 @@
-// src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
 import React, { useState, useEffect, ReactElement } from "react";
@@ -20,7 +19,7 @@ import {
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
-/* ── popularity tier helper ───────────────────────────── */
+/* ── popularity helper ───────────────────────────── */
 
 type FilterKey =
   | "lights"
@@ -74,7 +73,7 @@ function getPopularityTier(score: number | null | undefined): PopularityTier {
   };
 }
 
-/* ── time/helpers ─────────────────────────────────────── */
+/* ── time / availability helpers (unchanged) ─────── */
 
 function timeToMinutes(str: string): number {
   const [time, ampm] = str.toUpperCase().split(" ");
@@ -106,7 +105,7 @@ function getHourColor(c: TennisCourt, slot: string) {
   return "bg-orange-400 text-white";
 }
 
-/* ── skeleton loaders ────────────────────────────────── */
+/* ── skeletons (unchanged) ───────────────────────── */
 
 function CourtCardSkeleton(): ReactElement {
   return (
@@ -141,7 +140,7 @@ function CourtListSkeleton({ count = 3 }: { count?: number }) {
   );
 }
 
-/* ── main component ──────────────────────────────────── */
+/* ── component ─────────────────────────────────────── */
 
 export default function TennisCourtList(): ReactElement {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
@@ -158,7 +157,7 @@ export default function TennisCourtList(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
 
-  /* fetch courts */
+  /* data fetch */
   useEffect(() => {
     getTennisCourts()
       .then(setCourts)
@@ -166,7 +165,7 @@ export default function TennisCourtList(): ReactElement {
       .finally(() => setLoading(false));
   }, []);
 
-  /* load favourites */
+  /* favourites */
   useEffect(() => {
     try {
       const raw = localStorage.getItem("favoriteCourts");
@@ -198,7 +197,7 @@ export default function TennisCourtList(): ReactElement {
           c.address ?? c.title
         )}`;
 
-  /* filter config */
+  /* filter cfg */
   const filterCfg: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
@@ -206,7 +205,7 @@ export default function TennisCourtList(): ReactElement {
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  /* filtered list */
+  /* list */
   const list = courts
     .filter((c) =>
       search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
@@ -221,6 +220,7 @@ export default function TennisCourtList(): ReactElement {
       return a.title.localeCompare(b.title);
     });
 
+  /* header date */
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -233,9 +233,7 @@ export default function TennisCourtList(): ReactElement {
   if (loading)
     return (
       <div className="p-4 space-y-4">
-        {aboutOpen && (
-          <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
-        )}
+        {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
         <CourtListSkeleton />
       </div>
     );
@@ -243,31 +241,14 @@ export default function TennisCourtList(): ReactElement {
 
   return (
     <div className="p-4 space-y-4">
-      {aboutOpen && (
-        <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
-      )}
+      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
 
       {/* ── sticky header ────────────────────────────── */}
       <div className="sticky top-0 bg-white z-10 border-b pb-3 mb-4">
         <div className="space-y-3 pt-4">
-          <div className="text-xl font-semibold flex items-center gap-1">
-            {today}
-            <span
-              title={
-                "Popularity badge key:\n" +
-                "N/A – No data\n" +
-                "Walk-on – Reservations not available\n" +
-                "Chill – Light traffic (≤45)\n" +
-                "Busy – Often busy (≤70)\n" +
-                "Hot – High demand (>70)"
-              }
-              className="inline-flex h-4 w-4 items-center justify-center rounded-full border bg-gray-100 text-[10px] text-gray-600 cursor-help select-none"
-            >
-              i
-            </span>
-          </div>
+          <div className="text-xl font-semibold">{today}</div>
 
-          {/* search row with one responsive Info button */}
+          {/* search + single responsive info button */}
           <div className="flex gap-2 items-center">
             <input
               value={search}
@@ -286,6 +267,7 @@ export default function TennisCourtList(): ReactElement {
             </Button>
           </div>
 
+          {/* filter buttons */}
           <div className="flex flex-wrap gap-2">
             {(Object.entries(filterCfg) as [
               FilterKey,
@@ -325,8 +307,11 @@ export default function TennisCourtList(): ReactElement {
                       <tier.icon size={10} className="mr-1" />
                       {tier.label}
                     </Badge>
-                    <span title={tier.tooltip} className="cursor-help ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full border bg-gray-100 text-[10px] text-gray-600 select-none">
-                      i
+                    <span
+                      title={tier.tooltip}
+                      className="cursor-help inline-flex items-center justify-center ml-1"
+                    >
+                      <Info size={14} />
                     </span>
                   </div>
                 </div>
@@ -340,8 +325,8 @@ export default function TennisCourtList(): ReactElement {
 
               {/* body */}
               <CardContent className="space-y-3 p-3">
-                {/* attribute chips 2×2 on mobile */}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3">
+                {/* attribute chips 2×2 on mobile, row on larger */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-0">
                   {court.lights && (
                     <div className="flex items-center gap-1">
                       <Image src="/icons/lighticon.png" alt="" width={12} height={12} />
@@ -387,7 +372,7 @@ export default function TennisCourtList(): ReactElement {
                   ))}
                 </div>
 
-                {/* location button */}
+                {/* location */}
                 {(court.address || court.Maps_url) && (
                   <Button
                     size="sm"
@@ -424,12 +409,7 @@ export default function TennisCourtList(): ReactElement {
                       window.open("https://seattleballmachine.com", "_blank")
                     }
                   >
-                    <Image
-                      src="/icons/ballmachine.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                    />
+                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
                     Ball Machine Rental
                   </Button>
                 )}
