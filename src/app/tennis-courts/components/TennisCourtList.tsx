@@ -1,7 +1,7 @@
 // src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactElement } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -46,10 +46,7 @@ function isRangeFree(court: TennisCourt, startM: number, endM: number): boolean 
   });
 }
 
-function getHourAvailabilityColor(
-  court: TennisCourt,
-  slot: string
-): string {
+function getHourAvailabilityColor(court: TennisCourt, slot: string): string {
   const startM = timeToMinutes(slot);
   if (startM === -1) return "bg-gray-200 text-gray-400";
   const mid = startM + 30;
@@ -102,7 +99,7 @@ function getPopularityTier(score: number | null): PopularityTier {
   };
 }
 
-function CourtCardSkeleton(): JSX.Element {
+function CourtCardSkeleton(): ReactElement {
   return (
     <Card className="shadow-md border border-gray-200 rounded-lg animate-pulse">
       <div className="p-3 border-b border-gray-100 bg-gray-50/60">
@@ -134,7 +131,7 @@ function CourtCardSkeleton(): JSX.Element {
   );
 }
 
-function CourtListSkeleton({ count = 5 }: { count?: number }): JSX.Element {
+function CourtListSkeleton({ count = 5 }: { count?: number }): ReactElement {
   return (
     <div className="space-y-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -144,7 +141,7 @@ function CourtListSkeleton({ count = 5 }: { count?: number }): JSX.Element {
   );
 }
 
-export default function TennisCourtList(): JSX.Element {
+export default function TennisCourtList(): ReactElement {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -249,6 +246,7 @@ export default function TennisCourtList(): JSX.Element {
         {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
         {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
+          {/* Header + Search + Filters */}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
             <div className="space-y-2 w-full sm:w-auto">
               <div className="text-xl font-semibold text-gray-700">{today}</div>
