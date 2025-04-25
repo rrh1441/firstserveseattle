@@ -1,7 +1,7 @@
 // src/app/tennis-courts/components/TennisCourtList.tsx
 "use client";
 
-import React, { useState, useEffect, ReactElement } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -12,6 +12,13 @@ import { Star, MapPin, Info, Users, Zap, Snowflake, HelpCircle } from "lucide-re
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
+// --- Types ---
+interface ParsedInterval {
+  date: string;
+  start: string;
+  end: string;
+}
+
 type FilterKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
 
 interface PopularityTier {
@@ -21,45 +28,9 @@ interface PopularityTier {
   icon: typeof Users | typeof Zap | typeof Snowflake | typeof HelpCircle;
 }
 
-function timeToMinutes(str: string): number {
-  const parts = str.toUpperCase().split(" ");
-  if (parts.length !== 2) return -1;
-  const [time, ampm] = parts;
-  const [hhStr, mmStr] = time.split(":");
-  const hh = parseInt(hhStr, 10);
-  const mm = parseInt(mmStr, 10);
-  if (isNaN(hh) || isNaN(mm)) return -1;
-  const hour24 =
-    ampm === "PM" && hh < 12
-      ? hh + 12
-      : ampm === "AM" && hh === 12
-      ? 0
-      : hh;
-  return hour24 * 60 + mm;
-}
-
-function isRangeFree(court: TennisCourt, startM: number, endM: number): boolean {
-  return court.parsed_intervals.some(({ start, end }) => {
-    const s = timeToMinutes(start);
-    const e = timeToMinutes(end);
-    return s <= startM && e >= endM;
-  });
-}
-
-function getHourAvailabilityColor(court: TennisCourt, slot: string): string {
-  const startM = timeToMinutes(slot);
-  if (startM === -1) return "bg-gray-200 text-gray-400";
-  const mid = startM + 30;
-  const end = startM + 60;
-  const firstFree = isRangeFree(court, startM, mid);
-  const secondFree = isRangeFree(court, mid, end);
-  if (firstFree && secondFree) return "bg-green-500 text-white";
-  if (!firstFree && !secondFree) return "bg-gray-400 text-gray-100";
-  return "bg-orange-400 text-white";
-}
-
-function getPopularityTier(score: number | null): PopularityTier {
-  if (score === null) {
+// --- Popularity tier logic ---
+function getPopularityTier(score: number | null | undefined): PopularityTier {
+  if (score == null) {
     return {
       label: "N/A",
       tooltip: "Popularity data unavailable.",
@@ -99,7 +70,42 @@ function getPopularityTier(score: number | null): PopularityTier {
   };
 }
 
-function CourtCardSkeleton(): ReactElement {
+// --- Time / availability helpers ---
+function timeToMinutes(str: string): number {
+  const parts = str.toUpperCase().split(" ");
+  if (parts.length !== 2) return -1;
+  const [time, ampm] = parts;
+  const [hhStr, mmStr] = time.split(":");
+  const hh = parseInt(hhStr, 10);
+  const mm = parseInt(mmStr, 10);
+  if (isNaN(hh) || isNaN(mm)) return -1;
+  let hour = hh % 12;
+  if (ampm === "PM") hour += 12;
+  return hour * 60 + mm;
+}
+
+function isRangeFree(court: TennisCourt, start: number, end: number): boolean {
+  return court.parsed_intervals.some((iv) => {
+    const s = timeToMinutes(iv.start);
+    const e = timeToMinutes(iv.end);
+    return s <= start && e >= end;
+  });
+}
+
+function getHourAvailabilityColor(court: TennisCourt, slot: string): string {
+  const start = timeToMinutes(slot);
+  if (start === -1) return "bg-gray-200 text-gray-400";
+  const mid = start + 30;
+  const end = start + 60;
+  const first = isRangeFree(court, start, mid);
+  const second = isRangeFree(court, mid, end);
+  if (first && second) return "bg-green-500 text-white";
+  if (!first && !second) return "bg-gray-400 text-gray-100";
+  return "bg-orange-400 text-white";
+}
+
+// --- Skeletons ---
+function CourtCardSkeleton() {
   return (
     <Card className="shadow-md border border-gray-200 rounded-lg animate-pulse">
       <div className="p-3 border-b border-gray-100 bg-gray-50/60">
@@ -113,9 +119,7 @@ function CourtCardSkeleton(): ReactElement {
             </div>
             <div className="h-4 bg-gray-200 rounded w-20 mt-2" />
           </div>
-          <div>
-            <div className="h-8 w-8 bg-gray-200 rounded-full" />
-          </div>
+          <div className="h-8 w-8 bg-gray-200 rounded-full" />
         </div>
       </div>
       <CardContent className="p-3 space-y-3">
@@ -131,52 +135,58 @@ function CourtCardSkeleton(): ReactElement {
   );
 }
 
-function CourtListSkeleton({ count = 5 }: { count?: number }): ReactElement {
+function CourtListSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <CourtCardSkeleton key={i} />
+      {Array.from({ length: count }).map((_, idx) => (
+        <CourtCardSkeleton key={idx} />
       ))}
     </div>
   );
 }
 
-export default function TennisCourtList(): ReactElement {
+// --- Main Component ---
+export default function TennisCourtList() {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [favoriteCourts, setFavoriteCourts] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Record<FilterKey, boolean>>({
     lights: false,
     hitting_wall: false,
     pickleball_lined: false,
     ball_machine: false,
   });
-  const [expanded, setExpanded] = useState<number[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [expandedMaps, setExpandedMaps] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [aboutOpen, setAboutOpen] = useState<boolean>(false);
+  const [aboutModalOpen, setAboutModalOpen] = useState(false);
 
-  const times = [
-    "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
-    "12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM",
-    "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
+  const timesInOneHour = [
+    "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
+    "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM",
+    "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM",
   ];
 
+  // Fetch courts
   useEffect(() => {
-    setLoading(true);
+    setIsLoading(true);
+    setError(null);
     getTennisCourts()
       .then((data) => setCourts(data))
       .catch((err) => setError(err.message || "Failed to load courts."))
-      .finally(() => setLoading(false));
+      .finally(() => setIsLoading(false));
   }, []);
 
+  // Load favorites
   useEffect(() => {
     try {
       const stored = localStorage.getItem("favoriteCourts");
       if (stored) {
         const arr = JSON.parse(stored);
         if (Array.isArray(arr) && arr.every((n) => typeof n === "number")) {
-          setFavorites(arr);
+          setFavoriteCourts(arr);
+        } else {
+          localStorage.removeItem("favoriteCourts");
         }
       }
     } catch {
@@ -184,36 +194,38 @@ export default function TennisCourtList(): ReactElement {
     }
   }, []);
 
-  const toggleFavorite = (id: number): void => {
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id];
+  const toggleFavorite = (courtId: number) => {
+    setFavoriteCourts((prev) => {
+      const next = prev.includes(courtId)
+        ? prev.filter((id) => id !== courtId)
+        : [...prev, courtId];
       localStorage.setItem("favoriteCourts", JSON.stringify(next));
       return next;
     });
   };
 
-  const toggleFilter = (key: FilterKey): void => {
-    setFilters((f) => ({ ...f, [key]: !f[key] }));
+  const toggleFilter = (key: FilterKey) => {
+    setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const toggleMap = (id: number): void => {
-    setExpanded((e) => (e.includes(id) ? e.filter((n) => n !== id) : [...e, id]));
+  const toggleMapExpansion = (courtId: number) => {
+    setExpandedMaps((prev) =>
+      prev.includes(courtId)
+        ? prev.filter((id) => id !== courtId)
+        : [...prev, courtId]
+    );
   };
 
-  const getMapsUrl = (court: TennisCourt): string => {
-    if (court.Maps_url?.startsWith("http")) return court.Maps_url;
-    const q = court.address ?? court.title ?? "Seattle Tennis Court";
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  const getGoogleMapsUrl = (court: TennisCourt): string => {
+    if (court.Maps_url?.trim().startsWith("http")) {
+      return court.Maps_url;
+    }
+    const query = encodeURIComponent(court.address || court.title || "Seattle Tennis Court");
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
   };
 
-  const filterConfig: Record<FilterKey, { label: string; icon: string }> = {
-    lights: { label: "Lights", icon: "/icons/lighticon.png" },
-    pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
-    hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
-    ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
-  };
-
-  const filtered = courts
+  // Filtering & sorting
+  const filteredCourts = courts
     .filter((c) =>
       !searchTerm || c.title.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -223,65 +235,25 @@ export default function TennisCourtList(): ReactElement {
       )
     );
 
-  const sorted = filtered.sort((a, b) => {
-    const af = favorites.includes(a.id) ? 1 : 0;
-    const bf = favorites.includes(b.id) ? 1 : 0;
-    if (af !== bf) return bf - af;
-    return a.title.localeCompare(b.title);
+  const sortedCourts = [...filteredCourts].sort((a, b) => {
+    const aFav = favoriteCourts.includes(a.id) ? 1 : 0;
+    const bFav = favoriteCourts.includes(b.id) ? 1 : 0;
+    if (aFav !== bFav) return bFav - aFav;
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
   });
 
-  const today = new Date().toLocaleDateString("en-US", {
+  // Today date
+  const todayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     timeZone: "America/Los_Angeles",
   });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-white text-black p-2 sm:p-0 space-y-4">
-        {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
-        <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-            <div className="space-y-2 w-full sm:w-auto">
-              <div className="text-xl font-semibold text-gray-700">{today}</div>
-              <input
-                type="text"
-                placeholder="Search courts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 border rounded focus:ring focus:ring-blue-500 text-sm"
-              />
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(filterConfig).map(([key, { label, icon }]) => (
-                  <Button
-                    key={key}
-                    onClick={() => toggleFilter(key as FilterKey)}
-                    variant="outline"
-                    className={`flex items-center gap-1 px-3 h-9 text-sm ${
-                      filters[key as FilterKey]
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-white text-gray-700"
-                    }`}
-                  >
-                    <Image src={icon} alt="" width={14} height={14} />
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <Button
-                onClick={() => setAboutOpen(true)}
-                variant="outline"
-                className="flex items-center gap-1 px-3 h-9 text-sm"
-              >
-                <Info size={16} />
-                Info / Key
-              </Button>
-            </div>
-          </div>
-        </div>
+        {aboutModalOpen && <AboutUs isOpen={aboutModalOpen} onClose={() => setAboutModalOpen(false)} />}
         <CourtListSkeleton />
       </div>
     );
@@ -289,10 +261,10 @@ export default function TennisCourtList(): ReactElement {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <div className="bg-red-50 border border-red-200 p-6 rounded text-center">
-          <h3 className="text-red-800 font-semibold mb-2">Oops! Something went wrong.</h3>
-          <p className="text-red-700">{error}</p>
+      <div className="flex items-center justify-center py-10 px-4 min-h-[300px]">
+        <div className="text-center p-6 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Oops! Something went wrong.</h3>
+          <p className="text-base text-red-700">{error}</p>
         </div>
       </div>
     );
@@ -300,42 +272,53 @@ export default function TennisCourtList(): ReactElement {
 
   return (
     <div className="bg-white text-black p-2 sm:p-0 space-y-4">
-      {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
+      {aboutModalOpen && <AboutUs isOpen={aboutModalOpen} onClose={() => setAboutModalOpen(false)} />}
 
+      {/* Header */}
       <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-          <div className="space-y-2 w-full sm:w-auto">
-            <div className="text-xl font-semibold text-gray-700">{today}</div>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-grow space-y-3 w-full sm:w-auto">
+            <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
             <input
               type="text"
-              placeholder="Search courts..."
+              placeholder="Search courts by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 border rounded focus:ring focus:ring-blue-500 text-sm"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
             />
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(filterConfig).map(([key, { label, icon }]) => (
-                <Button
-                  key={key}
-                  onClick={() => toggleFilter(key as FilterKey)}
-                  variant="outline"
-                  className={`flex items-center gap-1 px-3 h-9 text-sm ${
-                    filters[key as FilterKey]
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-white text-gray-700"
-                  }`}
-                >
-                  <Image src={icon} alt="" width={14} height={14} />
-                  {label}
-                </Button>
-              ))}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+              {(
+                {
+                  lights: { label: "Lights", icon: "/icons/lighticon.png" },
+                  pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
+                  hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
+                  ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
+                } as const
+              ).entries().map(([key, { label, icon }]) => {
+                const k = key as FilterKey;
+                return (
+                  <Button
+                    key={key}
+                    onClick={() => toggleFilter(k)}
+                    variant="outline"
+                    className={`flex items-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${
+                      filters[k]
+                        ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
+                        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Image src={icon} alt="" width={14} height={14} onError={(e) => (e.currentTarget.style.display = "none")} />
+                    {label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
             <Button
-              onClick={() => setAboutOpen(true)}
+              onClick={() => setAboutModalOpen(true)}
               variant="outline"
-              className="flex items-center gap-1 px-3 h-9 text-sm"
+              className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
             >
               <Info size={16} />
               Info / Key
@@ -344,62 +327,43 @@ export default function TennisCourtList(): ReactElement {
         </div>
       </div>
 
-      {sorted.length === 0 ? (
-        <div className="text-center text-gray-600 py-10">
+      {/* Court List */}
+      {sortedCourts.length === 0 ? (
+        <div className="text-center text-base text-gray-600 py-10 px-4">
           {courts.length > 0
-            ? "No courts match your search or filters."
-            : "No court data available."}
+            ? "No courts found matching your current search or filters."
+            : "No court data available at this time."}
         </div>
       ) : (
         <div className="space-y-4">
-          {sorted.map((court) => {
+          {sortedCourts.map((court) => {
             const tier = getPopularityTier(court.avg_busy_score_7d);
             const Icon = tier.icon;
             return (
-              <Card
-                key={court.id}
-                className="shadow-md border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-              >
-                <div className="p-3 border-b bg-gray-50/60">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1">
-                      <h3
-                        className="font-semibold text-gray-800 truncate"
-                        title={court.title}
-                      >
+              <Card key={court.id} className="shadow-md border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200">
+                {/* Card Header */}
+                <div className="p-3 border-b border-gray-100 bg-gray-50/60">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold truncate text-gray-800" title={court.title}>
                         {court.title}
                       </h3>
-                      <div className="flex flex-wrap gap-2 text-xs text-gray-600 mt-1">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
                         {court.lights && (
-                          <div className="flex items-center gap-1" title="Lights">
-                            <Image
-                              src="/icons/lighticon.png"
-                              alt=""
-                              width={12}
-                              height={12}
-                            />
+                          <div className="flex items-center gap-1" title="Lights available">
+                            <Image src="/icons/lighticon.png" alt="Lights" width={12} height={12} onError={(e) => (e.currentTarget.style.display = "none")} />
                             Lights
                           </div>
                         )}
                         {court.pickleball_lined && (
-                          <div className="flex items-center gap-1" title="Pickleball">
-                            <Image
-                              src="/icons/pickleballicon.png"
-                              alt=""
-                              width={12}
-                              height={12}
-                            />
+                          <div className="flex items-center gap-1" title="Pickleball lines">
+                            <Image src="/icons/pickleballicon.png" alt="Pickleball" width={12} height={12} onError={(e) => (e.currentTarget.style.display = "none")} />
                             Pickleball
                           </div>
                         )}
                         {court.hitting_wall && (
-                          <div className="flex items-center gap-1" title="Wall">
-                            <Image
-                              src="/icons/wallicon.png"
-                              alt=""
-                              width={12}
-                              height={12}
-                            />
+                          <div className="flex items-center gap-1" title="Hitting wall available">
+                            <Image src="/icons/wallicon.png" alt="Wall" width={12} height={12} onError={(e) => (e.currentTarget.style.display = "none")} />
                             Wall
                           </div>
                         )}
@@ -415,40 +379,31 @@ export default function TennisCourtList(): ReactElement {
                         </Badge>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      onClick={() => toggleFavorite(court.id)}
-                      className="p-1 h-8 w-8"
-                      aria-label={
-                        favorites.includes(court.id)
-                          ? "Remove from favorites"
-                          : "Add to favorites"
-                      }
-                    >
-                      <Star
-                        size={18}
-                        fill={favorites.includes(court.id) ? "currentColor" : "none"}
-                        className={
-                          favorites.includes(court.id)
-                            ? "text-yellow-400"
-                            : "text-gray-400"
-                        }
-                      />
-                    </Button>
+                    <div className="flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        onClick={() => toggleFavorite(court.id)}
+                        className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150 flex items-center justify-center"
+                        aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Star size={18} fill={favoriteCourts.includes(court.id) ? "currentColor" : "none"} className={`${favoriteCourts.includes(court.id) ? "text-yellow-400" : "text-gray-400"}`} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
+                {/* Card Content */}
                 <CardContent className="p-3 space-y-3">
+                  {/* Availability Grid */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                    {times.map((slot, idx) => {
+                    {timesInOneHour.map((slot, idx) => {
                       const color = getHourAvailabilityColor(court, slot);
-                      const label = slot.replace(":00 ", " ").toLowerCase();
-                      const title =
-                        color.includes("green")
-                          ? `Available at ${slot}`
-                          : color.includes("orange")
-                          ? `Partially available at ${slot}`
-                          : `Reserved at ${slot}`;
+                      const label = slot.replace(":00 ", "").toLowerCase();
+                      const title = color.includes("green")
+                        ? `Available at ${slot}`
+                        : color.includes("orange")
+                        ? `Partially available at ${slot}`
+                        : `Reserved at ${slot}`;
                       return (
                         <div
                           key={`${court.id}-${idx}`}
@@ -461,52 +416,43 @@ export default function TennisCourtList(): ReactElement {
                     })}
                   </div>
 
+                  {/* Map Toggle */}
                   {(court.address || court.Maps_url) && (
                     <Button
+                      onClick={() => toggleMapExpansion(court.id)}
                       variant="outline"
                       size="sm"
-                      className="w-full mt-3 flex items-center gap-1.5"
-                      onClick={() => toggleMap(court.id)}
-                      aria-expanded={expanded.includes(court.id)}
-                      aria-controls={`map-${court.id}`}
+                      className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs h-8 bg-white border-gray-200 hover:bg-gray-50 text-gray-700 shadow-sm"
+                      aria-expanded={expandedMaps.includes(court.id)}
+                      aria-controls={`map-details-${court.id}`}
                     >
-                      <MapPin size={14} />
-                      {expanded.includes(court.id) ? "Hide Location" : "Show Location"}
+                      <MapPin size={14} aria-hidden="true" />
+                      {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
                     </Button>
                   )}
 
-                  {expanded.includes(court.id) && (
-                    <div
-                      id={`map-${court.id}`}
-                      className="mt-2 p-3 rounded border border-gray-200 bg-gray-50/80"
-                    >
-                      <p className="text-sm text-gray-700 mb-2">
-                        {court.address ?? "Address not available"}
-                      </p>
+                  {/* Expanded Map */}
+                  {expandedMaps.includes(court.id) && (
+                    <div id={`map-details-${court.id}`} className="mt-2 p-3 bg-gray-50/80 rounded border border-gray-200 animate-in fade-in-50 duration-300">
+                      <p className="text-sm text-gray-700 mb-2">{court.address}</p>
                       <Button
                         size="sm"
-                        className="w-full"
-                        onClick={() => window.open(getMapsUrl(court), "_blank")}
+                        className="w-full bg-blue-600 text-white hover:bg-blue-700 h-8 text-xs shadow-sm"
+                        onClick={() => window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")}
                       >
                         Open in Google Maps
                       </Button>
                     </div>
                   )}
 
+                  {/* Ball Machine */}
                   {court.ball_machine && (
                     <Button
                       size="sm"
-                      className="w-full mt-2 flex items-center gap-1.5"
-                      onClick={() =>
-                        window.open("https://seattleballmachine.com", "_blank")
-                      }
+                      className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm"
+                      onClick={() => window.open("https://seattleballmachine.com", "_blank", "noopener,noreferrer")}
                     >
-                      <Image
-                        src="/icons/ballmachine.png"
-                        alt=""
-                        width={12}
-                        height={12}
-                      />
+                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} onError={(e) => (e.currentTarget.style.display = "none")} />
                       Ball Machine Rental (Nearby)
                     </Button>
                   )}

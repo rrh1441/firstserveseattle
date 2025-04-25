@@ -40,9 +40,9 @@ interface PopularityRow {
 }
 
 export async function getTennisCourts(): Promise<TennisCourt[]> {
-  // 1. Fetch base court info (two generics!)
+  // 1) Fetch base courts
   const { data: courtRows, error: courtError } = await supabase
-    .from<CourtRow, CourtRow>("tennis_courts")
+    .from<"tennis_courts", CourtRow, CourtRow>("tennis_courts")
     .select(`
       id,
       title,
@@ -56,54 +56,45 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       ball_machine
     `);
 
-  if (courtError) {
-    console.error("[getTennisCourts] Error fetching courts:", courtError);
-    return [];
-  }
-  if (!courtRows) {
-    console.warn("[getTennisCourts] No courts returned");
+  if (courtError || !courtRows) {
+    console.error("[getTennisCourts] courts error:", courtError);
     return [];
   }
 
-  // 2. Fetch 7-day rolling popularity (two generics!)
+  // 2) Fetch popularity view
   const { data: popRows, error: popError } = await supabase
-    .from<PopularityRow, PopularityRow>("v_court_popularity_7d")
+    .from<"v_court_popularity_7d", PopularityRow, PopularityRow>("v_court_popularity_7d")
     .select("court_id, avg_busy_score_7d");
 
-  if (popError) {
-    console.error("[getTennisCourts] Error fetching popularity metrics:", popError);
+  if (popError || !popRows) {
+    console.error("[getTennisCourts] popularity error:", popError);
     return [];
   }
 
   const popMap = new Map<number, number | null>();
-  popRows?.forEach(({ court_id, avg_busy_score_7d }) => {
+  popRows.forEach(({ court_id, avg_busy_score_7d }) => {
     popMap.set(court_id, avg_busy_score_7d);
   });
 
-  // 3. Merge and transform
-  return courtRows.map((row) => {
-    const parsed_intervals = parseAvailableDates(row.available_dates ?? "");
-    const avg_busy_score_7d = popMap.get(row.id) ?? null;
-    return {
-      id: row.id,
-      title: row.title ?? "Unknown Court",
-      facility_type: row.facility_type ?? "Unknown",
-      address: row.address,
-      Maps_url: row.google_map_url,
-      lights: row.lights ?? false,
-      hitting_wall: row.hitting_wall ?? false,
-      pickleball_lined: row.pickleball_lined ?? false,
-      ball_machine: row.ball_machine ?? false,
-      parsed_intervals,
-      avg_busy_score_7d,
-    };
-  });
+  // 3) Merge & return
+  return courtRows.map((r) => ({
+    id: r.id,
+    title: r.title ?? "Unknown Court",
+    facility_type: r.facility_type ?? "Unknown",
+    address: r.address,
+    Maps_url: r.google_map_url,
+    lights: r.lights ?? false,
+    hitting_wall: r.hitting_wall ?? false,
+    pickleball_lined: r.pickleball_lined ?? false,
+    ball_machine: r.ball_machine ?? false,
+    parsed_intervals: parseAvailableDates(r.available_dates ?? ""),
+    avg_busy_score_7d: popMap.get(r.id) ?? null,
+  }));
 }
 
 // ─── Helpers ───────────────────────────────────────────────
 
 function parseAvailableDates(input: string): ParsedInterval[] {
-  if (!input) return [];
   return input
     .split("\n")
     .map((l) => l.trim())
@@ -127,6 +118,5 @@ function convertToAMPM(raw: string): string {
   const mm = parseInt(m[2], 10);
   const ampm = hh >= 12 ? "PM" : "AM";
   const h12 = hh % 12 === 0 ? 12 : hh % 12;
-  const mmStr = mm.toString().padStart(2, "0");
-  return `${h12}:${mmStr} ${ampm}`;
+  return `${h12}:${mm.toString().padStart(2, "0")} ${ampm}`;
 }
