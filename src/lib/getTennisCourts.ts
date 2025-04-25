@@ -1,6 +1,6 @@
 // src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
-// No date-fns needed here anymore as the view handles dates
+// Removed date-fns import
 
 // --- Interfaces ---
 
@@ -10,8 +10,8 @@ interface ParsedInterval {
   end: string;
 }
 
-// Define the structure returned by the join query
-// Includes all tennis_courts fields + avg_busy_score_7d from the view
+// Raw data shape expected from the Supabase query with the join
+// Includes all tennis_courts fields + the nested result from the view join
 interface JoinedCourtData {
   id: number | null;
   title: string | null;
@@ -25,13 +25,12 @@ interface JoinedCourtData {
   pickleball_lined: boolean | null;
   drive_time: number | null;
   ball_machine: boolean | null;
-  // Joined data from v_court_popularity_7d (may be null due to LEFT JOIN)
+  // Joined data from v_court_popularity_7d (can be null or an empty array)
   v_court_popularity_7d: {
       avg_busy_score_7d: number | null;
       // days_in_avg: number | null; // Can include if needed
-  }[] | null; // Supabase often returns joined table data as an array
+  }[] | null; // Supabase returns joined related data as an array
 }
-
 
 // Final transformed type for the application
 interface TennisCourt {
@@ -80,14 +79,16 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       return [];
     }
 
-    const rows = data as any[] | null; // Use any for simplicity due to nested join result
+    // *** CORRECTED: Use the specific row type for the type assertion ***
+    const rows = data as JoinedCourtData[] | null;
 
     if (!rows) {
       console.log("[getTennisCourts] No data returned.");
       return [];
     }
 
-    const transformed = rows.map((row): TennisCourt | null => {
+    // *** CORRECTED: Use the specific JoinedCourtData type for 'row' ***
+    const transformed = rows.map((row: JoinedCourtData): TennisCourt | null => {
        if (row.id === null || typeof row.id === 'undefined') {
          console.warn("[getTennisCourts] Skipping row with missing/null ID:", row);
          return null;
@@ -100,7 +101,7 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
        // Extract popularity score from the joined view data
        const popularityData = Array.isArray(row.v_court_popularity_7d) && row.v_court_popularity_7d.length > 0
          ? row.v_court_popularity_7d[0]
-         : null;
+         : null; // If join returns null or empty array, popularityData is null
 
        const mapsUrl = row.google_map_url ?? null;
 
@@ -116,6 +117,7 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
          ball_machine: row.ball_machine ?? false,
          parsed_intervals,
          avg_busy_score_7d: popularityData?.avg_busy_score_7d ?? null, // Get score or null
+         // is_closed_today was removed as requested
        };
      }).filter((court): court is TennisCourt => court !== null);
 
