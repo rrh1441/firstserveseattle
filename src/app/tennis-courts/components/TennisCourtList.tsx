@@ -162,7 +162,6 @@ export default function TennisCourtList(): ReactElement {
     "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
   ];
 
-  // Fetch courts
   useEffect(() => {
     setLoading(true);
     getTennisCourts()
@@ -171,7 +170,6 @@ export default function TennisCourtList(): ReactElement {
       .finally(() => setLoading(false));
   }, []);
 
-  // Load favorites
   useEffect(() => {
     try {
       const stored = localStorage.getItem("favoriteCourts");
@@ -215,7 +213,6 @@ export default function TennisCourtList(): ReactElement {
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  // Filter + sort
   const filtered = courts
     .filter((c) =>
       !searchTerm || c.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -244,9 +241,7 @@ export default function TennisCourtList(): ReactElement {
     return (
       <div className="bg-white text-black p-2 sm:p-0 space-y-4">
         {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
-        {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
-          {/* Header + Search + Filters */}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
             <div className="space-y-2 w-full sm:w-auto">
               <div className="text-xl font-semibold text-gray-700">{today}</div>
@@ -307,7 +302,6 @@ export default function TennisCourtList(): ReactElement {
     <div className="bg-white text-black p-2 sm:p-0 space-y-4">
       {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
 
-      {/* Sticky Header */}
       <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
           <div className="space-y-2 w-full sm:w-auto">
@@ -366,7 +360,6 @@ export default function TennisCourtList(): ReactElement {
                 key={court.id}
                 className="shadow-md border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
               >
-                {/* Card Header */}
                 <div className="p-3 border-b bg-gray-50/60">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
@@ -445,7 +438,6 @@ export default function TennisCourtList(): ReactElement {
                   </div>
                 </div>
 
-                {/* Card Content */}
                 <CardContent className="p-3 space-y-3">
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                     {times.map((slot, idx) => {
@@ -469,7 +461,6 @@ export default function TennisCourtList(): ReactElement {
                     })}
                   </div>
 
-                  {/* Map Toggle */}
                   {(court.address || court.Maps_url) && (
                     <Button
                       variant="outline"
@@ -484,7 +475,6 @@ export default function TennisCourtList(): ReactElement {
                     </Button>
                   )}
 
-                  {/* Expanded Map */}
                   {expanded.includes(court.id) && (
                     <div
                       id={`map-${court.id}`}
@@ -503,7 +493,6 @@ export default function TennisCourtList(): ReactElement {
                     </div>
                   )}
 
-                  {/* Ball Machine */}
                   {court.ball_machine && (
                     <Button
                       size="sm"
