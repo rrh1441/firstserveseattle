@@ -8,9 +8,7 @@ interface ParsedInterval {
   end: string
 }
 
-// --- Define the shape of the raw data expected from Supabase ---
-// Use the actual column names from your 'tennis_courts' table
-// Allow null for fields that might be null in the database
+// --- Define the shape of the raw data EXACTLY matching your Supabase columns ---
 interface SupabaseTennisCourtRow {
   id: number | null;
   title: string | null;
@@ -18,30 +16,31 @@ interface SupabaseTennisCourtRow {
   address: string | null;
   available_dates: string | null;
   last_updated: string | null; // Assuming TIMESTAMPTZ or similar string representation
-  Maps_url: string | null; // Or Maps_url, match your DB column name
+  google_map_url: string | null; // <-- CORRECTED column name
   lights: boolean | null;
   hitting_wall: boolean | null;
   pickleball_lined: boolean | null;
-  ball_machine: boolean | null; // Add the ball_machine column
-  // Add any other columns you are selecting with '*' that you might use
+  drive_time: number | null; // Added drive_time based on your list
+  ball_machine: boolean | null;
 }
 
 
-// --- Define the final transformed type for the application (remains the same) ---
+// --- Define the final transformed type for the application ---
+// We can keep 'Maps_url' here if the component expects it,
+// and map it during transformation. Or change it here and in the component.
+// Let's keep it as Maps_url for now to minimize component changes.
 interface TennisCourt {
-  id: number // Assuming ID is non-nullable in the final object
+  id: number
   title: string
   facility_type: string
-  address: string | null // Keep null possibility based on usage
-  Maps_url: string | null // Match property name used in component
+  address: string | null
+  Maps_url: string | null // Component-facing name (plural 'maps')
   lights: boolean
   hitting_wall: boolean
   pickleball_lined: boolean
   ball_machine: boolean
   parsed_intervals: ParsedInterval[]
-  // Include other transformed fields if needed (e.g., available_dates, last_updated if kept)
-  // available_dates?: string | null; // Optional: include if needed downstream
-  // last_updated?: string | null;    // Optional: include if needed downstream
+  // drive_time?: number | null; // Add if needed by the component
 }
 
 /**
@@ -49,21 +48,19 @@ interface TennisCourt {
  */
 export async function getTennisCourts(): Promise<TennisCourt[]> {
   try {
-    // Select specific columns if '*' is too broad, otherwise '*' is fine
-    // Ensure the select includes all fields defined in SupabaseTennisCourtRow
+    // --- CORRECTED Select list based on your column names ---
+    const columnsToSelect = "id, title, facility_type, address, available_dates, last_updated, google_map_url, lights, hitting_wall, pickleball_lined, drive_time, ball_machine";
+
     const { data, error } = await supabase
         .from("tennis_courts")
-        .select("id, title, facility_type, address, available_dates, last_updated, Maps_url, lights, hitting_wall, pickleball_lined, ball_machine") // Explicit select is safer than '*'
-        // Or keep using .select("*") if you prefer
+        .select(columnsToSelect) // Use the corrected select list
 
     if (error) {
-      console.error("[getTennisCourts] Supabase error:", error)
-      // Consider throwing error for better upstream handling
-      // throw new Error(`Supabase query failed: ${error.message}`);
-      return [] // Return empty array as per original fallback
+      console.error("[getTennisCourts] Supabase error:", error);
+      return []
     }
-    // Type assertion: Tell TypeScript data is an array of our expected raw row type
-    // This assumes the Supabase client might return 'any[]' or a generic type
+
+    // Type assertion using the corrected raw row type
     const rows = data as SupabaseTennisCourtRow[] | null;
 
     if (!rows) {
@@ -71,9 +68,8 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
       return []
     }
 
-    // FIX: Use the specific SupabaseTennisCourtRow type for 'row' instead of 'any'
+    // Use the specific SupabaseTennisCourtRow type for 'row'
     const transformed = rows.map((row: SupabaseTennisCourtRow): TennisCourt | null => {
-      // Perform null check on essential fields like id if needed for filtering invalid rows
       if (row.id === null) {
           console.warn("[getTennisCourts] Skipping row with null ID:", row);
           return null; // Skip transforming rows with null ID
@@ -85,93 +81,54 @@ export async function getTennisCourts(): Promise<TennisCourt[]> {
 
       // Transform the raw row into the application's TennisCourt type
       return {
-        id: row.id, // ID is confirmed non-null here
-        title: row.title ?? "Unknown Court", // Default value if null
+        id: row.id,
+        title: row.title ?? "Unknown Court",
         facility_type: row.facility_type ?? "Unknown",
-        address: row.address ?? null, // Preserve null if address can be missing
-        Maps_url: row.Maps_url ?? null, // Use the name expected by component
-        lights: row.lights ?? false, // Default to false if null
+        address: row.address ?? null,
+        // --- Map the correct DB column (google_map_url) to the app's property (Maps_url) ---
+        Maps_url: row.google_map_url ?? null,
+        lights: row.lights ?? false,
         hitting_wall: row.hitting_wall ?? false,
         pickleball_lined: row.pickleball_lined ?? false,
-        ball_machine: row.ball_machine ?? false, // Default to false if null
+        ball_machine: row.ball_machine ?? false,
         parsed_intervals,
-        // Optional: pass through other fields if needed
-        // available_dates: row.available_dates,
-        // last_updated: row.last_updated,
+        // drive_time: row.drive_time ?? null, // Include drive_time if needed by component
       }
-    }).filter((court): court is TennisCourt => court !== null); // Filter out any null results from mapping
+    }).filter((court): court is TennisCourt => court !== null); // Filter out any null results
 
-    // console.log("[getTennisCourts] Transformed data:", transformed) // Keep for debugging if needed
     return transformed
 
   } catch (err) {
-    // Catch specific errors if possible, otherwise log the generic error
     if (err instanceof Error) {
         console.error("[getTennisCourts] Unhandled exception:", err.message, err.stack);
     } else {
         console.error("[getTennisCourts] Unhandled exception:", err);
     }
-    // Consider throwing the error to be handled by the calling component
-    // throw err;
-    return [] // Return empty array as per original fallback
+    return []
   }
 }
 
 // --- Helper Functions (parseAvailableDates, convertToAMPM) ---
-// Keep the improved helper functions from the previous step
-// (including checks for null/empty strings, format validation)
-
-/**
- * Parse the "available_dates" column into intervals of { date, start, end }.
- */
+// Keep the robust helper functions from before
 function parseAvailableDates(availableDatesStr: string): ParsedInterval[] {
-    // (Keep the robust implementation from the previous response)
     if (!availableDatesStr) return [];
-    const lines = availableDatesStr
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-
+    const lines = availableDatesStr.split("\n").map((line) => line.trim()).filter(Boolean);
     const intervals = lines.map((line) => {
-      const parts = line.split(/\s+/);
-      if (parts.length < 2) {
-           console.warn(`[parseAvailableDates] Skipping malformed line (not enough parts): "${line}"`);
-           return null;
-      }
-      const datePart = parts[0];
-      const timeRangePart = parts[parts.length - 1];
-      const timeParts = timeRangePart.split("-");
-      if (timeParts.length !== 2 || !timeParts[0] || !timeParts[1]) {
-          console.warn(`[parseAvailableDates] Skipping malformed time range in line: "${line}"`);
-          return null;
-      }
+      const parts = line.split(/\s+/); if (parts.length < 2) return null;
+      const datePart = parts[0]; const timeRangePart = parts[parts.length - 1];
+      const timeParts = timeRangePart.split("-"); if (timeParts.length !== 2 || !timeParts[0] || !timeParts[1]) return null;
       const [startRaw, endRaw] = timeParts;
-      const startFormatted = convertToAMPM(startRaw.trim());
-      const endFormatted = convertToAMPM(endRaw.trim());
-      if (!startFormatted || !endFormatted) {
-           console.warn(`[parseAvailableDates] Skipping line due to invalid time conversion: "${line}"`);
-           return null;
-      }
+      const startFormatted = convertToAMPM(startRaw.trim()); const endFormatted = convertToAMPM(endRaw.trim());
+      if (!startFormatted || !endFormatted) return null;
       return { date: datePart, start: startFormatted, end: endFormatted };
     });
-
     return intervals.filter((interval): interval is ParsedInterval => interval !== null);
 }
-
-/**
- * Convert a time string from 24-hour format to 12-hour AM/PM format.
- */
 function convertToAMPM(rawTime: string): string {
-    // (Keep the robust implementation from the previous response)
     if (!rawTime || typeof rawTime !== 'string') return "";
-    const timeMatch = rawTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-    if (!timeMatch) return "";
-    const [, hhStr, mmStr] = timeMatch;
-    const hh = parseInt(hhStr, 10);
-    const mm = parseInt(mmStr, 10);
+    const timeMatch = rawTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/); if (!timeMatch) return "";
+    const [, hhStr, mmStr] = timeMatch; const hh = parseInt(hhStr, 10); const mm = parseInt(mmStr, 10);
     if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return "";
-    const ampm = hh >= 12 ? "PM" : "AM";
-    const hour12 = hh % 12 === 0 ? 12 : hh % 12;
-    const mmFormatted = mm < 10 ? `0${mm}` : `${mm}`;
-    return `${hour12}:${mmFormatted} ${ampm}`;
+    const ampm = hh >= 12 ? "PM" : "AM"; const hour12 = hh % 12 === 0 ? 12 : hh % 12;
+    const mmFormatted = mm < 10 ? `0${mm}` : `${mm}`; return `${hour12}:${mmFormatted} ${ampm}`;
 }
