@@ -1,173 +1,134 @@
 // src/lib/getTennisCourts.ts
 import { supabase } from "@/app/supabaseClient";
 
-// --- Interfaces ---
-
-interface ParsedInterval {
+export interface ParsedInterval {
   date: string;
   start: string;
   end: string;
 }
 
-// Raw data shape expected from the Supabase query with the join
-// Includes all tennis_courts fields + the nested result from the view join
-interface JoinedCourtData {
-  id: number | null;
-  title: string | null;
-  facility_type: string | null;
-  address: string | null;
-  available_dates: string | null;
-  last_updated: string | null;
-  google_map_url: string | null; // Database column name
-  lights: boolean | null;
-  hitting_wall: boolean | null;
-  pickleball_lined: boolean | null;
-  drive_time: number | null;
-  ball_machine: boolean | null;
-  // Joined data from v_court_popularity_7d
-  v_court_popularity_7d: {
-    avg_busy_score_7d: number | null;
-    days_in_avg: number | null;
-  } | null;
-}
-
-// Final transformed type for the application
-interface TennisCourt {
+export interface TennisCourt {
   id: number;
   title: string;
   facility_type: string;
   address: string | null;
-  Maps_url: string | null; // Component-facing name
+  Maps_url: string | null;
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
   ball_machine: boolean;
   parsed_intervals: ParsedInterval[];
-  avg_busy_score_7d: number | null; // The 7-day average score
+  avg_busy_score_7d: number | null;
 }
 
-/**
- * Fetch and transform data from the "tennis_courts" table,
- * joining with the 7-day popularity view.
- */
+interface CourtRow {
+  id: number;
+  title: string | null;
+  facility_type: string | null;
+  address: string | null;
+  available_dates: string | null;
+  google_map_url: string | null;
+  lights: boolean | null;
+  hitting_wall: boolean | null;
+  pickleball_lined: boolean | null;
+  ball_machine: boolean | null;
+}
+
+interface PopularityRow {
+  court_id: number;
+  avg_busy_score_7d: number | null;
+}
+
 export async function getTennisCourts(): Promise<TennisCourt[]> {
-  try {
-    // Fetch courts data with joined popularity view
-    const { data, error } = await supabase
-      .from("tennis_courts")
-      .select(`
-        id,
-        title,
-        facility_type,
-        address,
-        available_dates,
-        last_updated,
-        google_map_url,
-        lights,
-        hitting_wall,
-        pickleball_lined,
-        drive_time,
-        ball_machine,
-        v_court_popularity_7d (
-          avg_busy_score_7d,
-          days_in_avg
-        )
-      `);
+  // 1. Fetch base court info
+  const { data: courtRows, error: courtError } = await supabase
+    .from<CourtRow>("tennis_courts")
+    .select(
+      `id,
+       title,
+       facility_type,
+       address,
+       available_dates,
+       google_map_url,
+       lights,
+       hitting_wall,
+       pickleball_lined,
+       ball_machine`
+    );
 
-    if (error) {
-      console.error("[getTennisCourts] Supabase error:", error);
-      return [];
-    }
-
-    if (!data || !Array.isArray(data)) {
-      console.log("[getTennisCourts] No data returned.");
-      return [];
-    }
-
-    // Transform data to match our application's interface
-    const transformed = data.map((row: any): TennisCourt | null => {
-      if (row.id === null || typeof row.id === 'undefined') {
-        console.warn("[getTennisCourts] Skipping row with missing/null ID:", row);
-        return null;
-      }
-
-      const parsed_intervals = row.available_dates
-        ? parseAvailableDates(row.available_dates)
-        : [];
-
-      // Extract popularity score - handle both object and array formats
-      // (Supabase might return related data in different formats depending on configuration)
-      let avgBusyScore: number | null = null;
-      
-      if (row.v_court_popularity_7d) {
-        if (Array.isArray(row.v_court_popularity_7d)) {
-          // Handle array format
-          avgBusyScore = row.v_court_popularity_7d.length > 0
-            ? row.v_court_popularity_7d[0]?.avg_busy_score_7d ?? null
-            : null;
-        } else {
-          // Handle object format
-          avgBusyScore = row.v_court_popularity_7d.avg_busy_score_7d ?? null;
-        }
-      }
-
-      return {
-        id: row.id,
-        title: row.title ?? "Unknown Court",
-        facility_type: row.facility_type ?? "Unknown",
-        address: row.address ?? null,
-        Maps_url: row.google_map_url ?? null, // Map DB field to component field
-        lights: row.lights ?? false,
-        hitting_wall: row.hitting_wall ?? false,
-        pickleball_lined: row.pickleball_lined ?? false,
-        ball_machine: row.ball_machine ?? false,
-        parsed_intervals,
-        avg_busy_score_7d: avgBusyScore
-      };
-    }).filter((court): court is TennisCourt => court !== null);
-
-    return transformed;
-
-  } catch (err) {
-    if (err instanceof Error) {
-      console.error("[getTennisCourts] Unhandled exception:", err.message, err.stack);
-    } else {
-      console.error("[getTennisCourts] Unhandled exception:", err);
-    }
+  if (courtError) {
+    console.error("[getTennisCourts] Error fetching courts:", courtError);
     return [];
   }
+  if (!courtRows) {
+    console.warn("[getTennisCourts] No courts returned");
+    return [];
+  }
+
+  // 2. Fetch 7-day rolling popularity
+  const { data: popRows, error: popError } = await supabase
+    .from<PopularityRow>("v_court_popularity_7d")
+    .select("court_id, avg_busy_score_7d");
+
+  if (popError) {
+    console.error("[getTennisCourts] Error fetching popularity metrics:", popError);
+    return [];
+  }
+
+  const popMap = new Map<number, number | null>();
+  popRows?.forEach(({ court_id, avg_busy_score_7d }) => {
+    popMap.set(court_id, avg_busy_score_7d);
+  });
+
+  // 3. Merge and transform
+  return courtRows.map((row) => {
+    const parsed_intervals = parseAvailableDates(row.available_dates ?? "");
+    const avg_busy_score_7d = popMap.get(row.id) ?? null;
+
+    return {
+      id: row.id,
+      title: row.title ?? "Unknown Court",
+      facility_type: row.facility_type ?? "Unknown",
+      address: row.address,
+      Maps_url: row.google_map_url,
+      lights: row.lights ?? false,
+      hitting_wall: row.hitting_wall ?? false,
+      pickleball_lined: row.pickleball_lined ?? false,
+      ball_machine: row.ball_machine ?? false,
+      parsed_intervals,
+      avg_busy_score_7d,
+    };
+  });
 }
 
-// --- Helper Functions ---
+// ─── Helpers ───────────────────────────────────────────────
+
 function parseAvailableDates(availableDatesStr: string): ParsedInterval[] {
-    if (!availableDatesStr) return [];
-    const lines = availableDatesStr.split("\n").map((line) => line.trim()).filter(Boolean);
-    const intervals = lines.map((line) => {
-      const parts = line.split(/\s+/); 
-      if (parts.length < 2) return null;
-      const datePart = parts[0]; 
-      const timeRangePart = parts[parts.length - 1];
-      const timeParts = timeRangePart.split("-"); 
-      if (timeParts.length !== 2 || !timeParts[0] || !timeParts[1]) return null;
-      const [startRaw, endRaw] = timeParts;
-      const startFormatted = convertToAMPM(startRaw.trim()); 
-      const endFormatted = convertToAMPM(endRaw.trim());
-      if (!startFormatted || !endFormatted) return null;
-      return { date: datePart, start: startFormatted, end: endFormatted };
-    });
-    return intervals.filter((interval): interval is ParsedInterval => interval !== null);
+  if (!availableDatesStr) return [];
+
+  return availableDatesStr
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [datePart, timeRange] = line.split(/\s+(.+)/);
+      if (!datePart || !timeRange) return null;
+      const [startRaw, endRaw] = timeRange.split("-");
+      const start = convertToAMPM(startRaw.trim());
+      const end = convertToAMPM(endRaw.trim());
+      if (!start || !end) return null;
+      return { date: datePart, start, end };
+    })
+    .filter((i): i is ParsedInterval => i !== null);
 }
 
-function convertToAMPM(rawTime: string): string {
-    if (!rawTime || typeof rawTime !== 'string') return "";
-    const timeMatch = rawTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/); 
-    if (!timeMatch) return "";
-    const [, hhStr, mmStr] = timeMatch; 
-    const hh = parseInt(hhStr, 10); 
-    const mm = parseInt(mmStr, 10);
-    if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return "";
-    const ampm = hh >= 12 ? "PM" : "AM"; 
-    const hour12 = hh % 12 === 0 ? 12 : hh % 12;
-    const mmFormatted = mm < 10 ? `0${mm}` : `${mm}`; 
-    return `${hour12}:${mmFormatted} ${ampm}`;
+function convertToAMPM(raw: string): string {
+  const m = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!m) return "";
+  const hh = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const ampm = hh >= 12 ? "PM" : "AM";
+  const hour12 = hh % 12 === 0 ? 12 : hh % 12;
+  const mmStr = mm.toString().padStart(2, "0");
+  return `${hour12}:${mmStr} ${ampm}`;
 }
