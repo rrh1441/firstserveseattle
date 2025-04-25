@@ -12,6 +12,8 @@ import { Star, MapPin, Info, Users, Zap, Snowflake, HelpCircle } from "lucide-re
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
+type FilterKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
+
 interface PopularityTier {
   label: string;
   tooltip: string;
@@ -37,9 +39,9 @@ function timeToMinutes(str: string): number {
 }
 
 function isRangeFree(court: TennisCourt, startM: number, endM: number): boolean {
-  return court.parsed_intervals.some((intv) => {
-    const s = timeToMinutes(intv.start);
-    const e = timeToMinutes(intv.end);
+  return court.parsed_intervals.some(({ start, end }) => {
+    const s = timeToMinutes(start);
+    const e = timeToMinutes(end);
     return s <= startM && e >= endM;
   });
 }
@@ -50,10 +52,10 @@ function getHourAvailabilityColor(
 ): string {
   const startM = timeToMinutes(slot);
   if (startM === -1) return "bg-gray-200 text-gray-400";
-  const half = startM + 30;
-  const full = startM + 60;
-  const firstFree = isRangeFree(court, startM, half);
-  const secondFree = isRangeFree(court, half, full);
+  const mid = startM + 30;
+  const end = startM + 60;
+  const firstFree = isRangeFree(court, startM, mid);
+  const secondFree = isRangeFree(court, mid, end);
   if (firstFree && secondFree) return "bg-green-500 text-white";
   if (!firstFree && !secondFree) return "bg-gray-400 text-gray-100";
   return "bg-orange-400 text-white";
@@ -145,8 +147,8 @@ function CourtListSkeleton({ count = 5 }: { count?: number }): JSX.Element {
 export default function TennisCourtList(): JSX.Element {
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState({
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filters, setFilters] = useState<Record<FilterKey, boolean>>({
     lights: false,
     hitting_wall: false,
     pickleball_lined: false,
@@ -163,20 +165,16 @@ export default function TennisCourtList(): JSX.Element {
     "6:00 PM","7:00 PM","8:00 PM","9:00 PM","10:00 PM",
   ];
 
+  // Fetch courts
   useEffect(() => {
     setLoading(true);
-    setError(null);
     getTennisCourts()
-      .then((data) => {
-        setCourts(data);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError(err.message || "Failed to load courts.");
-      })
+      .then((data) => setCourts(data))
+      .catch((err) => setError(err.message || "Failed to load courts."))
       .finally(() => setLoading(false));
   }, []);
 
+  // Load favorites
   useEffect(() => {
     try {
       const stored = localStorage.getItem("favoriteCourts");
@@ -191,7 +189,7 @@ export default function TennisCourtList(): JSX.Element {
     }
   }, []);
 
-  const toggleFav = (id: number): void => {
+  const toggleFavorite = (id: number): void => {
     setFavorites((prev) => {
       const next = prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id];
       localStorage.setItem("favoriteCourts", JSON.stringify(next));
@@ -199,7 +197,7 @@ export default function TennisCourtList(): JSX.Element {
     });
   };
 
-  const toggleFilt = (key: keyof typeof filters): void => {
+  const toggleFilter = (key: FilterKey): void => {
     setFilters((f) => ({ ...f, [key]: !f[key] }));
   };
 
@@ -209,24 +207,29 @@ export default function TennisCourtList(): JSX.Element {
 
   const getMapsUrl = (court: TennisCourt): string => {
     if (court.Maps_url?.startsWith("http")) return court.Maps_url;
-    const q = court.address || court.title || "Seattle Tennis Court";
+    const q = court.address ?? court.title ?? "Seattle Tennis Court";
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
   };
 
-  const filterConfig = {
+  const filterConfig: Record<FilterKey, { label: string; icon: string }> = {
     lights: { label: "Lights", icon: "/icons/lighticon.png" },
     pickleball_lined: { label: "Pickleball", icon: "/icons/pickleballicon.png" },
     hitting_wall: { label: "Wall", icon: "/icons/wallicon.png" },
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
-  } as const;
+  };
 
-  type FK = keyof typeof filters;
+  // Filter + sort
+  const filtered = courts
+    .filter((c) =>
+      !searchTerm || c.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((c) =>
+      (Object.keys(filters) as FilterKey[]).every((k) =>
+        !filters[k] ? true : c[k]
+      )
+    );
 
-  const results = courts
-    .filter((c) => !search || c.title.toLowerCase().includes(search.toLowerCase()))
-    .filter((c) => (Object.keys(filters) as FK[]).every((k) => !filters[k] || (c as any)[k]));
-
-  const sorted = [...results].sort((a, b) => {
+  const sorted = filtered.sort((a, b) => {
     const af = favorites.includes(a.id) ? 1 : 0;
     const bf = favorites.includes(b.id) ? 1 : 0;
     if (af !== bf) return bf - af;
@@ -234,15 +237,57 @@ export default function TennisCourtList(): JSX.Element {
   });
 
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", timeZone: "America/Los_Angeles",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
   });
 
   if (loading) {
     return (
       <div className="bg-white text-black p-2 sm:p-0 space-y-4">
         {aboutOpen && <AboutUs isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />}
+        {/* Sticky Header */}
         <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
-          {/* Header + Search + Filters (omitted for brevity) */}
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+            <div className="space-y-2 w-full sm:w-auto">
+              <div className="text-xl font-semibold text-gray-700">{today}</div>
+              <input
+                type="text"
+                placeholder="Search courts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 border rounded focus:ring focus:ring-blue-500 text-sm"
+              />
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(filterConfig).map(([key, { label, icon }]) => (
+                  <Button
+                    key={key}
+                    onClick={() => toggleFilter(key as FilterKey)}
+                    variant="outline"
+                    className={`flex items-center gap-1 px-3 h-9 text-sm ${
+                      filters[key as FilterKey]
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-white text-gray-700"
+                    }`}
+                  >
+                    <Image src={icon} alt="" width={14} height={14} />
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <Button
+                onClick={() => setAboutOpen(true)}
+                variant="outline"
+                className="flex items-center gap-1 px-3 h-9 text-sm"
+              >
+                <Info size={16} />
+                Info / Key
+              </Button>
+            </div>
+          </div>
         </div>
         <CourtListSkeleton />
       </div>
@@ -251,8 +296,8 @@ export default function TennisCourtList(): JSX.Element {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-10 px-4 min-h-[300px]">
-        <div className="bg-red-50 border-red-200 border p-6 rounded text-center">
+      <div className="flex justify-center items-center py-10">
+        <div className="bg-red-50 border border-red-200 p-6 rounded text-center">
           <h3 className="text-red-800 font-semibold mb-2">Oops! Something went wrong.</h3>
           <p className="text-red-700">{error}</p>
         </div>
@@ -266,11 +311,49 @@ export default function TennisCourtList(): JSX.Element {
 
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b px-2 sm:px-0">
-        {/* Search input, filter buttons, Info button… (omitted for brevity) */}
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+          <div className="space-y-2 w-full sm:w-auto">
+            <div className="text-xl font-semibold text-gray-700">{today}</div>
+            <input
+              type="text"
+              placeholder="Search courts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 border rounded focus:ring focus:ring-blue-500 text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(filterConfig).map(([key, { label, icon }]) => (
+                <Button
+                  key={key}
+                  onClick={() => toggleFilter(key as FilterKey)}
+                  variant="outline"
+                  className={`flex items-center gap-1 px-3 h-9 text-sm ${
+                    filters[key as FilterKey]
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-white text-gray-700"
+                  }`}
+                >
+                  <Image src={icon} alt="" width={14} height={14} />
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <Button
+              onClick={() => setAboutOpen(true)}
+              variant="outline"
+              className="flex items-center gap-1 px-3 h-9 text-sm"
+            >
+              <Info size={16} />
+              Info / Key
+            </Button>
+          </div>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center text-gray-600 py-10 px-4 min-h-[200px]">
+        <div className="text-center text-gray-600 py-10">
           {courts.length > 0
             ? "No courts match your search or filters."
             : "No court data available."}
@@ -285,7 +368,7 @@ export default function TennisCourtList(): JSX.Element {
                 key={court.id}
                 className="shadow-md border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
               >
-                {/* Header */}
+                {/* Card Header */}
                 <div className="p-3 border-b bg-gray-50/60">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
@@ -297,37 +380,34 @@ export default function TennisCourtList(): JSX.Element {
                       </h3>
                       <div className="flex flex-wrap gap-2 text-xs text-gray-600 mt-1">
                         {court.lights && (
-                          <div className="flex items-center gap-1" title="Lights available">
+                          <div className="flex items-center gap-1" title="Lights">
                             <Image
                               src="/icons/lighticon.png"
                               alt=""
                               width={12}
                               height={12}
-                              onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                             Lights
                           </div>
                         )}
                         {court.pickleball_lined && (
-                          <div className="flex items-center gap-1" title="Pickleball lines">
+                          <div className="flex items-center gap-1" title="Pickleball">
                             <Image
                               src="/icons/pickleballicon.png"
                               alt=""
                               width={12}
                               height={12}
-                              onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                             Pickleball
                           </div>
                         )}
                         {court.hitting_wall && (
-                          <div className="flex items-center gap-1" title="Hitting wall">
+                          <div className="flex items-center gap-1" title="Wall">
                             <Image
                               src="/icons/wallicon.png"
                               alt=""
                               width={12}
                               height={12}
-                              onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                             Wall
                           </div>
@@ -346,7 +426,7 @@ export default function TennisCourtList(): JSX.Element {
                     </div>
                     <Button
                       variant="ghost"
-                      onClick={() => toggleFav(court.id)}
+                      onClick={() => toggleFavorite(court.id)}
                       className="p-1 h-8 w-8"
                       aria-label={
                         favorites.includes(court.id)
@@ -367,7 +447,7 @@ export default function TennisCourtList(): JSX.Element {
                   </div>
                 </div>
 
-                {/* Availability Grid */}
+                {/* Card Content */}
                 <CardContent className="p-3 space-y-3">
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
                     {times.map((slot, idx) => {
@@ -391,12 +471,12 @@ export default function TennisCourtList(): JSX.Element {
                     })}
                   </div>
 
-                  {/* Map toggle */}
+                  {/* Map Toggle */}
                   {(court.address || court.Maps_url) && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full mt-3 flex items-center justify-center gap-1.5"
+                      className="w-full mt-3 flex items-center gap-1.5"
                       onClick={() => toggleMap(court.id)}
                       aria-expanded={expanded.includes(court.id)}
                       aria-controls={`map-${court.id}`}
@@ -406,7 +486,7 @@ export default function TennisCourtList(): JSX.Element {
                     </Button>
                   )}
 
-                  {/* Expanded map */}
+                  {/* Expanded Map */}
                   {expanded.includes(court.id) && (
                     <div
                       id={`map-${court.id}`}
@@ -425,11 +505,11 @@ export default function TennisCourtList(): JSX.Element {
                     </div>
                   )}
 
-                  {/* Ball machine button */}
+                  {/* Ball Machine */}
                   {court.ball_machine && (
                     <Button
                       size="sm"
-                      className="w-full mt-2 flex items-center justify-center gap-1.5"
+                      className="w-full mt-2 flex items-center gap-1.5"
                       onClick={() =>
                         window.open("https://seattleballmachine.com", "_blank")
                       }
@@ -439,7 +519,6 @@ export default function TennisCourtList(): JSX.Element {
                         alt=""
                         width={12}
                         height={12}
-                        onError={(e) => (e.currentTarget.style.display = "none")}
                       />
                       Ball Machine Rental (Nearby)
                     </Button>
