@@ -289,7 +289,7 @@ export default function TennisCourtList() {
     lights: { label: 'Lights', icon: '/icons/lighticon.png' },
     pickleball_lined: { label: 'Pickleball', icon: '/icons/pickleballicon.png' },
     hitting_wall: { label: 'Wall', icon: '/icons/wallicon.png' },
-    ball_machine: { label: 'Ball Machine', icon: '/icons/ballmachine.png' }, // config for ball machine
+    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' }, // config for ball machine
   } as const;
 
   type FilterKey = keyof typeof filterConfig;
