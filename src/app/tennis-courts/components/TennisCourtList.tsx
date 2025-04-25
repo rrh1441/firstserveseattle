@@ -19,17 +19,17 @@ interface ParsedInterval {
   end: string;
 }
 
+// Using Maps_url based on your last provided code for this file
 interface Court {
   id: number;
   title: string;
   facility_type: string;
   address: string | null;
-  // Ensure this matches the name used in getTennisCourts and mapping
-  Maps_url?: string | null; // Use the name consistent with getTennisCourts
+  Maps_url?: string | null; // Using Maps_url as per your last version
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
-  ball_machine: boolean; // ball machine property
+  ball_machine: boolean;
   parsed_intervals: ParsedInterval[];
 }
 
@@ -289,7 +289,8 @@ export default function TennisCourtList() {
     lights: { label: 'Lights', icon: '/icons/lighticon.png' },
     pickleball_lined: { label: 'Pickleball', icon: '/icons/pickleballicon.png' },
     hitting_wall: { label: 'Wall', icon: '/icons/wallicon.png' },
-    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' }, // config for ball machine
+    // ***** MODIFICATION 1: Updated Label *****
+    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' },
   } as const;
 
   type FilterKey = keyof typeof filterConfig;
@@ -317,7 +318,8 @@ export default function TennisCourtList() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
                     aria-label="Search courts by name"
                 />
-                <div className="flex items-center gap-2 flex-wrap">
+                {/* ***** MODIFICATION 2: Updated Filter Container Layout ***** */}
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
                    {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
                        const { label, icon } = filterConfig[filterKey];
                        const isActive = filters[filterKey];
@@ -326,15 +328,16 @@ export default function TennisCourtList() {
                                key={filterKey}
                                onClick={() => toggleFilter(filterKey)}
                                variant="outline"
-                               size="sm" // Use 'sm' size for filter buttons
-                               className={`flex items-center justify-center gap-1.5 px-2.5 h-8 text-xs transition-colors duration-150 shadow-sm ${
+                               // ***** MODIFICATION 3: Updated Filter Button Size/Padding/Text *****
+                               className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${ // Added w-full for grid, sm:w-auto for flex
                                 isActive
                                 ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
                                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                                }`}
                                aria-pressed={isActive}
                            >
-                              <Image src={icon} alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
+                               {/* ***** MODIFICATION 3b: Updated Filter Icon Size ***** */}
+                              <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
                               {label}
                            </Button>
                        );
@@ -346,11 +349,12 @@ export default function TennisCourtList() {
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
-                    size="sm" // Use 'sm' size for info button
-                    className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-8 text-xs flex items-center gap-1.5 shadow-sm"
+                    // ***** MODIFICATION 4: Updated Info Button Size to Match Filters *****
+                    className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
                     aria-label="Open Information and Key"
                 >
-                    <Info size={14} aria-hidden="true" />
+                    {/* ***** MODIFICATION 4b: Updated Info Icon Size ***** */}
+                    <Info size={16} aria-hidden="true" />
                     Info / Key
                 </Button>
             </div>
@@ -394,7 +398,8 @@ export default function TennisCourtList() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
                     aria-label="Search courts by name"
                 />
-                <div className="flex items-center gap-2 flex-wrap">
+                {/* ***** MODIFICATION 2: Updated Filter Container Layout ***** */}
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
                    {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
                        const { label, icon } = filterConfig[filterKey];
                        const isActive = filters[filterKey];
@@ -403,15 +408,16 @@ export default function TennisCourtList() {
                                key={filterKey}
                                onClick={() => toggleFilter(filterKey)}
                                variant="outline"
-                               size="sm" // Use 'sm' size
-                               className={`flex items-center justify-center gap-1.5 px-2.5 h-8 text-xs transition-colors duration-150 shadow-sm ${
+                               // ***** MODIFICATION 3: Updated Filter Button Size/Padding/Text *****
+                               className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${ // Added w-full for grid, sm:w-auto for flex
                                 isActive
                                 ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
                                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                                }`}
                                aria-pressed={isActive}
                            >
-                              <Image src={icon} alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
+                               {/* ***** MODIFICATION 3b: Updated Filter Icon Size ***** */}
+                              <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
                               {label}
                            </Button>
                        );
@@ -423,11 +429,12 @@ export default function TennisCourtList() {
                 <Button
                     onClick={() => setAboutModalOpen(true)}
                     variant="outline"
-                    size="sm" // Use 'sm' size
-                    className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-8 text-xs flex items-center gap-1.5 shadow-sm"
+                    // ***** MODIFICATION 4: Updated Info Button Size to Match Filters *****
+                    className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
                     aria-label="Open Information and Key"
                 >
-                    <Info size={14} aria-hidden="true"/>
+                    {/* ***** MODIFICATION 4b: Updated Info Icon Size ***** */}
+                    <Info size={16} aria-hidden="true"/>
                     Info / Key
                 </Button>
             </div>
@@ -558,9 +565,8 @@ export default function TennisCourtList() {
                             {court.ball_machine && (
                                 <Button
                                     onClick={() => window.open("https://seattleballmachine.com", "_blank", "noopener,noreferrer")}
-                                    size="sm" // Use 'sm' size
-                                    // Approx US Open Blue. Define #003168 in tailwind.config.js for exact color
-                                    className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm"
+                                    size="sm" // Keep this specific button 'sm' unless you want it larger too
+                                    className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm" // Kept original size for this one
                                 >
                                     {/* Ensure icon path is correct */}
                                     <Image src="/icons/ballmachine.png" alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
