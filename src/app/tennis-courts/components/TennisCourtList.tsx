@@ -4,14 +4,9 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"; // Import Badge
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"; // Import Tooltip components
-import { Star, MapPin, Info, Users, Zap, Snowflake } from "lucide-react"; // Added potential icons
+import { Badge } from "@/components/ui/badge"; // Keep Badge
+// Removed Tooltip imports
+import { Star, MapPin, Info, Users, Zap, Snowflake } from "lucide-react";
 import { getTennisCourts } from "@/lib/getTennisCourts";
 import Image from "next/image";
 import dynamic from 'next/dynamic';
@@ -26,13 +21,13 @@ interface ParsedInterval {
   end: string;
 }
 
-// Updated Interface
+// Updated Interface to match expected data from getTennisCourts
 interface Court {
   id: number;
   title: string;
   facility_type: string;
   address: string | null;
-  Maps_url?: string | null; // Using Maps_url as per your code
+  Maps_url?: string | null; // Matches interface in getTennisCourts output
   lights: boolean;
   hitting_wall: boolean;
   pickleball_lined: boolean;
@@ -102,7 +97,6 @@ function isRangeFree(court: Court, startM: number, endM: number): boolean {
     if (intervalStart === -1 || intervalEnd === -1) {
       return false;
     }
-    // Assuming intervals are AVAILABLE time
     return intervalStart <= startM && intervalEnd >= endM;
   });
 }
@@ -317,7 +311,7 @@ export default function TennisCourtList() {
     lights: { label: 'Lights', icon: '/icons/lighticon.png' },
     pickleball_lined: { label: 'Pickleball', icon: '/icons/pickleballicon.png' },
     hitting_wall: { label: 'Wall', icon: '/icons/wallicon.png' },
-    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' }, // Label updated
+    ball_machine: { label: 'Machine', icon: '/icons/ballmachine.png' }, // Label already updated
   } as const;
 
   type FilterKey = keyof typeof filterConfig;
@@ -407,197 +401,208 @@ export default function TennisCourtList() {
 
   // --- Render Loaded State ---
   return (
-    <TooltipProvider delayDuration={200}>
-      <div className="bg-white text-black p-2 sm:p-0 space-y-4 relative">
-          {aboutModalOpen && <AboutUs isOpen={aboutModalOpen} onClose={() => setAboutModalOpen(false)} />}
+    // Removed TooltipProvider
+    <div className="bg-white text-black p-2 sm:p-0 space-y-4 relative">
+        {aboutModalOpen && <AboutUs isOpen={aboutModalOpen} onClose={() => setAboutModalOpen(false)} />}
 
-          {/* Sticky Header */}
-          <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
-              {/* ... Header Content including filters ... */}
-               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                 {/* Left Side */}
-                 <div className="flex-grow space-y-3 w-full sm:w-auto">
-                    {/* ... Date, Search ... */}
-                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-                       {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
-                           const { label, icon } = filterConfig[filterKey];
-                           const isActive = filters[filterKey];
-                           return (
-                               <Button
-                                   key={filterKey}
-                                   onClick={() => toggleFilter(filterKey)}
-                                   variant="outline"
-                                   className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${
-                                    isActive
-                                    ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
-                                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                                   }`}
-                                   aria-pressed={isActive}
-                               >
-                                 <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
-                                 {label}
-                               </Button>
-                           );
-                          })}
-                    </div>
-                 </div>
-                 {/* Right Side: Info Button */}
-                 <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
-                     <Button
-                         onClick={() => setAboutModalOpen(true)}
-                         variant="outline"
-                         className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
-                         aria-label="Open Information and Key"
-                     >
-                       <Info size={16} aria-hidden="true"/>
-                       Info / Key
-                     </Button>
-                 </div>
+        {/* Sticky Header */}
+        <div className="sticky top-0 bg-white z-10 pt-4 pb-3 mb-4 border-b border-gray-200 px-2 sm:px-0">
+            {/* Header Content */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+               {/* Left Side */}
+               <div className="flex-grow space-y-3 w-full sm:w-auto">
+                  <div className="text-xl font-semibold text-gray-700">{todayDate}</div>
+                  <input
+                      type="text"
+                      placeholder="Search courts by name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm shadow-sm"
+                      aria-label="Search courts by name"
+                  />
+                  {/* Filter Container Layout */}
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+                     {(Object.keys(filterConfig) as FilterKey[]).map((filterKey) => {
+                         const { label, icon } = filterConfig[filterKey];
+                         const isActive = filters[filterKey];
+                         return (
+                             <Button
+                                 key={filterKey}
+                                 onClick={() => toggleFilter(filterKey)}
+                                 variant="outline"
+                                 // Filter Button Size/Padding/Text
+                                 className={`flex items-center justify-center gap-1.5 px-3 h-9 text-sm transition-colors duration-150 shadow-sm w-full sm:w-auto ${
+                                  isActive
+                                  ? "bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200 ring-1 ring-blue-300"
+                                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                                 }`}
+                                 aria-pressed={isActive}
+                             >
+                                {/* Filter Icon Size */}
+                                <Image src={icon} alt="" width={14} height={14} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'} />
+                                {label}
+                             </Button>
+                         );
+                        })}
+                  </div>
                </div>
-          </div>
+               {/* Right Side: Info Button */}
+               <div className="flex-shrink-0 mt-2 sm:mt-0 self-center sm:self-start sm:ml-4">
+                   <Button
+                       onClick={() => setAboutModalOpen(true)}
+                       variant="outline"
+                       // Info Button Size/Padding/Text
+                       className="bg-gray-700 text-white hover:bg-gray-800 border-gray-700 px-3 h-9 text-sm flex items-center gap-1.5 shadow-sm"
+                       aria-label="Open Information and Key"
+                   >
+                     {/* Info Icon Size */}
+                     <Info size={16} aria-hidden="true"/>
+                     Info / Key
+                   </Button>
+               </div>
+            </div>
+        </div>
 
-          {/* Court List or No Results Message */}
-          {sortedCourts.length === 0 ? (
-              <div className="text-center text-base text-gray-600 py-10 px-4 min-h-[200px] flex items-center justify-center">
-                   {courts.length > 0 ? "No courts found matching your current search or filters." : "No court data available at this time."}
-              </div>
-          ) : (
-              <div className="space-y-4">
-                  {sortedCourts.map((court) => {
-                      // Get popularity tier based on busy_score
-                      const popularityTier = getPopularityTier(court.busy_score);
-                      const IconComponent = popularityTier?.icon; // Get the icon component if available
+        {/* Court List or No Results Message */}
+        {sortedCourts.length === 0 ? (
+            <div className="text-center text-base text-gray-600 py-10 px-4 min-h-[200px] flex items-center justify-center">
+                 {courts.length > 0 ? "No courts found matching your current search or filters." : "No court data available at this time."}
+            </div>
+        ) : (
+            <div className="space-y-4">
+                {sortedCourts.map((court) => {
+                    // Get popularity tier based on busy_score
+                    const popularityTier = getPopularityTier(court.busy_score);
+                    const IconComponent = popularityTier?.icon; // Get the icon component if available
 
-                      return (
-                        <Card key={court.id} className="shadow-md overflow-hidden border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200">
-                            {/* Card Header */}
-                            <div className="p-3 border-b border-gray-100 bg-gray-50/60">
-                              <div className="flex items-start justify-between gap-2">
-                                  {/* Left side: Title, Attributes, Popularity Tag */}
-                                  <div className="flex-1 min-w-0">
-                                      <h3 className="text-base sm:text-lg font-semibold truncate text-gray-800" title={court.title ?? "Unknown Court"}>
-                                          {court.title?.replace(/'/g, "'") || "Unknown Court"}
-                                      </h3>
-                                      {/* Attributes Row */}
-                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
-                                           {court.lights && ( <div className="flex items-center gap-1" title="Lights available"><Image src="/icons/lighticon.png" alt="Lights" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Lights</div> )}
-                                           {court.pickleball_lined && ( <div className="flex items-center gap-1" title="Pickleball lines"><Image src="/icons/pickleballicon.png" alt="Pickleball" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Pickleball</div> )}
-                                           {court.hitting_wall && ( <div className="flex items-center gap-1" title="Hitting wall available"><Image src="/icons/wallicon.png" alt="Wall" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Wall</div> )}
-                                      </div>
+                    return (
+                      <Card key={court.id} className="shadow-md overflow-hidden border border-gray-200 rounded-lg hover:shadow-lg transition-shadow duration-200">
+                          {/* Card Header */}
+                          <div className="p-3 border-b border-gray-100 bg-gray-50/60">
+                            <div className="flex items-start justify-between gap-2">
+                                {/* Left side: Title, Attributes, Popularity Tag */}
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-base sm:text-lg font-semibold truncate text-gray-800" title={court.title ?? "Unknown Court"}>
+                                        {court.title?.replace(/'/g, "'") || "Unknown Court"}
+                                    </h3>
+                                    {/* Attributes Row */}
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
+                                         {court.lights && ( <div className="flex items-center gap-1" title="Lights available"><Image src="/icons/lighticon.png" alt="Lights" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Lights</div> )}
+                                         {court.pickleball_lined && ( <div className="flex items-center gap-1" title="Pickleball lines"><Image src="/icons/pickleballicon.png" alt="Pickleball" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Pickleball</div> )}
+                                         {court.hitting_wall && ( <div className="flex items-center gap-1" title="Hitting wall available"><Image src="/icons/wallicon.png" alt="Wall" width={12} height={12} onError={(e) => e.currentTarget.style.display='none'}/> Wall</div> )}
+                                    </div>
 
-                                      {/* Popularity Tag - Always attempt to show */}
-                                      <div className="mt-2">
-                                        {court.is_closed_today ? (
-                                            <Badge variant="destructive" className="text-xs h-5 px-1.5">Closed Today</Badge>
-                                        ) : popularityTier ? (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Badge variant="outline" className={`text-xs h-5 px-1.5 cursor-default inline-flex items-center ${popularityTier.colorClass}`}>
-                                                   {IconComponent && <IconComponent size={10} className="mr-1"/> } {/* Conditionally render icon */}
-                                                   {popularityTier.label}
-                                                </Badge>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                  <p>{popularityTier.tooltip}</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                        ) : (
-                                             <Badge variant="outline" className="text-xs h-5 px-1.5 bg-gray-100 text-gray-600 border-gray-300">Popularity N/A</Badge>
-                                        )}
-                                      </div>
-                                      {/* End Popularity Tag */}
-                                  </div>
-                                  {/* Right side: Favorite Button */}
-                                  <div className="flex-shrink-0">
-                                       <Button
-                                         variant="ghost"
-                                         onClick={() => toggleFavorite(court.id)}
-                                         className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150 flex items-center justify-center"
-                                         aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
-                                       >
-                                         <Star size={18} fill={favoriteCourts.includes(court.id) ? "currentColor" : "none"} className={`transition-colors duration-150 ${ favoriteCourts.includes(court.id) ? "text-yellow-400" : "text-gray-400" }`} />
-                                       </Button>
-                                  </div>
-                              </div>
-                            </div>
-                            {/* Card Content */}
-                            <CardContent className="p-3 space-y-3">
-                              {/* Availability Grid (Always shown) */}
-                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                                {timesInOneHour.map((timeSlot, idx) => {
-                                   const colorClass = getHourAvailabilityColor(court, timeSlot);
-                                   const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
-                                   const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved/Unavailable';
-                                   // Add a check for closed status to potentially override color/text
-                                   const displayColor = court.is_closed_today ? "bg-gray-400 text-gray-100" : colorClass;
-                                   const displayAvailabilityText = court.is_closed_today ? "Closed" : availabilityText;
+                                    {/* Popularity Tag - Always attempt to show */}
+                                    <div className="mt-2">
+                                      {court.is_closed_today ? (
+                                          <Badge variant="destructive" className="text-xs h-5 px-1.5">Closed Today</Badge>
+                                      ) : popularityTier ? (
+                                           // Use title attribute for basic browser tooltip
+                                          <Badge
+                                             variant="outline"
+                                             className={`text-xs h-5 px-1.5 cursor-default inline-flex items-center ${popularityTier.colorClass}`}
+                                             title={popularityTier.tooltip} // Tooltip text here
+                                          >
+                                             {IconComponent && <IconComponent size={10} className="mr-1"/> }
+                                             {popularityTier.label}
+                                          </Badge>
+                                      ) : (
+                                           <Badge variant="outline" className="text-xs h-5 px-1.5 bg-gray-100 text-gray-600 border-gray-300" title="Popularity data not available for today.">N/A</Badge>
+                                      )}
+                                    </div>
+                                    {/* End Popularity Tag */}
 
-                                   return (
-                                      <div
-                                          key={`${court.id}-time-${idx}`}
-                                          className={`text-center py-2 px-1 rounded text-xs sm:text-sm ${displayColor} font-medium shadow-sm transition-colors duration-150`}
-                                          title={`${displayAvailabilityText} at ${timeSlot}`}
-                                      >
-                                        {simpleTime}
-                                      </div>
-                                    );
-                                })}
-                              </div>
-
-                              {/* Map Toggle Button */}
-                                {(court.address || court.Maps_url) && (
-                                   <Button
-                                     onClick={() => toggleMapExpansion(court.id)}
-                                     variant="outline"
-                                     size="sm"
-                                     className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs h-8 bg-white border-gray-200 hover:bg-gray-50 text-gray-700 shadow-sm"
-                                     aria-expanded={expandedMaps.includes(court.id)}
-                                     aria-controls={`map-details-${court.id}`}
-                                   >
-                                       <MapPin size={14} aria-hidden="true" />
-                                       {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
-                                   </Button>
-                                )}
-
-                               {/* Expanded Map View */}
-                                 {expandedMaps.includes(court.id) && (
-                                     <div
-                                         id={`map-details-${court.id}`}
-                                         className="mt-2 p-3 bg-gray-50/80 rounded border border-gray-200 animate-in fade-in-50 duration-300"
+                                </div>
+                                {/* Right side: Favorite Button */}
+                                <div className="flex-shrink-0">
+                                     <Button
+                                       variant="ghost"
+                                       onClick={() => toggleFavorite(court.id)}
+                                       className="p-1 h-8 w-8 rounded-full text-gray-400 hover:bg-yellow-100 hover:text-yellow-500 transition-colors duration-150 flex items-center justify-center"
+                                       aria-label={favoriteCourts.includes(court.id) ? "Remove from favorites" : "Add to favorites"}
                                      >
-                                         <p className="text-sm text-gray-700 mb-2">
-                                            {court.address?.replace(/'/g, "'") || "Address not available"}
-                                         </p>
-                                         {(court.Maps_url || court.address || court.title) && (
-                                             <Button
-                                                 onClick={() => window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")}
-                                                 size="sm"
-                                                 className="w-full bg-blue-600 text-white hover:bg-blue-700 h-8 text-xs shadow-sm"
-                                             >
-                                                Open in Google Maps
-                                             </Button>
-                                         )}
-                                     </div>
-                                 )}
+                                       <Star size={18} fill={favoriteCourts.includes(court.id) ? "currentColor" : "none"} className={`transition-colors duration-150 ${ favoriteCourts.includes(court.id) ? "text-yellow-400" : "text-gray-400" }`} />
+                                     </Button>
+                                </div>
+                            </div>
+                          </div>
+                          {/* Card Content */}
+                          <CardContent className="p-3 space-y-3">
+                            {/* Availability Grid (Always shown now) */}
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                              {timesInOneHour.map((timeSlot, idx) => {
+                                 const colorClass = getHourAvailabilityColor(court, timeSlot);
+                                 const simpleTime = timeSlot.replace(':00 ', '').toLowerCase();
+                                 const availabilityText = colorClass.includes('green') ? 'Available' : colorClass.includes('orange') ? 'Partially Available' : 'Reserved/Unavailable';
+                                 const displayColor = court.is_closed_today ? "bg-gray-400 text-gray-100" : colorClass;
+                                 const displayAvailabilityText = court.is_closed_today ? "Closed" : availabilityText;
 
-                                {/* Ball Machine Rental Button */}
-                                {court.ball_machine && (
-                                    <Button
-                                        onClick={() => window.open("https://seattleballmachine.com", "_blank", "noopener,noreferrer")}
-                                        size="sm"
-                                        className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm"
+                                 return (
+                                    <div
+                                        key={`${court.id}-time-${idx}`}
+                                        className={`text-center py-2 px-1 rounded text-xs sm:text-sm ${displayColor} font-medium shadow-sm transition-colors duration-150`}
+                                        title={`${displayAvailabilityText} at ${timeSlot}`}
                                     >
-                                        <Image src="/icons/ballmachine.png" alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
-                                        Ball Machine Rental (Nearby)
-                                    </Button>
-                                )}
-                            </CardContent>
-                        </Card>
-                      );
-                  })}
+                                      {simpleTime}
+                                    </div>
+                                  );
+                              })}
+                            </div>
+
+                            {/* Map Toggle Button */}
+                              {(court.address || court.Maps_url) && (
+                                 <Button
+                                   onClick={() => toggleMapExpansion(court.id)}
+                                   variant="outline"
+                                   size="sm"
+                                   className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs h-8 bg-white border-gray-200 hover:bg-gray-50 text-gray-700 shadow-sm"
+                                   aria-expanded={expandedMaps.includes(court.id)}
+                                   aria-controls={`map-details-${court.id}`}
+                                 >
+                                     <MapPin size={14} aria-hidden="true" />
+                                     {expandedMaps.includes(court.id) ? "Hide Location" : "Show Location"}
+                                 </Button>
+                              )}
+
+                             {/* Expanded Map View */}
+                               {expandedMaps.includes(court.id) && (
+                                   <div
+                                       id={`map-details-${court.id}`}
+                                       className="mt-2 p-3 bg-gray-50/80 rounded border border-gray-200 animate-in fade-in-50 duration-300"
+                                   >
+                                       <p className="text-sm text-gray-700 mb-2">
+                                          {court.address?.replace(/'/g, "'") || "Address not available"}
+                                       </p>
+                                       {(court.Maps_url || court.address || court.title) && (
+                                           <Button
+                                               onClick={() => window.open(getGoogleMapsUrl(court), "_blank", "noopener,noreferrer")}
+                                               size="sm"
+                                               className="w-full bg-blue-600 text-white hover:bg-blue-700 h-8 text-xs shadow-sm"
+                                           >
+                                              Open in Google Maps
+                                           </Button>
+                                       )}
+                                   </div>
+                               )}
+
+                              {/* Ball Machine Rental Button */}
+                              {court.ball_machine && (
+                                  <Button
+                                      onClick={() => window.open("https://seattleballmachine.com", "_blank", "noopener,noreferrer")}
+                                      size="sm"
+                                      className="w-full mt-2 flex items-center justify-center gap-1.5 text-xs h-8 bg-blue-800 text-white hover:bg-blue-900 shadow-sm"
+                                  >
+                                      <Image src="/icons/ballmachine.png" alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
+                                      Ball Machine Rental (Nearby)
+                                  </Button>
+                              )}
+                          </CardContent>
+                      </Card>
+                    );
+                })}
               </div>
           )}
       </div>
-    </TooltipProvider>
+    // Removed TooltipProvider
   );
 }
