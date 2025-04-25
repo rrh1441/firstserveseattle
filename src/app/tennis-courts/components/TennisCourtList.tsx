@@ -564,7 +564,7 @@ export default function TennisCourtList() {
                                 >
                                     {/* Ensure icon path is correct */}
                                     <Image src="/icons/ballmachine.png" alt="" width={12} height={12} aria-hidden="true" onError={(e) => e.currentTarget.style.display='none'}/>
-                                    Ball Machine Rental
+                                    Ball Machine Rental (Nearby)
                                 </Button>
                             )}
                         </CardContent>
