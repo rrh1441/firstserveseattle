@@ -14,7 +14,7 @@
      Star,
      MapPin,
      Footprints,
-     Snowflake,
+     ThumbsUp,
    } from "lucide-react";
    
    const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
@@ -109,7 +109,7 @@
        try {
          const raw = localStorage.getItem("favoriteCourts");
          if (raw) setFav(JSON.parse(raw));
-       } catch {/* ignore */}
+       } catch {/* ignore */ }
      }, []);
      const toggleFav = (id: number) =>
        setFav((prev) => {
@@ -118,14 +118,13 @@
          return next;
        });
    
-     /* median for “less popular” */
+     /* median for “easy walk-on” */
      const median = useMemo(() => {
        const s = courts
          .map((c) => c.avg_busy_score_7d)
          .filter((x): x is number => x !== null && x > 0)
          .sort((a, b) => a - b);
-       if (!s.length) return 0;
-       return s[Math.floor(s.length / 2)];
+       return s.length ? s[Math.floor(s.length / 2)] : 0;
      }, [courts]);
    
      /* filter + sort */
@@ -220,9 +219,7 @@
                        ? "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-300"
                        : "bg-transparent"
                    }`}
-                   onClick={() =>
-                     setAmenities((f) => ({ ...f, [k]: !f[k] }))
-                   }
+                   onClick={() => setAmenities((f) => ({ ...f, [k]: !f[k] }))}
                    aria-pressed={active}
                  >
                    <Image src={icon} alt="" width={14} height={14} />
@@ -234,7 +231,7 @@
              {/* popularity chips */}
              {([
                ["walk", "Walk-on only", Footprints],
-               ["low", "Less popular", Snowflake],
+               ["low", "Easy walk-on", ThumbsUp],
              ] as const).map(([key, label, Icon]) => {
                const active = popFilter === key;
                return (
@@ -264,10 +261,7 @@
            <div>No courts found.</div>
          ) : (
            list.map((court) => (
-             <Card
-               key={court.id}
-               className="border rounded-lg shadow-sm"
-             >
+             <Card key={court.id} className="border rounded-lg shadow-sm">
                {/* header */}
                <div className="flex justify-between items-start p-3 bg-gray-50">
                  <h3 className="font-semibold">{court.title}</h3>
@@ -285,45 +279,25 @@
                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
                    {court.lights && (
                      <div className="flex items-center gap-1">
-                       <Image
-                         src="/icons/lighticon.png"
-                         alt=""
-                         width={12}
-                         height={12}
-                       />{" "}
+                       <Image src="/icons/lighticon.png" alt="" width={12} height={12} />
                        Lights
                      </div>
                    )}
                    {court.pickleball_lined && (
                      <div className="flex items-center gap-1">
-                       <Image
-                         src="/icons/pickleballicon.png"
-                         alt=""
-                         width={12}
-                         height={12}
-                       />{" "}
+                       <Image src="/icons/pickleballicon.png" alt="" width={12} height={12} />
                        Pickleball
                      </div>
                    )}
                    {court.hitting_wall && (
                      <div className="flex items-center gap-1">
-                       <Image
-                         src="/icons/wallicon.png"
-                         alt=""
-                         width={12}
-                         height={12}
-                       />{" "}
+                       <Image src="/icons/wallicon.png" alt="" width={12} height={12} />
                        Wall
                      </div>
                    )}
                    {court.ball_machine && (
                      <div className="flex items-center gap-1">
-                       <Image
-                         src="/icons/ballmachine.png"
-                         alt=""
-                         width={12}
-                         height={12}
-                       />{" "}
+                       <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
                        Machine
                      </div>
                    )}
@@ -334,10 +308,7 @@
                    {TIME.map((t) => (
                      <div
                        key={t}
-                       className={`text-center py-1 rounded text-xs ${slotClr(
-                         court,
-                         t
-                       )}`}
+                       className={`text-center py-1 rounded text-xs ${slotClr(court, t)}`}
                      >
                        {t.replace(":00", "")}
                      </div>
@@ -359,9 +330,7 @@
                      }
                    >
                      <MapPin size={14} />
-                     {expanded.includes(court.id)
-                       ? "Hide Location"
-                       : "Show Location"}
+                     {expanded.includes(court.id) ? "Hide Location" : "Show Location"}
                    </Button>
                  )}
    
@@ -386,16 +355,9 @@
                    <Button
                      size="sm"
                      className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
-                     onClick={() =>
-                       window.open("https://seattleballmachine.com", "_blank")
-                     }
+                     onClick={() => window.open("https://seattleballmachine.com", "_blank")}
                    >
-                     <Image
-                       src="/icons/ballmachine.png"
-                       alt=""
-                       width={12}
-                       height={12}
-                     />
+                     <Image src="/icons/ballmachine.png" alt="" width={12} height={12} />
                      Ball Machine Rental
                    </Button>
                  )}
