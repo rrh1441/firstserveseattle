@@ -1,3 +1,4 @@
+// src/lib/logEvent.ts
 export async function logEvent(
     event: string,
     metadata: Record<string, unknown> = {}
