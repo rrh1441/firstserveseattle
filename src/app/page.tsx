@@ -70,7 +70,7 @@ export default function HomePage() {
         try {
           const errorJson = JSON.parse(errorText);
           detail = errorJson.error || errorJson.message || errorText;
-        } catch (_) {}
+        } catch {}
         throw new Error(`Failed to update/check view status (${res.status}): ${detail}`);
       }
 
