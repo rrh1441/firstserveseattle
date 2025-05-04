@@ -1,5 +1,5 @@
 // src/app/api/log-event/route.ts
-import { supabase } from "@/app/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {

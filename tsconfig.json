@@ -18,13 +18,16 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": ".",
+    "baseUrl": ".", // Sets the base for path resolution to the root
     "paths": {
+      // Corrected: Point @/components/* to the src/app/components/ directory
       "@/components/*": ["src/app/components/*"],
+      // Keep other aliases pointing inside src/ if that's where those files are
       "@/lib/*": ["src/lib/*"],
-      "@/hooks/*": ["src/hooks/*"], // Keep existing paths
-      "@/app/*": ["src/app/*"],     // Keep existing paths
-      "@/types/*": ["src/types/*"]  // Add if you created src/types
+      // Assuming hooks would be in src/hooks if you add them
+      "@/hooks/*": ["src/hooks/*"],
+      "@/app/*": ["src/app/*"], // For things directly in src/app
+      "@/types/*": ["src/types/*"]
     },
     "plugins": [
       {
@@ -41,8 +44,8 @@
     ],
   "exclude": [
     "node_modules",
-    "supabase/functions" // <<< ADD THIS LINE TO EXCLUDE EDGE FUNCTIONS
-    // Add "supabase" instead if you want to exclude the whole folder
-    // "supabase"
+    "supabase/functions", // Exclude Supabase edge functions
+    // Add "app" here if the root app directory is truly unused now
+    "app" // Assuming the root app/ directory is no longer needed
   ]
 }

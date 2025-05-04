@@ -1,14 +1,17 @@
+// src/app/page.tsx
 "use client";
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+// Reverted to alias import for Button
 import { Button } from "@/components/ui/button";
+// Use relative paths for components within the same feature area
 import Paywall from "./tennis-courts/components/paywall";
 import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 import ViewsCounter from "./tennis-courts/components/counter";
 import { ExternalLink } from "lucide-react";
-import { logEvent } from "@/lib/logEvent";
+import { logEvent } from "@/lib/logEvent"; // Alias for lib should be correct
 
 const exemptPaths = [
   "/reset-password",
@@ -16,7 +19,8 @@ const exemptPaths = [
   "/signup",
   "/members",
   "/privacy-policy",
-  "/terms-of-service"
+  "/terms-of-service",
+  "/courts", // Add the main courts listing page
 ];
 
 const LoadingIndicator = () => (
@@ -32,8 +36,21 @@ export default function HomePage() {
   const [viewData, setViewData] = useState<{ count: number; showPaywall: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to check if the current path is exempt
+  const isPathExempt = useCallback((currentPathname: string) => {
+    if (exemptPaths.includes(currentPathname)) {
+        return true;
+    }
+    if (currentPathname.startsWith('/courts/')) { // Exempt dynamic court pages
+        return true;
+    }
+    return false;
+  }, []);
+
+
   useEffect(() => {
-    if (exemptPaths.includes(pathname)) {
+    if (isPathExempt(pathname)) {
+      console.log(`Pathname ${pathname} is exempt from view tracking.`);
       setIsLoading(false);
       setViewData(null);
       setUserId(null);
@@ -44,16 +61,20 @@ export default function HomePage() {
     if (!storedId) {
       storedId = crypto.randomUUID();
       localStorage.setItem("userId", storedId);
+       console.log(`Generated new userId: ${storedId}`);
+    } else {
+        console.log(`Using existing userId: ${storedId}`);
     }
     setUserId(storedId);
-  }, [pathname]);
+  }, [pathname, isPathExempt]);
 
   const updateAndCheckViewStatus = useCallback(async () => {
-    if (!userId || exemptPaths.includes(pathname)) {
-      if (exemptPaths.includes(pathname)) setIsLoading(false);
+    if (!userId || isPathExempt(pathname)) {
+      if (isPathExempt(pathname)) setIsLoading(false);
       return;
     }
 
+    console.log(`Updating/checking view status for userId: ${userId} on path: ${pathname}`);
     setIsLoading(true);
     setError(null);
 
@@ -77,15 +98,18 @@ export default function HomePage() {
       const data = await res.json();
       if (data && typeof data.viewsCount !== 'undefined' && typeof data.showPaywall !== 'undefined') {
         setViewData({ count: data.viewsCount, showPaywall: data.showPaywall });
+        console.log(`View status updated: Count=${data.viewsCount}, ShowPaywall=${data.showPaywall}`);
 
         logEvent("visit_home", {
           visitNumber: data.viewsCount,
           showPaywall: data.showPaywall,
+          pathname: pathname,
         });
 
         if (data.showPaywall) {
           logEvent("view_paywall", {
             visitNumber: data.viewsCount,
+            triggerPath: pathname,
           });
         }
       } else {
@@ -99,17 +123,19 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, pathname]);
+  }, [userId, pathname, isPathExempt]);
 
   useEffect(() => {
-    if (userId && !exemptPaths.includes(pathname)) {
+    if (userId && !isPathExempt(pathname)) {
       updateAndCheckViewStatus();
-    } else if (!userId && !exemptPaths.includes(pathname)) {
+    } else if (!userId && !isPathExempt(pathname)) {
       setIsLoading(true);
+    } else {
+        setIsLoading(false);
     }
-  }, [userId, pathname, updateAndCheckViewStatus]);
+  }, [userId, pathname, updateAndCheckViewStatus, isPathExempt]);
 
-  if (exemptPaths.includes(pathname)) return null;
+  if (isPathExempt(pathname)) return null;
   if (isLoading) return <LoadingIndicator />;
   if (error) {
     return (
@@ -122,6 +148,7 @@ export default function HomePage() {
     return <Paywall />;
   }
 
+  // Only render court list content on the root path '/'
   if (viewData && pathname === '/') {
     return (
       <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
@@ -152,7 +179,7 @@ export default function HomePage() {
           <TennisCourtList />
         </Suspense>
 
-        <div className="mt-8 text-center space-x-0 space-y-3 sm:space-x-4 sm:space-y-0">
+        <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
           <Button asChild className="gap-2 w-full sm:w-auto">
             <a
               href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
@@ -190,5 +217,6 @@ export default function HomePage() {
     );
   }
 
+   console.warn("HomePage reached unexpected render state for path:", pathname);
   return null;
 }

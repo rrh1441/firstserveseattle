@@ -1,6 +1,6 @@
 // src/lib/updateUserSessions.ts
 
-import { supabase } from "@/app/supabaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
 export async function updateUserSession(userId: string) {
   try {

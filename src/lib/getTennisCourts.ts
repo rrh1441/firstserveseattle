@@ -1,4 +1,4 @@
-import { supabase } from "@/app/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 /* ---------- local types ---------- */
 
