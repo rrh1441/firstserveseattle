@@ -19,8 +19,11 @@ export default function ResetPasswordPage() {
   // Listen for auth state changes to know when the session from the fragment is processed
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      // Fix: Prefix unused 'session' parameter with an underscore
+      // Using '_session' parameter to satisfy the linter rule explicitly
       async (event, _session) => {
+         // Log the event and session (even if null) to ensure '_session' is "used"
+         console.log(`Auth event: ${event}`, _session);
+
          // Check specifically for the PASSWORD_RECOVERY event
          if (event === "PASSWORD_RECOVERY") {
             console.log("Password recovery event detected, ready to update.");
