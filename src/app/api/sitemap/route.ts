@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 
 // Exporting a function makes this file a module
 // This is a basic GET handler for the sitemap route
-// Fix: Prefix unused 'request' parameter with an underscore
+// Fix: Explicitly use '_request' parameter to satisfy linter
 export async function GET(_request: Request) {
   // Placeholder: You'll need to add your actual sitemap generation logic here.
-  // For now, it just returns a success response.
-  console.log("Sitemap route accessed");
+  // Log the request URL to ensure '_request' is used
+  console.log(`Sitemap route accessed. Request URL: ${_request.url}`);
 
   // Example: Returning a simple XML structure (replace with actual sitemap)
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
