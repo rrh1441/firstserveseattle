@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 
 // Exporting a function makes this file a module
 // This is a basic GET handler for the sitemap route
-export async function GET(request: Request) {
+// Fix: Prefix unused 'request' parameter with an underscore
+export async function GET(_request: Request) {
   // Placeholder: You'll need to add your actual sitemap generation logic here.
   // For now, it just returns a success response.
   console.log("Sitemap route accessed");
