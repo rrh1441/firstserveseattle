@@ -1,6 +1,7 @@
+// Corrected logic for src/app/reset-password/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -13,23 +14,47 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false); // To wait for potential session recovery
 
+  // Listen for auth state changes to know when the session from the fragment is processed
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      const resetToken = searchParams.get("token");
-      const userEmail = searchParams.get("email");
-
-      if (resetToken && userEmail) {
-        setToken(resetToken);
-        setEmail(userEmail);
-      } else {
-        setError("Invalid or expired reset link. Please request a new one.");
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+         // Check specifically for the PASSWORD_RECOVERY event
+         if (event === "PASSWORD_RECOVERY") {
+            console.log("Password recovery event detected, ready to update.");
+            setIsReady(true);
+         } else if (event === "SIGNED_IN") {
+            // Could also indicate readiness if signed in via recovery
+             console.log("Signed in event detected during potential recovery.");
+             setIsReady(true);
+         }
+          // Handle other events if needed, e.g., redirect if already signed in normally
+          // else if (session && event !== "PASSWORD_RECOVERY") {
+          // router.push('/'); // Or wherever signed-in users should go
+          //}
       }
-    }
-  }, []);
+    );
+
+     // Initial check in case the event fired before listener attached
+     // Check if the URL has the recovery fragment
+     if (window.location.hash.includes('type=recovery')) {
+        console.log("Recovery fragment detected on initial load.");
+        // Give Supabase a moment to process the fragment if needed
+        setTimeout(() => setIsReady(true), 50);
+     } else {
+        // If no recovery fragment, maybe show an error or redirect
+         console.log("No recovery fragment detected.");
+         // setError("Invalid or expired password reset link.");
+         // setIsReady(true); // Allow rendering error state if needed
+     }
+
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase.auth, router]);
+
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,35 +64,27 @@ export default function ResetPasswordPage() {
       setError("Passwords do not match.");
       return;
     }
-
-    if (!token || !email) {
-      setError("Invalid or expired reset link.");
-      return;
-    }
+     if (!isReady) {
+         setError("Waiting for session recovery... Please wait a moment.");
+         return;
+     }
 
     setLoading(true);
 
     try {
-      // Step 1: Verify the reset token
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "recovery",
-      });
-
-      if (verifyError) {
-        setError(verifyError.message);
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: Now update the password
+       // Directly update the user's password.
+       // Supabase client handles the session context from the URL fragment.
       const { error: updateError } = await supabase.auth.updateUser({
-        password,
+        password: password,
       });
 
       if (updateError) {
-        setError(updateError.message);
+        // Check for specific errors, e.g., weak password
+        if (updateError.message.includes("Password should be at least 6 characters")) {
+             setError("Password must be at least 6 characters long.");
+         } else {
+             setError(`Failed to update password: ${updateError.message}`);
+         }
         setLoading(false);
         return;
       }
@@ -77,82 +94,58 @@ export default function ResetPasswordPage() {
 
       // Redirect to login after success
       setTimeout(() => {
-        router.push("/login");
+        router.push("/login"); // Redirect to login page
       }, 3000);
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
+
+    } catch (err: unknown) {
+      setError( err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md text-center">
-          <h1 className="text-2xl font-bold mb-4">Reset Link Invalid</h1>
-          <p className="text-gray-600">{error}</p>
-          <button
-            onClick={() => router.push("/signin")}
-            className="mt-4 w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800"
-          >
-            Go to Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Optional: Add a loading state before 'isReady' is true
+  // if (!isReady && !error) {
+  //   return <div>Verifying link...</div>;
+  // }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-4">Reset Password</h1>
-        {success ? (
-          <p className="text-green-500 text-sm text-center mb-4">
-            Password updated! Redirecting to login...
-          </p>
-        ) : (
-          <form onSubmit={handleResetPassword}>
-            {error && (
-              <p className="text-red-500 text-sm text-center mb-4">{error}</p>
-            )}
-            <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                New Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Updating Password..." : "Reset Password"}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+       <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+         <h1 className="text-2xl font-bold text-center mb-4">Set New Password</h1>
+         {success ? (
+           <p className="text-green-500 text-sm text-center mb-4">
+             Password updated successfully! Redirecting to login...
+           </p>
+         ) : (
+           <form onSubmit={handleResetPassword}>
+             {error && (
+               <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+             )}
+             {!isReady && !error && (
+                 <p className="text-blue-500 text-sm text-center mb-4">Verifying reset link...</p>
+             )}
+             <div className="mb-4">
+               <label htmlFor="password" /* ... */>New Password</label>
+               <input
+                 id="password" type="password" value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 /* ... */ required disabled={!isReady || loading}
+               />
+             </div>
+             <div className="mb-6">
+               <label htmlFor="confirmPassword" /* ... */>Confirm Password</label>
+               <input
+                 id="confirmPassword" type="password" value={confirmPassword}
+                 onChange={(e) => setConfirmPassword(e.target.value)}
+                 /* ... */ required disabled={!isReady || loading}
+               />
+             </div>
+             <button type="submit" /* ... */ disabled={!isReady || loading}>
+               {loading ? "Updating..." : "Set New Password"}
+             </button>
+           </form>
+         )}
+       </div>
+     </div>
   );
 }
