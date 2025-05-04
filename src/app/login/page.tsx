@@ -1,19 +1,42 @@
 // src/app/login/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+// Import useSearchParams to read URL query parameters
+import { useSearchParams } from 'next/navigation';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
-import Image from "next/image"; // Import Image
-import Link from "next/link"; // Import Link
+import Image from "next/image";
+import Link from "next/link";
 
 export default function LoginPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  // Get search parameters hook
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // State to store the intended redirect path
+  const [redirectTo, setRedirectTo] = useState<string>('/members'); // Default redirect
+
+  // Read the redirect_to parameter when the component mounts or params change
+  useEffect(() => {
+    const redirectParam = searchParams.get('redirect_to');
+    // Basic validation: Ensure it's a relative path within the app for security
+    if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && !redirectParam.includes(':')) {
+      setRedirectTo(redirectParam);
+      console.log(`Login page: Will redirect to ${redirectParam} after successful login.`);
+    } else {
+        // Stick to the default if param is missing or invalid
+        setRedirectTo('/members');
+        if (redirectParam) {
+            console.warn(`Login page: Invalid redirect_to parameter ignored: ${redirectParam}`);
+        }
+    }
+  }, [searchParams]); // Re-run if searchParams change
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,20 +50,32 @@ export default function LoginPage() {
       });
 
       if (loginError) {
-        setError(loginError.message);
+        // Handle specific common errors more clearly
+        if (loginError.message === "Invalid login credentials") {
+             setError("Incorrect email or password. Please try again.");
+        } else if (loginError.message.includes("Email not confirmed")) {
+             setError("Please confirm your email address before signing in. Check your inbox for the confirmation link.");
+        }
+         else {
+             setError(loginError.message);
+        }
         setLoading(false);
         return;
       }
 
       if (!authUser.user) {
+        // This case might be redundant if loginError handles it, but good as a fallback
         setError("Login failed. Please check your credentials.");
         setLoading(false);
         return;
       }
 
-      router.push("/members"); // Redirect to members page
+      // --- Redirect Logic ---
+      console.log(`Login successful. Redirecting to: ${redirectTo}`);
+      router.push(redirectTo); // Use the determined redirect path
       // Optionally force a refresh if state isn't updating correctly post-redirect
       // router.refresh();
+
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
       setLoading(false);
@@ -82,6 +117,7 @@ export default function LoginPage() {
                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
                 required
                 placeholder="you@example.com"
+                autoComplete="email" // Added for better UX
               />
             </div>
 
@@ -90,8 +126,8 @@ export default function LoginPage() {
                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                     Password
                  </label>
-                 {/* Forgot Password Link */}
-                 <Link href="/reset-password" // Assuming this is the correct path
+                 {/* Updated link to point to the request page */}
+                 <Link href="/request-password-reset"
                       className="text-sm font-medium text-blue-600 hover:underline">
                    Forgot Password?
                  </Link>
@@ -104,12 +140,12 @@ export default function LoginPage() {
                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors placeholder:text-gray-400"
                 required
                 placeholder="••••••••"
+                autoComplete="current-password" // Added for better UX
               />
             </div>
 
             <button
               type="submit"
-              // Use primary green button style
               className="w-full rounded-lg bg-[#0c372b] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
               disabled={loading}
             >
@@ -125,7 +161,6 @@ export default function LoginPage() {
             {/* Sign Up and Support Links */}
              <div className="mt-6 text-center text-sm text-gray-600 space-y-1">
                  <p>
-                    {/* Corrected apostrophe here */}
                     Don&apos;t have an account?{" "}
                    <Link href="/signup" className="font-medium text-blue-600 hover:underline">
                      Sign Up
