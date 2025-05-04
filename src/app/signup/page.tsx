@@ -19,14 +19,12 @@ const features = [
 
 type PlanType = "monthly" | "annual"
 
-// Define requirement structure
 interface PasswordRequirement {
-  id: string      // Unique key for mapping
+  id: string
   regex: RegExp
   message: string
 }
 
-// Password requirements definitions
 const passwordRequirements: PasswordRequirement[] = [
   { id: "length",    regex: /.{6,}/,  message: "At least 6 characters" },
   { id: "lowercase", regex: /[a-z]/,  message: "At least one lowercase letter" },
@@ -38,33 +36,30 @@ export default function SignUpPage() {
   const searchParams        = useSearchParams()
   const initialPlanParam    = searchParams.get("plan")
   const headlineGroupParam  = searchParams.get("headline_group")
-  const offerParam          = searchParams.get("offer")           // ← NEW
+  const offerParam          = searchParams.get("offer") // retained for analytics
 
-  const [plan, setPlan]     = useState<PlanType>(
+  const [plan, setPlan] = useState<PlanType>(
     initialPlanParam === "annual" ? "annual" : "monthly",
   )
 
-  const supabase            = createClientComponentClient()
-  const [fullName,  setFullName]  = useState("")
-  const [email,     setEmail]     = useState("")
-  const [password,  setPassword]  = useState("")
-  const [loading,   setLoading]   = useState(false)
-  const [errorMsg,  setErrorMsg]  = useState("")
+  const supabase = createClientComponentClient()
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail]       = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading]   = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
   const [passwordVisible, setPasswordVisible] = useState(false)
-
-  // --- State for tracking met password requirements ---
   const [metRequirements, setMetRequirements] = useState<string[]>([])
 
-  // Validate password & update met requirements
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value
     setPassword(newPassword)
 
-    const currentlyMet = passwordRequirements
+    const met = passwordRequirements
       .filter(req => req.regex.test(newPassword))
       .map(req => req.id)
 
-    setMetRequirements(currentlyMet)
+    setMetRequirements(met)
   }
 
   const allPasswordRequirementsMet = () =>
@@ -82,7 +77,6 @@ export default function SignUpPage() {
     setLoading(true)
 
     try {
-      // 1. Supabase sign-up
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -92,35 +86,26 @@ export default function SignUpPage() {
       if (authError) throw new Error(`Sign-up failed: ${authError.message}`)
       if (!authData.user) throw new Error("No user returned after sign-up.")
 
-      // === Datafast Signup Tracking ===
-      if (typeof window !== "undefined" && typeof window.datafast === "function") {
+      if (typeof window !== "undefined" && typeof window.datafast === "function")
         window.datafast("signup", { email })
-      }
 
-      // 2. Upsert subscriber record
-      const { error: subscriberError } = await supabase
-        .from("subscribers")
-        .upsert(
-          {
-            id: authData.user.id,
-            email,
-            full_name: fullName,
-            plan,
-            status: "pending",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email" },
-        )
+      await supabase.from("subscribers").upsert(
+        {
+          id: authData.user.id,
+          email,
+          full_name: fullName,
+          plan,
+          status: "pending",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "email" },
+      )
 
-      if (subscriberError)
-        console.error("Error upserting subscriber record:", subscriberError)
-
-      // 3. Stripe checkout session  (plan + offerParam)
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, offer: offerParam }),      // ← UPDATED
+        body: JSON.stringify({ email, plan }),           // ← UPDATED
       })
 
       if (!response.ok) {
@@ -131,7 +116,6 @@ export default function SignUpPage() {
       const { url } = (await response.json()) as { url: string | null }
       if (!url) throw new Error("No checkout URL received from server.")
 
-      // Optional analytics
       if (typeof window !== "undefined" && typeof window.datafast === "function") {
         window.datafast("event", {
           name: "InitiateCheckout",
@@ -144,12 +128,13 @@ export default function SignUpPage() {
         })
       }
 
-      // 4. Redirect to Stripe
       window.location.href = url
     } catch (err) {
       console.error("Signup or Checkout Error:", err)
       setErrorMsg(
-        err instanceof Error ? err.message : "An unknown error occurred during signup.",
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred during signup.",
       )
       setLoading(false)
     }
@@ -180,7 +165,6 @@ export default function SignUpPage() {
               Select the plan that works best for you.
             </p>
 
-            {/* Plan selector */}
             <div className="mb-10">
               <PlanSelector
                 selectedPlan={plan}
@@ -201,14 +185,10 @@ export default function SignUpPage() {
               </div>
             )}
 
-            {/* Signup form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Full name */}
               <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
                 </label>
                 <input
@@ -224,10 +204,7 @@ export default function SignUpPage() {
 
               {/* Email */}
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -243,10 +220,7 @@ export default function SignUpPage() {
 
               {/* Password */}
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
 
@@ -271,30 +245,15 @@ export default function SignUpPage() {
                   </button>
                 </div>
 
-                {/* Live password requirements */}
-                <ul
-                  id="password-requirements"
-                  className="mt-2 space-y-1 list-none pl-0"
-                >
+                <ul id="password-requirements" className="mt-2 space-y-1 list-none pl-0">
                   {passwordRequirements.map(req => {
                     const isMet = metRequirements.includes(req.id)
                     return (
-                      <li
-                        key={req.id}
-                        className={`flex items-center text-xs ${
-                          isMet ? "text-green-600" : "text-gray-500"
-                        }`}
-                      >
+                      <li key={req.id} className={`flex items-center text-xs ${isMet ? "text-green-600" : "text-gray-500"}`}>
                         {isMet ? (
-                          <CheckCircle2
-                            size={14}
-                            className="mr-1.5 flex-shrink-0"
-                          />
+                          <CheckCircle2 size={14} className="mr-1.5 flex-shrink-0" />
                         ) : (
-                          <XCircle
-                            size={14}
-                            className="mr-1.5 flex-shrink-0"
-                          />
+                          <XCircle size={14} className="mr-1.5 flex-shrink-0" />
                         )}
                         {req.message}
                       </li>
@@ -303,7 +262,6 @@ export default function SignUpPage() {
                 </ul>
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading || !allPasswordRequirementsMet()}
@@ -316,14 +274,7 @@ export default function SignUpPage() {
                     fill="none"
                     viewBox="0 0 24 24"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -335,23 +286,16 @@ export default function SignUpPage() {
               </button>
             </form>
 
-            {/* Footer */}
             <div className="mt-6 text-center text-sm text-gray-600 space-y-1">
               <p>
                 Already have an account?{" "}
-                <Link
-                  href="/login"
-                  className="font-medium text-blue-600 hover:underline"
-                >
+                <Link href="/login" className="font-medium text-blue-600 hover:underline">
                   Sign In
                 </Link>
               </p>
               <p>
                 Need help?{" "}
-                <a
-                  href="mailto:support@firstserveseattle.com"
-                  className="font-medium text-blue-600 hover:underline"
-                >
+                <a href="mailto:support@firstserveseattle.com" className="font-medium text-blue-600 hover:underline">
                   Contact support
                 </a>
               </p>
@@ -359,17 +303,11 @@ export default function SignUpPage() {
 
             <p className="mt-6 text-xs text-center text-gray-500">
               By creating an account, you agree to our{" "}
-              <Link
-                href="/terms-of-service"
-                className="underline hover:text-gray-700"
-              >
+              <Link href="/terms-of-service" className="underline hover:text-gray-700">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link
-                href="/privacy-policy"
-                className="underline hover:text-gray-700"
-              >
+              <Link href="/privacy-policy" className="underline hover:text-gray-700">
                 Privacy Policy
               </Link>
               . Secure payment via Stripe.
