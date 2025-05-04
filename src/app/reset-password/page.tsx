@@ -1,4 +1,4 @@
-// Corrected logic for src/app/reset-password/page.tsx
+// src/app/reset-password/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,12 +14,13 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isReady, setIsReady] = useState(false); // To wait for potential session recovery
+  const [isReady, setIsReady] = useState(false);
 
   // Listen for auth state changes to know when the session from the fragment is processed
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      // Fix: Prefix unused 'session' parameter with an underscore
+      async (event, _session) => {
          // Check specifically for the PASSWORD_RECOVERY event
          if (event === "PASSWORD_RECOVERY") {
             console.log("Password recovery event detected, ready to update.");
@@ -29,24 +30,20 @@ export default function ResetPasswordPage() {
              console.log("Signed in event detected during potential recovery.");
              setIsReady(true);
          }
-          // Handle other events if needed, e.g., redirect if already signed in normally
-          // else if (session && event !== "PASSWORD_RECOVERY") {
-          // router.push('/'); // Or wherever signed-in users should go
-          //}
+          // Handle other events if needed
       }
     );
 
      // Initial check in case the event fired before listener attached
-     // Check if the URL has the recovery fragment
-     if (window.location.hash.includes('type=recovery')) {
+     if (typeof window !== "undefined" && window.location.hash.includes('type=recovery')) {
         console.log("Recovery fragment detected on initial load.");
         // Give Supabase a moment to process the fragment if needed
         setTimeout(() => setIsReady(true), 50);
      } else {
-        // If no recovery fragment, maybe show an error or redirect
          console.log("No recovery fragment detected.");
+         // Optionally set an error if no recovery fragment is present
          // setError("Invalid or expired password reset link.");
-         // setIsReady(true); // Allow rendering error state if needed
+         // setIsReady(true); // Allow rendering error state
      }
 
 
@@ -65,7 +62,7 @@ export default function ResetPasswordPage() {
       return;
     }
      if (!isReady) {
-         setError("Waiting for session recovery... Please wait a moment.");
+         setError("Verifying link... Please wait a moment.");
          return;
      }
 
@@ -103,11 +100,6 @@ export default function ResetPasswordPage() {
     }
   };
 
-  // Optional: Add a loading state before 'isReady' is true
-  // if (!isReady && !error) {
-  //   return <div>Verifying link...</div>;
-  // }
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
@@ -125,22 +117,26 @@ export default function ResetPasswordPage() {
                  <p className="text-blue-500 text-sm text-center mb-4">Verifying reset link...</p>
              )}
              <div className="mb-4">
-               <label htmlFor="password" /* ... */>New Password</label>
+               <label htmlFor="password" className="block text-sm font-medium text-gray-700">New Password</label>
                <input
                  id="password" type="password" value={password}
                  onChange={(e) => setPassword(e.target.value)}
-                 /* ... */ required disabled={!isReady || loading}
+                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
+                 required disabled={!isReady || loading}
                />
              </div>
              <div className="mb-6">
-               <label htmlFor="confirmPassword" /* ... */>Confirm Password</label>
+               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
                <input
                  id="confirmPassword" type="password" value={confirmPassword}
                  onChange={(e) => setConfirmPassword(e.target.value)}
-                 /* ... */ required disabled={!isReady || loading}
+                 className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
+                 required disabled={!isReady || loading}
                />
              </div>
-             <button type="submit" /* ... */ disabled={!isReady || loading}>
+             <button type="submit"
+               className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+               disabled={!isReady || loading}>
                {loading ? "Updating..." : "Set New Password"}
              </button>
            </form>
