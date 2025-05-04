@@ -1,3 +1,4 @@
+// src/app/api/stripe-webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
@@ -14,17 +15,19 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
   // 1️⃣ **Read raw body & verify signature**
-  const rawBody = await request.text();
+  const rawBody   = await request.text();
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
     console.error("❌ Missing Stripe signature header");
-    return new NextResponse("Missing Stripe signature header.", { status: 400 });
+    return new NextResponse("Missing Stripe signature header.", {
+      status: 400,
+    });
   }
 
   // 2️⃣ **Initialize Stripe client with correct API version**
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion, // Correct API version
+    apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion,
   });
 
   // 3️⃣ **Verify webhook signature**
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET as string
+      process.env.STRIPE_WEBHOOK_SECRET as string,
     );
   } catch (err) {
     console.error("❌ Webhook signature verification failed:", err);
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
   // 4️⃣ **Initialize Supabase Admin Client**
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.SUPABASE_SERVICE_ROLE_KEY as string
+    process.env.SUPABASE_SERVICE_ROLE_KEY as string,
   );
 
   // ✅ **Helper function to upsert subscription (email is primary key)**
@@ -52,14 +55,23 @@ export async function POST(request: NextRequest) {
     subscriptionId,
     status,
     fullName,
+    trialEnd,                       // ← NEW (optional)
   }: {
     email: string;
     plan: string;
     subscriptionId?: string | null;
     status: string;
     fullName: string;
+    trialEnd?: number | null;       // ← NEW
   }) {
-    console.log("🔄 Upserting subscription:", { email, plan, subscriptionId, status, fullName });
+    console.log("🔄 Upserting subscription:", {
+      email,
+      plan,
+      subscriptionId,
+      status,
+      fullName,
+      trialEnd,
+    });
 
     const { error } = await supabaseAdmin
       .from("subscribers")
@@ -67,12 +79,13 @@ export async function POST(request: NextRequest) {
         {
           email, // Primary Key
           plan,
-          stripe_subscription_id: subscriptionId,
+          stripe_subscription_id: subscriptionId ?? null,
           status,
-          full_name: fullName, // Ensure full_name is provided
+          full_name: fullName,
+          trial_end: trialEnd ?? null,    // ← NEW COLUMN (nullable)
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "email" } // Ensure email is unique
+        { onConflict: "email" },
       );
 
     if (error) {
@@ -87,28 +100,46 @@ export async function POST(request: NextRequest) {
     console.log(`⚡ Processing webhook event: ${event.type}`);
 
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const email = session.customer_details?.email ?? session.customer_email;
-      const fullName = session.customer_details?.name ?? "Unknown"; // Use full name or default
-      // Use metadata if provided. Otherwise, default to unknown.
-      const plan = session.metadata?.plan ?? "unknown";
-      const subscriptionId = session.subscription as string | null;
+      const session         = event.data.object as Stripe.Checkout.Session;
+      const email           =
+        session.customer_details?.email ?? session.customer_email;
+      const fullName        = session.customer_details?.name ?? "Unknown";
+      const plan            = session.metadata?.plan ?? "unknown";
+      const subscriptionId  = session.subscription as string | null;
 
       if (!email) {
         console.error("❌ Missing email in checkout.session:", session);
         return new NextResponse("Missing email in session", { status: 400 });
       }
 
+      // ⬇️ NEW: fetch subscription to capture status/trial info
+      let status   = "active";
+      let trialEnd: number | null | undefined = null;
+      if (subscriptionId) {
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          status    = sub.status;
+          trialEnd  = sub.trial_end;
+        } catch (subErr) {
+          console.warn(
+            "⚠️ Could not retrieve subscription for trial data:",
+            subErr,
+          );
+        }
+      }
+
       await upsertSubscription({
         email,
         plan,
         subscriptionId,
-        status: "active",
+        status,
         fullName,
+        trialEnd,                    // ← NEW
       });
     } else if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
-      const priceId = subscription.items?.data?.[0]?.price?.id ?? "";
+      const priceId      = subscription.items?.data?.[0]?.price?.id ?? "";
+
       // Update the price IDs to match the ones used in your checkout session creation.
       const plan =
         priceId === "price_1Qbm96KSaqiJUYkj7SWySbjU"
@@ -118,14 +149,16 @@ export async function POST(request: NextRequest) {
           : "unknown";
 
       const customerId = subscription.customer as string;
-      const customer = (await stripe.customers.retrieve(customerId)) as Stripe.Customer;
+      const customer   = (await stripe.customers.retrieve(
+        customerId,
+      )) as Stripe.Customer;
 
       if (!customer.email) {
         console.error("❌ No valid email found on customer:", customerId);
         return new NextResponse("No email on customer.", { status: 400 });
       }
 
-      const fullName = customer.name ?? "Unknown"; // Use full name or default
+      const fullName = customer.name ?? "Unknown";
 
       await upsertSubscription({
         email: customer.email,
@@ -133,6 +166,7 @@ export async function POST(request: NextRequest) {
         subscriptionId: subscription.id,
         status: subscription.status,
         fullName,
+        trialEnd: subscription.trial_end,   // ← NEW
       });
     } else {
       console.log(`⚠️ Unhandled event type: ${event.type}`);

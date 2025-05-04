@@ -4,14 +4,12 @@
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-// Reverted to alias import for Button
 import { Button } from "@/components/ui/button";
-// Use relative paths for components within the same feature area
 import Paywall from "./tennis-courts/components/paywall";
 import TennisCourtList from "./tennis-courts/components/TennisCourtList";
 import ViewsCounter from "./tennis-courts/components/counter";
 import { ExternalLink } from "lucide-react";
-import { logEvent } from "@/lib/logEvent"; // Alias for lib should be correct
+import { logEvent } from "@/lib/logEvent";
 
 const exemptPaths = [
   "/reset-password",
@@ -20,7 +18,8 @@ const exemptPaths = [
   "/members",
   "/privacy-policy",
   "/terms-of-service",
-  "/courts", // Add the main courts listing page
+  "/courts",
+  "/request-password-reset",
 ];
 
 const LoadingIndicator = () => (
@@ -36,21 +35,14 @@ export default function HomePage() {
   const [viewData, setViewData] = useState<{ count: number; showPaywall: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to check if the current path is exempt
   const isPathExempt = useCallback((currentPathname: string) => {
-    if (exemptPaths.includes(currentPathname)) {
-        return true;
-    }
-    if (currentPathname.startsWith('/courts/')) { // Exempt dynamic court pages
-        return true;
-    }
+    if (exemptPaths.includes(currentPathname)) return true;
+    if (currentPathname.startsWith("/courts/")) return true;
     return false;
   }, []);
 
-
   useEffect(() => {
     if (isPathExempt(pathname)) {
-      console.log(`Pathname ${pathname} is exempt from view tracking.`);
       setIsLoading(false);
       setViewData(null);
       setUserId(null);
@@ -61,9 +53,6 @@ export default function HomePage() {
     if (!storedId) {
       storedId = crypto.randomUUID();
       localStorage.setItem("userId", storedId);
-       console.log(`Generated new userId: ${storedId}`);
-    } else {
-        console.log(`Using existing userId: ${storedId}`);
     }
     setUserId(storedId);
   }, [pathname, isPathExempt]);
@@ -74,36 +63,33 @@ export default function HomePage() {
       return;
     }
 
-    console.log(`Updating/checking view status for userId: ${userId} on path: ${pathname}`);
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/update-and-check-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/update-and-check-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId }),
       });
 
       if (!res.ok) {
-        const errorText = await res.text();
-        let detail = errorText;
-        try {
-          const errorJson = JSON.parse(errorText);
-          detail = errorJson.error || errorJson.message || errorText;
-        } catch {}
+        const detail = await res.text();
         throw new Error(`Failed to update/check view status (${res.status}): ${detail}`);
       }
 
       const data = await res.json();
-      if (data && typeof data.viewsCount !== 'undefined' && typeof data.showPaywall !== 'undefined') {
+      if (
+        data &&
+        typeof data.viewsCount !== "undefined" &&
+        typeof data.showPaywall !== "undefined"
+      ) {
         setViewData({ count: data.viewsCount, showPaywall: data.showPaywall });
-        console.log(`View status updated: Count=${data.viewsCount}, ShowPaywall=${data.showPaywall}`);
 
         logEvent("visit_home", {
           visitNumber: data.viewsCount,
           showPaywall: data.showPaywall,
-          pathname: pathname,
+          pathname,
         });
 
         if (data.showPaywall) {
@@ -115,28 +101,26 @@ export default function HomePage() {
       } else {
         throw new Error("Invalid data received from view update/check API.");
       }
-    } catch (err: unknown) {
+    } catch (err) {
       const message = err instanceof Error ? err.message : "An unknown error occurred";
-      console.error("[page.tsx] Error during view update/check:", message);
-      setError(`Error loading view status. Please try refreshing.`);
+      setError("Error loading view status. Please try refreshing.");
       setViewData(null);
+      console.error("[page.tsx] " + message);
     } finally {
       setIsLoading(false);
     }
   }, [userId, pathname, isPathExempt]);
 
   useEffect(() => {
-    if (userId && !isPathExempt(pathname)) {
-      updateAndCheckViewStatus();
-    } else if (!userId && !isPathExempt(pathname)) {
-      setIsLoading(true);
-    } else {
-        setIsLoading(false);
-    }
+    if (userId && !isPathExempt(pathname)) updateAndCheckViewStatus();
+    else if (!userId && !isPathExempt(pathname)) setIsLoading(true);
+    else setIsLoading(false);
   }, [userId, pathname, updateAndCheckViewStatus, isPathExempt]);
 
   if (isPathExempt(pathname)) return null;
+
   if (isLoading) return <LoadingIndicator />;
+
   if (error) {
     return (
       <div className="container mx-auto p-4 text-center">
@@ -144,12 +128,10 @@ export default function HomePage() {
       </div>
     );
   }
-  if (viewData?.showPaywall) {
-    return <Paywall />;
-  }
 
-  // Only render court list content on the root path '/'
-  if (viewData && pathname === '/') {
+  if (viewData?.showPaywall) return <Paywall />;
+
+  if (viewData && pathname === "/") {
     return (
       <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
         <header className="flex flex-col md:flex-row items-center justify-between mb-8">
@@ -166,9 +148,12 @@ export default function HomePage() {
               <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
                 <span>First Serve</span> <span>Seattle</span>
               </h1>
+
+              {/* -------------- FIXED APOSTROPHE HERE -------------- */}
               <p className="text-base md:text-lg font-semibold">
                 Today&apos;s Open Tennis and Pickleball Courts
               </p>
+              {/* ---------------------------------------------------- */}
             </div>
           </div>
         </header>
@@ -204,11 +189,25 @@ export default function HomePage() {
 
         <footer className="mt-12 border-t pt-6 text-center text-sm">
           <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
-            <a href="/privacy-policy" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap">Privacy Policy</a>
+            <a
+              href="/privacy-policy"
+              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
+            >
+              Privacy Policy
+            </a>
             <span className="text-gray-400 hidden md:inline">|</span>
-            <a href="/terms-of-service" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap">Terms of Service</a>
+            <a
+              href="/terms-of-service"
+              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
+            >
+              Terms of Service
+            </a>
             <span className="text-gray-400 hidden md:inline">|</span>
-            <Button asChild variant="link" className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto">
+            <Button
+              asChild
+              variant="link"
+              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto"
+            >
               <a href="mailto:support@firstserveseattle.com">Questions?</a>
             </Button>
           </div>
@@ -217,6 +216,6 @@ export default function HomePage() {
     );
   }
 
-   console.warn("HomePage reached unexpected render state for path:", pathname);
+  console.warn("HomePage reached unexpected render state for non-exempt path:", pathname);
   return null;
 }

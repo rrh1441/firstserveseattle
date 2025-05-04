@@ -1,110 +1,107 @@
 /* src/app/api/create-checkout-session/route.ts */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { cookies } from "next/headers"; // Ensure this import is present
+import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
-// Ensure these URLs are correct for your production environment
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+
 const SUCCESS_URL = "https://www.firstserveseattle.com/members";
-const CANCEL_URL = "https://www.firstserveseattle.com/";
+const CANCEL_URL  = "https://www.firstserveseattle.com/";
 
-// Verify these Price IDs are correct in your Stripe account
-const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
-const ANNUAL_ID = "price_1QowMRKSaqiJUYkjgeqLADm4";
-
-// Verify this Coupon ID is correct in your Stripe account for the 50% discount
+const MONTHLY_ID  = "price_1Qbm96KSaqiJUYkj7SWySbjU";
+const ANNUAL_ID   = "price_1QowMRKSaqiJUYkjgeqLADm4";
 const FIRST_MONTH_50_OFF_COUPON_ID = "8m1czvbe";
 
 export async function POST(request: Request) {
   try {
-    // Safely parse the request body
-    let plan: string | undefined;
-    try {
-        const body = await request.json();
-        plan = body.plan;
-    } catch (e) {
-        console.error("Failed to parse request body:", e);
-        return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-    }
+    /* ------------------------------------------------------------------ */
+    /* 1. Parse body (email + plan)                                       */
+    /* ------------------------------------------------------------------ */
+    const { email, plan } = (await request.json()) as {
+      email?: string;
+      plan?: string;
+    };
 
-    // Default to monthly if plan is not 'annual'
+    if (!email || !plan)
+      return NextResponse.json(
+        { error: "Missing email or plan." },
+        { status: 400 },
+      );
+
     const selectedPlan = plan === "annual" ? "annual" : "monthly";
-    const priceId = selectedPlan === "annual" ? ANNUAL_ID : MONTHLY_ID;
+    const priceId      = selectedPlan === "annual" ? ANNUAL_ID : MONTHLY_ID;
 
-    // Check for Stripe secret key configuration
-    if (!STRIPE_SECRET_KEY) {
-        console.error("Stripe secret key environment variable is not configured.");
-        throw new Error("Server configuration error related to payment processing.");
-    }
+    /* ------------------------------------------------------------------ */
+    /* 2. Query subscribers table for trial flag                          */
+    /* ------------------------------------------------------------------ */
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: subRow, error: subErr } = await supabaseAdmin
+      .from("subscribers")
+      .select("trial_eligible")
+      .eq("email", email)
+      .single();
 
-    // Initialize Stripe client WITHOUT explicit apiVersion
+    if (subErr && subErr.code !== "PGRST116") // 116 = no rows
+      throw new Error(`Supabase query failed: ${subErr.message}`);
+
+    const giveTrial =
+      selectedPlan === "monthly" && subRow?.trial_eligible === true;
+
+    /* ------------------------------------------------------------------ */
+    /* 3. Build session params                                            */
+    /* ------------------------------------------------------------------ */
     const stripe = new Stripe(STRIPE_SECRET_KEY);
-
-     // Retrieve cookies for potential metadata (using await)
-     const cookieStore = await cookies(); // Use await here
-     const visitorId = cookieStore.get('datafast_visitor_id')?.value;
-     const sessionId = cookieStore.get('datafast_session_id')?.value;
-
-    // Prepare parameters for the Stripe Checkout Session
-    // Initialize WITHOUT discounts or allow_promotion_codes initially
+    const cookieStore = await cookies();                    /* ‹ UPDATED › */
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
+      customer_email: email,
       metadata: {
         plan: selectedPlan,
-        visitorId: visitorId ?? null,
-        sessionId: sessionId ?? null
+        trial_applied: giveTrial ? "true" : "false",
+        visitorId: cookieStore.get("datafast_visitor_id")?.value ?? null, /* ‹ UPDATED › */
+        sessionId: cookieStore.get("datafast_session_id")?.value ?? null,
       },
-      // Conditionally set EITHER discounts OR allow_promotion_codes below
     };
 
-    // Conditionally apply EITHER the automatic discount OR allow promo codes
     if (selectedPlan === "monthly") {
-      // Auto-apply 50% off coupon for Monthly
-      sessionParams.discounts = [{ coupon: FIRST_MONTH_50_OFF_COUPON_ID }];
-      console.log(`Applying coupon ${FIRST_MONTH_50_OFF_COUPON_ID} for monthly plan checkout.`);
-      // Note: Do NOT set allow_promotion_codes here
-    } else if (selectedPlan === "annual") {
-      // For Annual plan, allow user to enter codes (like your free pass code)
+      if (giveTrial) {
+        sessionParams.subscription_data = { trial_period_days: 30 };
+      } else {
+        sessionParams.discounts = [{ coupon: FIRST_MONTH_50_OFF_COUPON_ID }];
+      }
+    } else {
       sessionParams.allow_promotion_codes = true;
-      // Note: Do NOT set discounts here
-      console.log(`Allowing promotion codes for ${selectedPlan} plan checkout.`);
     }
-    // Add 'else if' blocks here for any other plans you might add
 
-    // Create the Stripe Checkout Session
-    console.log("Attempting to create Stripe checkout session with params:", JSON.stringify(sessionParams, null, 2));
+    /* ------------------------------------------------------------------ */
+    /* 4. Create Checkout Session                                         */
+    /* ------------------------------------------------------------------ */
     const session = await stripe.checkout.sessions.create(sessionParams);
-    console.log("Stripe checkout session created successfully:", session.id);
 
-    // Return the session URL to the frontend
-    return NextResponse.json({ url: session.url }, { status: 200 });
-
-  } catch (err: unknown) {
-    let message = "Unknown error occurred while creating checkout session.";
-    let stripeErrorCode: string | undefined;
-
-    // Check specifically for Stripe errors first
-    if (err instanceof Stripe.errors.StripeError) {
-        message = `Stripe Error: ${err.message}`; // Use Stripe's message
-        stripeErrorCode = err.code; // Get Stripe's error code
-        console.error("Stripe Error Details:", err); // Log the full Stripe error object
-    } else if (err instanceof Error) {
-        message = err.message; // Handle generic JavaScript errors
-    } else if (typeof err === 'string') {
-        message = err; // Handle plain string errors (less common)
+    /* ------------------------------------------------------------------ */
+    /* 5. Consume the entitlement if trial was granted                    */
+    /* ------------------------------------------------------------------ */
+    if (giveTrial) {
+      await supabaseAdmin
+        .from("subscribers")
+        .update({
+          trial_eligible: false,
+          offer_code: "free_month",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", email);
     }
 
-    // Log the determined error message server-side
-    console.error("Error creating Stripe checkout session:", message);
-
-    // Return a structured error response to the client
-    return NextResponse.json({
-        error: "Failed to initialize the checkout process. Please try again later.", // User-friendly message
-        details: message, // More specific error detail (potentially sensitive, use with caution)
-        code: stripeErrorCode // Optional: Stripe error code if available
-       }, { status: 500 });
+    return NextResponse.json({ url: session.url }, { status: 200 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("create-checkout-session error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
