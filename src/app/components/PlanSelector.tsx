@@ -56,7 +56,7 @@ export function PlanSelector({
           <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
             ${prices[selectedPlan]}
           </span>
-          <span className="text-3xl font-bold text-green-700">FREE today</span>
+          <span className="text-3xl font-bold text-green-700">Free for Two Weeks</span>
         </div>
 
         {/* After-trial price explanation */}
