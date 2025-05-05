@@ -33,7 +33,6 @@ export default function SignUpPage() {
   const initialPlanParam        = searchParams.get("plan")
   const _headlineGroupParam     = searchParams.get("headline_group")
   const _offerParam             = searchParams.get("offer")
-  /* reference once so ESLint sees them used */
   void _headlineGroupParam; void _offerParam;
 
   const [plan, setPlan]         = useState<PlanType>(
@@ -60,7 +59,6 @@ export default function SignUpPage() {
   const allMet = () =>
     passwordRequirements.every(r => metRequirements.includes(r.id))
 
-  /* ---------- create fresh Checkout session on plan toggle ---------- */
   async function handlePlanChange(newPlan: PlanType) {
     setPlan(newPlan)
     if (!email) return
@@ -75,7 +73,6 @@ export default function SignUpPage() {
     }
   }
 
-  /* ---------- submit signup ---------- */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErrorMsg("")
@@ -90,6 +87,10 @@ export default function SignUpPage() {
         password,
         options: { data: { full_name: fullName } },
       })
+
+      if (authErr?.message?.includes("already registered")) {
+        throw new Error("Account already exists. Please sign in instead.")
+      }
       if (authErr) throw new Error(authErr.message)
       if (!data.user) throw new Error("No user returned after sign-up.")
 
@@ -123,10 +124,8 @@ export default function SignUpPage() {
 
   const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible)
 
-  /* ---------------------------- JSX ---------------------------- */
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4 py-12 sm:py-16">
-      {/* Logo */}
       <div className="flex justify-center mb-8">
         <Image
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -147,7 +146,6 @@ export default function SignUpPage() {
               Select the plan that works best for you.
             </p>
 
-            {/* Plan selector */}
             <div className="mb-10">
               <PlanSelector
                 selectedPlan={plan}
@@ -169,7 +167,6 @@ export default function SignUpPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Full name */}
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
@@ -185,7 +182,6 @@ export default function SignUpPage() {
                 />
               </div>
 
-              {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -201,7 +197,6 @@ export default function SignUpPage() {
                 />
               </div>
 
-              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -227,7 +222,6 @@ export default function SignUpPage() {
                   </button>
                 </div>
 
-                {/* Live password requirements */}
                 <ul id="password-requirements" className="mt-2 space-y-1 list-none pl-0">
                   {passwordRequirements.map(req => {
                     const met = metRequirements.includes(req.id)
@@ -245,7 +239,6 @@ export default function SignUpPage() {
                 </ul>
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading || !allMet()}

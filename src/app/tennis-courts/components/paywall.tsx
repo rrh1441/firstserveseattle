@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Link from "next/link";
 import { PlanSelector } from "@/components/PlanSelector";
 import { logEvent } from "@/lib/logEvent";
@@ -15,13 +21,16 @@ const features = [
 ];
 
 const headlines = [
-  { group: 'A', text: "Stop guessing, start playing!" },
-  { group: 'B', text: "Never drive to a full court again!" }
+  { group: "A", text: "Stop guessing, start playing!" },
+  { group: "B", text: "Never drive to a full court again!" },
 ];
 
 export default function PaywallPage() {
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
-  const [assignedHeadline, setAssignedHeadline] = useState<{ group: string; text: string } | null>(null);
+  const [assignedHeadline, setAssignedHeadline] = useState<{
+    group: string;
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     const randomIndex = Math.random() < 0.5 ? 0 : 1;
@@ -45,12 +54,16 @@ export default function PaywallPage() {
       <Card className="w-full max-w-md border border-gray-200 shadow-lg">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl font-bold">
-            {assignedHeadline ? assignedHeadline.text : "You've reached your free limit"}
+            {assignedHeadline
+              ? assignedHeadline.text
+              : "You've reached your free limit"}
           </CardTitle>
           <CardDescription className="text-base text-gray-600">
-            Get unlimited access to all courts and features.
+            Start your <span className="font-semibold">14-day free trial</span>{" "}
+            — no payment due today.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-6">
           <PlanSelector
             selectedPlan={plan}
@@ -59,11 +72,15 @@ export default function PaywallPage() {
           />
 
           <Link
-            href={`/signup?plan=${plan}${assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ''}`}
+            href={`/signup?plan=${plan}${
+              assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ""
+            }`}
             onClick={handleSubscribeClick}
             className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >
-            Choose {plan === 'monthly' ? 'Monthly' : 'Annual'} & Create Account
+            {plan === "monthly"
+              ? "Start Free Trial – Monthly"
+              : "Start Free Trial – Annual"}
           </Link>
 
           <p className="text-xs text-center text-gray-500">
