@@ -1,107 +1,68 @@
 // src/app/members/page.tsx
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { ExternalLink } from "lucide-react";
-import Image from "next/image";
-// Reverted to alias import for Button
-import { Button } from "@/components/ui/button";
-// Use relative path for TennisCourtList as it's part of a different feature area
-import TennisCourtList from "../tennis-courts/components/TennisCourtList";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { ExternalLink } from "lucide-react"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import TennisCourtList from "../tennis-courts/components/TennisCourtList"
 
 export default function MembersPage() {
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
-
-  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(
-    null
-  );
+  const [isLoading, setIsLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkSessionAndSubscription = async () => {
+    const check = async () => {
       try {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          setFetchError("Error retrieving session.");
-          setIsLoading(false);
-          return;
-        }
-
+        const { data: { session } } = await supabase.auth.getSession()
         if (!session) {
-          router.push(`/login?redirect_to=${encodeURIComponent(window.location.pathname)}`);
-          return;
+          router.push(`/login?redirect_to=${encodeURIComponent(window.location.pathname)}`)
+          return
         }
+        setSessionAccessToken(session.access_token)
 
-        setSessionAccessToken(session.access_token);
-
-        const { data: subscriberData, error: subError } = await supabase
+        const { data: sub, error: subErr } = await supabase
           .from("subscribers")
           .select("status")
           .eq("id", session.user.id)
-          .single();
+          .single()
 
-        if (subError && subError.code !== 'PGRST116') {
-          console.error("Error fetching subscriber row:", subError);
-          setFetchError("Error retrieving subscription status.");
-          setIsLoading(false);
-          return;
-        }
+        if (subErr && subErr.code !== "PGRST116") throw subErr
 
-        if (!subscriberData || subscriberData.status !== "active") {
-          console.log("No active subscription found, redirecting to checkout.");
-          const defaultPlan = "monthly";
-
-          const response = await fetch("/api/create-checkout-session", {
+        const ok = sub && (sub.status === "active" || sub.status === "trialing") // **changed**
+        if (!ok) {
+          const resp = await fetch("/api/create-checkout-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ plan: defaultPlan }),
-          });
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(
-              `Cannot create checkout session: ${response.statusText} - ${errorText}`
-            );
-          }
-          const { url } = await response.json();
-          if (!url) {
-             throw new Error("Checkout URL not received from server.");
-          }
-          window.location.href = url;
-          return;
+            body: JSON.stringify({ email: session.user.email, plan: "monthly" }),
+          })
+          const { url } = await resp.json()
+          window.location.href = url
+          return
         }
-
-        console.log("Active subscription found. Showing members page.");
-
-      } catch (err: unknown) {
-        console.error("Unhandled subscription check error:", err);
-        setFetchError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      } catch (err) {
+        setFetchError(err instanceof Error ? err.message : String(err))
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-
-    checkSessionAndSubscription();
-  }, [router, supabase]);
-
+    }
+    check()
+  }, [router, supabase])
 
   async function handleManageSubscription() {
     if (!sessionAccessToken) {
-        setFetchError("Cannot manage subscription: Session token missing.");
-        return;
+      setFetchError("Cannot manage subscription: Session token missing.")
+      return
     }
-    setPortalLoading(true);
-    setFetchError(null);
+    setPortalLoading(true)
+    setFetchError(null)
     try {
       const response = await fetch("/api/create-portal-link", {
         method: "POST",
@@ -109,30 +70,22 @@ export default function MembersPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${sessionAccessToken}`,
         },
-      });
-
+      })
       if (!response.ok) {
-         const errorData = await response.json();
-        throw new Error(`Error creating portal link: ${response.statusText} - ${errorData.error || 'Unknown error'}`);
+        const errData = await response.json()
+        throw new Error(errData.error || "Portal link error")
       }
-
-      const { url } = await response.json();
-       if (!url) {
-         throw new Error("Portal URL not received from server.");
-       }
-      window.location.href = url;
+      const { url } = await response.json()
+      window.location.href = url
     } catch (err) {
-      console.error("Failed to create portal link:", err);
-      setFetchError(
-        err instanceof Error ? err.message : "Portal link error, please try again."
-      );
+      setFetchError(err instanceof Error ? err.message : "Portal link error")
     } finally {
-      setPortalLoading(false);
+      setPortalLoading(false)
     }
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen"><p>Checking membership status...</p></div>;
+    return <div className="flex justify-center items-center min-h-screen"><p>Checking membership status...</p></div>
   }
 
   if (fetchError) {
@@ -142,7 +95,7 @@ export default function MembersPage() {
           {fetchError} — please refresh or contact support.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -236,5 +189,5 @@ export default function MembersPage() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

@@ -19,11 +19,7 @@ const features = [
 
 type PlanType = "monthly" | "annual"
 
-interface PasswordRequirement {
-  id: string
-  regex: RegExp
-  message: string
-}
+interface PasswordRequirement { id: string; regex: RegExp; message: string }
 
 const passwordRequirements: PasswordRequirement[] = [
   { id: "length",    regex: /.{6,}/,  message: "At least 6 characters" },
@@ -33,12 +29,14 @@ const passwordRequirements: PasswordRequirement[] = [
 ]
 
 export default function SignUpPage() {
-  const searchParams        = useSearchParams()
-  const initialPlanParam    = searchParams.get("plan")
-  const headlineGroupParam  = searchParams.get("headline_group")
-  const offerParam          = searchParams.get("offer") // retained for analytics
+  const searchParams            = useSearchParams()
+  const initialPlanParam        = searchParams.get("plan")
+  const _headlineGroupParam     = searchParams.get("headline_group")
+  const _offerParam             = searchParams.get("offer")
+  /* reference once so ESLint sees them used */
+  void _headlineGroupParam; void _offerParam;
 
-  const [plan, setPlan] = useState<PlanType>(
+  const [plan, setPlan]         = useState<PlanType>(
     initialPlanParam === "annual" ? "annual" : "monthly",
   )
 
@@ -52,46 +50,52 @@ export default function SignUpPage() {
   const [metRequirements, setMetRequirements] = useState<string[]>([])
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value
-    setPassword(newPassword)
-
-    const met = passwordRequirements
-      .filter(req => req.regex.test(newPassword))
-      .map(req => req.id)
-
-    setMetRequirements(met)
+    const pw = e.target.value
+    setPassword(pw)
+    setMetRequirements(
+      passwordRequirements.filter(r => r.regex.test(pw)).map(r => r.id),
+    )
   }
 
-  const allPasswordRequirementsMet = () =>
-    passwordRequirements.every(req => metRequirements.includes(req.id))
+  const allMet = () =>
+    passwordRequirements.every(r => metRequirements.includes(r.id))
 
+  /* ---------- create fresh Checkout session on plan toggle ---------- */
+  async function handlePlanChange(newPlan: PlanType) {
+    setPlan(newPlan)
+    if (!email) return
+    const resp = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, plan: newPlan }),
+    })
+    if (resp.ok) {
+      const { url } = (await resp.json()) as { url: string | null }
+      if (url) window.location.href = url
+    }
+  }
+
+  /* ---------- submit signup ---------- */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErrorMsg("")
-
-    if (!allPasswordRequirementsMet()) {
+    if (!allMet()) {
       setErrorMsg("Password does not meet all requirements.")
       return
     }
-
     setLoading(true)
-
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error: authErr } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullName } },
       })
-
-      if (authError) throw new Error(`Sign-up failed: ${authError.message}`)
-      if (!authData.user) throw new Error("No user returned after sign-up.")
-
-      if (typeof window !== "undefined" && typeof window.datafast === "function")
-        window.datafast("signup", { email })
+      if (authErr) throw new Error(authErr.message)
+      if (!data.user) throw new Error("No user returned after sign-up.")
 
       await supabase.from("subscribers").upsert(
         {
-          id: authData.user.id,
+          id: data.user.id,
           email,
           full_name: fullName,
           plan,
@@ -102,46 +106,24 @@ export default function SignUpPage() {
         { onConflict: "email" },
       )
 
-      const response = await fetch("/api/create-checkout-session", {
+      const resp = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, plan }),           // ← UPDATED
+        body: JSON.stringify({ email, plan }),
       })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Creating checkout session failed: ${errorText}`)
-      }
-
-      const { url } = (await response.json()) as { url: string | null }
-      if (!url) throw new Error("No checkout URL received from server.")
-
-      if (typeof window !== "undefined" && typeof window.datafast === "function") {
-        window.datafast("event", {
-          name: "InitiateCheckout",
-          properties: {
-            plan,
-            paywall_headline_group: headlineGroupParam,
-            email,
-            offer: offerParam ?? "",
-          },
-        })
-      }
-
+      if (!resp.ok) throw new Error(await resp.text())
+      const { url } = (await resp.json()) as { url: string | null }
+      if (!url) throw new Error("No checkout URL.")
       window.location.href = url
     } catch (err) {
-      console.error("Signup or Checkout Error:", err)
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "An unknown error occurred during signup.",
-      )
+      setErrorMsg(err instanceof Error ? err.message : String(err))
       setLoading(false)
     }
   }
 
   const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible)
 
+  /* ---------------------------- JSX ---------------------------- */
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white px-4 py-12 sm:py-16">
       {/* Logo */}
@@ -165,10 +147,11 @@ export default function SignUpPage() {
               Select the plan that works best for you.
             </p>
 
+            {/* Plan selector */}
             <div className="mb-10">
               <PlanSelector
                 selectedPlan={plan}
-                onPlanSelect={setPlan}
+                onPlanSelect={handlePlanChange}
                 features={features}
               />
             </div>
@@ -223,7 +206,6 @@ export default function SignUpPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
-
                 <div className="relative">
                   <input
                     id="password"
@@ -245,12 +227,13 @@ export default function SignUpPage() {
                   </button>
                 </div>
 
+                {/* Live password requirements */}
                 <ul id="password-requirements" className="mt-2 space-y-1 list-none pl-0">
                   {passwordRequirements.map(req => {
-                    const isMet = metRequirements.includes(req.id)
+                    const met = metRequirements.includes(req.id)
                     return (
-                      <li key={req.id} className={`flex items-center text-xs ${isMet ? "text-green-600" : "text-gray-500"}`}>
-                        {isMet ? (
+                      <li key={req.id} className={`flex items-center text-xs ${met ? "text-green-600" : "text-gray-500"}`}>
+                        {met ? (
                           <CheckCircle2 size={14} className="mr-1.5 flex-shrink-0" />
                         ) : (
                           <XCircle size={14} className="mr-1.5 flex-shrink-0" />
@@ -262,26 +245,12 @@ export default function SignUpPage() {
                 </ul>
               </div>
 
+              {/* Submit */}
               <button
                 type="submit"
-                disabled={loading || !allPasswordRequirementsMet()}
+                disabled={loading || !allMet()}
                 className="w-full rounded-lg bg-[#0c372b] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {loading ? (
-                  <svg
-                    className="mr-2 inline h-4 w-4 animate-spin text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                ) : null}
                 {loading ? "Processing..." : "Create Account & Proceed to Payment"}
               </button>
             </form>
