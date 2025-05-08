@@ -1,13 +1,12 @@
-// src/app/members/page.tsx
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { ExternalLink } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import TennisCourtList from "../tennis-courts/components/TennisCourtList"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { ExternalLink } from 'lucide-react'
+import Image from 'next/image'
+import TennisCourtList from '../tennis-courts/components/TennisCourtList'
+import { Button } from '@/components/ui/button'
 
 export default function MembersPage() {
   const router = useRouter()
@@ -18,10 +17,16 @@ export default function MembersPage() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(null)
 
+  /* ------------------------------------------------------------------ */
+  /*  Auth + subscription check                                         */
+  /* ------------------------------------------------------------------ */
   useEffect(() => {
     const check = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
         if (!session) {
           router.push(`/login?redirect_to=${encodeURIComponent(window.location.pathname)}`)
           return
@@ -29,22 +34,22 @@ export default function MembersPage() {
         setSessionAccessToken(session.access_token)
 
         const { data: sub, error: subErr } = await supabase
-          .from("subscribers")
-          .select("status")
-          .eq("id", session.user.id)
+          .from('subscribers')
+          .select('status')
+          .eq('id', session.user.id)
           .single()
 
-        if (subErr && subErr.code !== "PGRST116") throw subErr
+        if (subErr && subErr.code !== 'PGRST116') throw subErr
 
-        const ok = sub && (sub.status === "active" || sub.status === "trialing") // **changed**
+        const ok = sub && (sub.status === 'active' || sub.status === 'trialing')
         if (!ok) {
-          const resp = await fetch("/api/create-checkout-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: session.user.email, plan: "monthly" }),
+          const resp = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: session.user.email, plan: 'monthly' }),
           })
           const { url } = await resp.json()
-          window.location.href = url
+          window.location.href = url as string
           return
         }
       } catch (err) {
@@ -53,86 +58,99 @@ export default function MembersPage() {
         setIsLoading(false)
       }
     }
+
     check()
   }, [router, supabase])
 
+  /* ------------------------------------------------------------------ */
+  /*  Stripe customer portal                                            */
+  /* ------------------------------------------------------------------ */
   async function handleManageSubscription() {
     if (!sessionAccessToken) {
-      setFetchError("Cannot manage subscription: Session token missing.")
+      setFetchError('Cannot manage subscription: Session token missing.')
       return
     }
     setPortalLoading(true)
     setFetchError(null)
     try {
-      const response = await fetch("/api/create-portal-link", {
-        method: "POST",
+      const response = await fetch('/api/create-portal-link', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionAccessToken}`,
         },
       })
       if (!response.ok) {
         const errData = await response.json()
-        throw new Error(errData.error || "Portal link error")
+        throw new Error(errData.error || 'Portal link error')
       }
       const { url } = await response.json()
-      window.location.href = url
+      window.location.href = url as string
     } catch (err) {
-      setFetchError(err instanceof Error ? err.message : "Portal link error")
+      setFetchError(err instanceof Error ? err.message : 'Portal link error')
     } finally {
       setPortalLoading(false)
     }
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  Render                                                            */
+  /* ------------------------------------------------------------------ */
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen"><p>Checking membership status...</p></div>
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Checking membership status&hellip;</p>
+      </div>
+    )
   }
 
   if (fetchError) {
     return (
       <div className="container mx-auto p-4 text-center">
-        <p className="text-red-500 bg-red-100 border border-red-300 p-4 rounded">
-          {fetchError} — please refresh or contact support.
+        <p className="rounded border border-red-300 bg-red-100 p-4 text-red-500">
+          {fetchError} &mdash; please refresh or contact support.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-      <header className="flex flex-col md:flex-row items-center md:justify-between mb-8 gap-4">
+    <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8">
+      {/* Header */}
+      <header className="mb-8 flex flex-col items-center gap-4 md:flex-row md:justify-between">
         <div className="flex items-center gap-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
             alt="First Serve Seattle Logo"
             width={80}
             height={80}
-            className="w-20 h-20"
             priority
           />
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
-              <span>First Serve</span> <span>Seattle</span>
+            <h1 className="mb-1 text-3xl font-extrabold text-[#0c372b] md:text-4xl">
+              First&nbsp;Serve&nbsp;Seattle
             </h1>
-            <p className="text-base md:text-lg font-semibold">
-              Today&apos;s Open Tennis and Pickleball Courts
+            <p className="text-base font-semibold md:text-lg">
+              Today&rsquo;s Open Tennis and Pickleball Courts
             </p>
           </div>
         </div>
 
         <Button
           onClick={handleManageSubscription}
-          className="bg-[#0c372b] hover:bg-[#0c372b]/90 whitespace-nowrap text-white w-full md:w-auto"
+          className="w-full whitespace-nowrap bg-[#0c372b] text-white hover:bg-[#0c372b]/90 md:w-auto"
           disabled={portalLoading}
         >
-          {portalLoading ? "Loading..." : "Manage Your Subscription"}
+          {portalLoading ? 'Loading…' : 'Manage Your Subscription'}
         </Button>
       </header>
 
+      {/* Court list */}
       <TennisCourtList />
 
-      <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
-        <Button asChild className="gap-2 w-full sm:w-auto">
+      {/* External links */}
+      <div className="mt-8 space-y-3 text-center sm:space-y-0 sm:space-x-4">
+        <Button asChild className="w-full gap-2 sm:w-auto">
           <a
             href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
             target="_blank"
@@ -142,7 +160,7 @@ export default function MembersPage() {
             <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
-        <Button asChild className="gap-2 w-full sm:w-auto">
+        <Button asChild className="w-full gap-2 sm:w-auto">
           <a
             href="http://www.tennis-seattle.com?From=185415"
             target="_blank"
@@ -153,41 +171,6 @@ export default function MembersPage() {
           </a>
         </Button>
       </div>
-
-      <footer className="mt-12 border-t pt-6 text-center text-sm">
-        <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
-          <a
-            href="/privacy-policy"
-            className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
-          >
-            Privacy Policy
-          </a>
-          <span className="text-gray-400 hidden md:inline">|</span>
-          <a
-            href="/terms-of-service"
-            className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
-          >
-            Terms of Service
-          </a>
-          <span className="text-gray-400 hidden md:inline">|</span>
-          <Button
-            onClick={handleManageSubscription}
-            variant="link"
-            className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto"
-            disabled={portalLoading}
-          >
-            {portalLoading ? "Loading..." : "Manage Your Subscription"}
-          </Button>
-          <span className="text-gray-400 hidden md:inline">|</span>
-          <Button
-            asChild
-            variant="link"
-            className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto"
-          >
-            <a href="mailto:support@firstserveseattle.com">Support</a>
-          </Button>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -9,8 +9,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 /* -------------------------------------------------------------------------- */
-/*  The inner component contains all logic and calls useSearchParams.         */
-/*  It is wrapped in <Suspense> so Next.js build passes.                      */
+/*  The inner component holds all logic and calls useSearchParams.            */
+/*  It is wrapped in <Suspense> so the Next.js build passes.                  */
 /* -------------------------------------------------------------------------- */
 
 function LoginInner() {
@@ -73,7 +73,7 @@ function LoginInner() {
         return
       }
 
-      /* Step 4 – active or trialing ⇒ members */
+      /* Step 4 – active or trialing => members */
       router.push(redirectTo)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err))
@@ -85,7 +85,7 @@ function LoginInner() {
   /*  Render                                                                */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center gap-4">
           <Image
@@ -95,13 +95,11 @@ function LoginInner() {
             height={80}
             priority
           />
-          <h1 className="text-2xl font-bold">
-            Sign in to First Serve Seattle
-          </h1>
+          <h1 className="text-2xl font-bold">Sign in to First Serve Seattle</h1>
         </div>
 
         {errorMsg && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {errorMsg}
           </div>
         )}
@@ -111,7 +109,7 @@ function LoginInner() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
               Email
             </label>
@@ -130,7 +128,7 @@ function LoginInner() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="mb-1 block text-sm font-medium text-gray-700"
             >
               Password
             </label>
@@ -151,7 +149,7 @@ function LoginInner() {
             className="w-full bg-[#0c372b] hover:bg-[#0c372b]/90"
             disabled={loading}
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </Button>
 
           {/* Forgot Password Link */}
@@ -167,18 +165,9 @@ function LoginInner() {
 
         <p className="text-center text-sm text-gray-600">
           No account?{' '}
-          <Link
-            href="/signup"
-            className="font-semibold text-blue-600 hover:underline"
-          >
+          <Link href="/signup" className="font-semibold text-blue-600 hover:underline">
             Sign up
           </Link>
-        </p>
-
-        {/* Footer disclaimer */}
-        <p className="text-center text-xs text-gray-400 mt-8">
-          First Serve Seattle is an independent community resource and is not
-          associated with Seattle Parks &amp; Recreation.
         </p>
       </div>
     </div>
