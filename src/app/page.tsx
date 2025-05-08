@@ -1,221 +1,197 @@
-// src/app/page.tsx
-"use client";
+// src/app/login/page.tsx
+'use client'
 
-import { useEffect, useState, Suspense, useCallback } from "react";
-import { usePathname } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import Paywall from "./tennis-courts/components/paywall";
-import TennisCourtList from "./tennis-courts/components/TennisCourtList";
-import ViewsCounter from "./tennis-courts/components/counter";
-import { ExternalLink } from "lucide-react";
-import { logEvent } from "@/lib/logEvent";
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
-const exemptPaths = [
-  "/reset-password",
-  "/login",
-  "/signup",
-  "/members",
-  "/privacy-policy",
-  "/terms-of-service",
-  "/courts",
-  "/request-password-reset",
-];
+/* -------------------------------------------------------------------------- */
+/*  The inner component contains all logic and calls useSearchParams.         */
+/*  It is wrapped in <Suspense> so Next.js build passes.                      */
+/* -------------------------------------------------------------------------- */
 
-const LoadingIndicator = () => (
-  <div className="flex items-center justify-center min-h-[50vh]">
-    <p className="text-lg text-gray-600 animate-pulse">Loading Courts...</p>
-  </div>
-);
+function LoginInner() {
+  const searchParams = useSearchParams()
+  const rawRedirect = searchParams.get('redirect_to')
 
-export default function HomePage() {
-  const pathname = usePathname();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [viewData, setViewData] = useState<{ count: number; showPaywall: boolean } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const redirectTo =
+    rawRedirect &&
+    rawRedirect.startsWith('/') &&
+    !rawRedirect.startsWith('//') &&
+    !rawRedirect.includes(':')
+      ? rawRedirect
+      : '/members'
 
-  const isPathExempt = useCallback((currentPathname: string) => {
-    if (exemptPaths.includes(currentPathname)) return true;
-    if (currentPathname.startsWith("/courts/")) return true;
-    return false;
-  }, []);
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    if (isPathExempt(pathname)) {
-      setIsLoading(false);
-      setViewData(null);
-      setUserId(null);
-      return;
-    }
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
-    let storedId = localStorage.getItem("userId");
-    if (!storedId) {
-      storedId = crypto.randomUUID();
-      localStorage.setItem("userId", storedId);
-    }
-    setUserId(storedId);
-  }, [pathname, isPathExempt]);
-
-  const updateAndCheckViewStatus = useCallback(async () => {
-    if (!userId || isPathExempt(pathname)) {
-      if (isPathExempt(pathname)) setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
+  /* ---------------------------------------------------------------------- */
+  /*  Submit handler                                                        */
+  /* ---------------------------------------------------------------------- */
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setErrorMsg('')
+    setLoading(true)
 
     try {
-      const res = await fetch("/api/update-and-check-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
+      /* Step 1 – sign in */
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error || !data.session) throw new Error('Invalid email or password.')
 
-      if (!res.ok) {
-        const detail = await res.text();
-        throw new Error(`Failed to update/check view status (${res.status}): ${detail}`);
+      /* Step 2 – check subscription row */
+      const { data: subRow, error: subErr } = await supabase
+        .from('subscribers')
+        .select('status, plan')
+        .eq('id', data.session.user.id)
+        .single()
+
+      if (subErr && subErr.code !== 'PGRST116') throw subErr
+
+      /* Step 3 – send pending users straight to Checkout */
+      if (!subRow || subRow.status === 'pending') {
+        const plan = subRow?.plan ?? 'monthly'
+        const resp = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, plan }),
+        })
+        if (!resp.ok) throw new Error(await resp.text())
+        const { url } = (await resp.json()) as { url: string | null }
+        if (!url) throw new Error('Checkout URL missing.')
+        window.location.href = url
+        return
       }
 
-      const data = await res.json();
-      if (
-        data &&
-        typeof data.viewsCount !== "undefined" &&
-        typeof data.showPaywall !== "undefined"
-      ) {
-        setViewData({ count: data.viewsCount, showPaywall: data.showPaywall });
-
-        logEvent("visit_home", {
-          visitNumber: data.viewsCount,
-          showPaywall: data.showPaywall,
-          pathname,
-        });
-
-        if (data.showPaywall) {
-          logEvent("view_paywall", {
-            visitNumber: data.viewsCount,
-            triggerPath: pathname,
-          });
-        }
-      } else {
-        throw new Error("Invalid data received from view update/check API.");
-      }
+      /* Step 4 – active or trialing ⇒ members */
+      router.push(redirectTo)
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An unknown error occurred";
-      setError("Error loading view status. Please try refreshing.");
-      setViewData(null);
-      console.error("[page.tsx] " + message);
-    } finally {
-      setIsLoading(false);
+      setErrorMsg(err instanceof Error ? err.message : String(err))
+      setLoading(false)
     }
-  }, [userId, pathname, isPathExempt]);
-
-  useEffect(() => {
-    if (userId && !isPathExempt(pathname)) updateAndCheckViewStatus();
-    else if (!userId && !isPathExempt(pathname)) setIsLoading(true);
-    else setIsLoading(false);
-  }, [userId, pathname, updateAndCheckViewStatus, isPathExempt]);
-
-  if (isPathExempt(pathname)) return null;
-
-  if (isLoading) return <LoadingIndicator />;
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <p className="text-red-600 bg-red-50 p-4 rounded border border-red-200">{error}</p>
-      </div>
-    );
   }
 
-  if (viewData?.showPaywall) return <Paywall />;
-
-  if (viewData && pathname === "/") {
-    return (
-      <div className="container mx-auto px-4 pt-8 md:pt-10 pb-6 md:pb-8 max-w-4xl bg-white text-black">
-        <header className="flex flex-col md:flex-row items-center justify-between mb-8">
-          <div className="flex items-center gap-6">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
-              alt="First Serve Seattle Logo"
-              width={80}
-              height={80}
-              className="w-20 h-20"
-              priority
-            />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold mb-1 text-[#0c372b]">
-                <span>First Serve</span> <span>Seattle</span>
-              </h1>
-
-              {/* -------------- FIXED APOSTROPHE HERE -------------- */}
-              <p className="text-base md:text-lg font-semibold">
-                Today&apos;s Open Tennis and Pickleball Courts
-              </p>
-              {/* ---------------------------------------------------- */}
-            </div>
-          </div>
-        </header>
-
-        <ViewsCounter viewsCount={viewData.count} />
-
-        <Suspense fallback={<LoadingIndicator />}>
-          <TennisCourtList />
-        </Suspense>
-
-        <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
-          <Button asChild className="gap-2 w-full sm:w-auto">
-            <a
-              href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book Future Reservations
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-          <Button asChild className="gap-2 w-full sm:w-auto">
-            <a
-              href="http://www.tennis-seattle.com?From=185415"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Join a Local Tennis League
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
+  /* ---------------------------------------------------------------------- */
+  /*  Render                                                                */
+  /* ---------------------------------------------------------------------- */
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
+            alt="First Serve Seattle Logo"
+            width={80}
+            height={80}
+            priority
+          />
+          <h1 className="text-2xl font-bold">
+            Sign in to First Serve Seattle
+          </h1>
         </div>
 
-        <footer className="mt-12 border-t pt-6 text-center text-sm">
-          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2">
-            <a
-              href="/privacy-policy"
-              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
-            >
-              Privacy Policy
-            </a>
-            <span className="text-gray-400 hidden md:inline">|</span>
-            <a
-              href="/terms-of-service"
-              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap"
-            >
-              Terms of Service
-            </a>
-            <span className="text-gray-400 hidden md:inline">|</span>
-            <Button
-              asChild
-              variant="link"
-              className="text-black hover:text-gray-700 transition-colors whitespace-nowrap p-0 h-auto"
-            >
-              <a href="mailto:support@firstserveseattle.com">Questions?</a>
-            </Button>
+        {errorMsg && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+            {errorMsg}
           </div>
-        </footer>
-      </div>
-    );
-  }
+        )}
 
-  console.warn("HomePage reached unexpected render state for non-exempt path:", pathname);
-  return null;
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Input */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+              placeholder="you@example.com"
+            />
+          </div>
+
+          {/* Password Input */}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+              placeholder="********"
+            />
+          </div>
+
+          {/* Sign In Button */}
+          <Button
+            type="submit"
+            className="w-full bg-[#0c372b] hover:bg-[#0c372b]/90"
+            disabled={loading}
+          >
+            {loading ? 'Signing in…' : 'Sign In'}
+          </Button>
+
+          {/* Forgot Password Link */}
+          <div className="text-center text-sm text-gray-600">
+            <Link
+              href="/request-password-reset"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+        </form>
+
+        <p className="text-center text-sm text-gray-600">
+          No account?{' '}
+          <Link
+            href="/signup"
+            className="font-semibold text-blue-600 hover:underline"
+          >
+            Sign up
+          </Link>
+        </p>
+
+        {/* Footer disclaimer */}
+        <p className="text-center text-xs text-gray-400 mt-8">
+          First Serve Seattle is an independent community resource and is not
+          associated with Seattle Parks &amp; Recreation.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Root component returns Suspense wrapper                                   */
+/* -------------------------------------------------------------------------- */
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <LoginInner />
+    </Suspense>
+  )
 }
