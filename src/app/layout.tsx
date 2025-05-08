@@ -1,36 +1,40 @@
 // src/app/layout.tsx
-import { Analytics } from "@vercel/analytics/react";
-import "./globals.css";
+import type { ReactNode } from 'react'
+import { Analytics } from '@vercel/analytics/react'
+import Script from 'next/script'
+import SiteFooter from '@/components/SiteFooter'
+import './globals.css'
 
 export const metadata = {
-  title: "First Serve Seattle",
+  title: 'First Serve Seattle',
   description: "Today's Open Tennis and Pickleball Courts",
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode
 }) {
   return (
-    <html lang="en">
-      <head>
-        {/* Metadata tags */}
-
-        {/* === ADDED DATAFAST SCRIPT HERE === */}
-        <script
-          defer
-          data-website-id="67e42faaad4cc8e626767b22" // Replace if you get a different ID
-          data-domain="firstserveseattle.com" // Replace if your domain changes
+    <html lang="en" className="scroll-smooth">
+      <body className="min-h-screen flex flex-col">
+        {/* Datafast tracking */}
+        <Script
           src="https://datafa.st/js/script.js"
-        ></script>
-        {/* =================================== */}
+          data-website-id="67e42faaad4cc8e626767b22"
+          data-domain="firstserveseattle.com"
+          strategy="afterInteractive"
+        />
 
-      </head>
-      <body>
-        {children}
-        <Analytics /> {/* Vercel Analytics */}
+        {/* Main content */}
+        <main className="flex-grow">{children}</main>
+
+        {/* Site-wide footer */}
+        <SiteFooter />
+
+        {/* Vercel Analytics */}
+        <Analytics />
       </body>
     </html>
-  );
+  )
 }
