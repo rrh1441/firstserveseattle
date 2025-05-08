@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import Script from 'next/script'
-import SiteFooter from '@/components/SiteFooter'
+import SiteFooter from '../components/SiteFooter'
 import './globals.css'
 
 export const metadata = {
