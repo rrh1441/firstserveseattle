@@ -1,6 +1,7 @@
+// src/app/login/page.tsx
 'use client'
 
-import React, { Suspense, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
@@ -13,20 +14,23 @@ import { Button } from '@/components/ui/button'
 /* -------------------------------------------------------------------------- */
 
 function LoginInner() {
-  const searchParams     = useSearchParams()
-  const rawRedirect      = searchParams.get('redirect_to')
-  const redirectTo       =
-    rawRedirect && rawRedirect.startsWith('/') &&
-    !rawRedirect.startsWith('//') && !rawRedirect.includes(':')
+  const searchParams = useSearchParams()
+  const rawRedirect = searchParams.get('redirect_to')
+
+  const redirectTo =
+    rawRedirect &&
+    rawRedirect.startsWith('/') &&
+    !rawRedirect.startsWith('//') &&
+    !rawRedirect.includes(':')
       ? rawRedirect
       : '/members'
 
-  const router           = useRouter()
-  const supabase         = createClientComponentClient()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
   /* ---------------------------------------------------------------------- */
@@ -38,14 +42,14 @@ function LoginInner() {
     setLoading(true)
 
     try {
-      /* 1 — sign in */
+      /* Step 1 - sign in */
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error || !data.session) throw new Error('Invalid e-mail or password.')
+      if (error || !data.session) throw new Error('Invalid email or password.')
 
-      /* 2 — check subscription row */
+      /* Step 2 - check subscription row */
       const { data: subRow, error: subErr } = await supabase
         .from('subscribers')
         .select('status, plan')
@@ -54,7 +58,7 @@ function LoginInner() {
 
       if (subErr && subErr.code !== 'PGRST116') throw subErr
 
-      /* 3 — send pending users straight to Checkout */
+      /* Step 3 - send pending users straight to Checkout */
       if (!subRow || subRow.status === 'pending') {
         const plan = subRow?.plan ?? 'monthly'
         const resp = await fetch('/api/create-checkout-session', {
@@ -69,7 +73,7 @@ function LoginInner() {
         return
       }
 
-      /* 4 — active or trialing => members */
+      /* Step 4 - active or trialing => members */
       router.push(redirectTo)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err))
@@ -92,7 +96,7 @@ function LoginInner() {
             priority
           />
           <h1 className="text-2xl font-bold">
-            Sign in to First&nbsp;Serve&nbsp;Seattle
+            Sign in to First Serve Seattle
           </h1>
         </div>
 
@@ -103,8 +107,12 @@ function LoginInner() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Input */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
             <input
@@ -112,14 +120,18 @@ function LoginInner() {
               type="email"
               required
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
               placeholder="you@example.com"
             />
           </div>
 
+          {/* Password Input */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
@@ -127,24 +139,38 @@ function LoginInner() {
               type="password"
               required
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
 
+          {/* Sign In Button */}
           <Button
             type="submit"
             className="w-full bg-[#0c372b] hover:bg-[#0c372b]/90"
             disabled={loading}
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </Button>
+
+          {/* Forgot Password Link */}
+          <div className="text-center text-sm text-gray-600">
+            <Link
+              href="/request-password-reset"
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
 
         <p className="text-center text-sm text-gray-600">
-          Don’t have an account?{' '}
-          <Link href="/signup" className="font-semibold text-blue-600 hover:underline">
+          Don't have an account?{' '}
+          <Link
+            href="/signup"
+            className="font-semibold text-blue-600 hover:underline"
+          >
             Sign up
           </Link>
         </p>
