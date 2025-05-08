@@ -20,16 +20,6 @@ export default function SiteFooter() {
         </Link>
         <span aria-hidden="true">|</span>
 
-        <Link href="/account" className="underline hover:text-gray-500">
-          Manage Your Subscription
-        </Link>
-        <span aria-hidden="true">|</span>
-
-        <Link href="/support" className="underline hover:text-gray-500">
-          Support
-        </Link>
-        <span aria-hidden="true">|</span>
-
         <Link href="/faq" className="underline hover:text-gray-500">
           FAQ
         </Link>

@@ -41,7 +41,7 @@ export const metadata = {
             <dd className="mt-1 text-gray-700 space-y-1">
               <p>&bull; Each visitor gets <strong>three free open-court views</strong>.</p>
               <p>&bull; After that you may start a <strong>14-day free trial</strong> of unlimited views.</p>
-              <p>&bull; Continued unlimited access is <strong>$X&nbsp;/&nbsp;month</strong> (cancel any time).</p>
+              <p>&bull; Continued unlimited access is <strong>$8&nbsp;/&nbsp;month</strong> (cancel any time).</p>
               <p>No payment is required unless you opt-in after the trial.</p>
             </dd>
           </div>
