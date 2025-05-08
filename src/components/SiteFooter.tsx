@@ -1,3 +1,4 @@
+// src/components/SiteFooter.tsx
 'use client'
 
 import Link from 'next/link'
@@ -5,7 +6,6 @@ import Link from 'next/link'
 export default function SiteFooter() {
   return (
     <footer className="border-t py-8 text-center text-xs text-gray-400">
-      {/* Navigation links */}
       <nav
         aria-label="Footer navigation"
         className="mb-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-gray-700"
@@ -40,14 +40,11 @@ export default function SiteFooter() {
         </Link>
       </nav>
 
-      {/* SPR disclaimer */}
       <p className="mb-1">
-        First Serve Seattle is an independent community resource and is not
-        associated with Seattle Parks&nbsp;&amp;&nbsp;Recreation.
+        First&nbsp;Serve&nbsp;Seattle is an independent community resource and
+        is not associated with Seattle Parks&nbsp;&amp;&nbsp;Recreation.
       </p>
-
-      {/* Optional copyright line */}
-      <p>&copy; {new Date().getFullYear()} First Serve Seattle.</p>
+      <p>&copy; {new Date().getFullYear()} Simple Apps LLC.</p>
     </footer>
   )
 }
