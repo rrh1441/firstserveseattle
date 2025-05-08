@@ -42,14 +42,14 @@ function LoginInner() {
     setLoading(true)
 
     try {
-      /* Step 1 - sign in */
+      /* Step 1 – sign in */
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error || !data.session) throw new Error('Invalid email or password.')
 
-      /* Step 2 - check subscription row */
+      /* Step 2 – check subscription row */
       const { data: subRow, error: subErr } = await supabase
         .from('subscribers')
         .select('status, plan')
@@ -58,7 +58,7 @@ function LoginInner() {
 
       if (subErr && subErr.code !== 'PGRST116') throw subErr
 
-      /* Step 3 - send pending users straight to Checkout */
+      /* Step 3 – send pending users straight to Checkout */
       if (!subRow || subRow.status === 'pending') {
         const plan = subRow?.plan ?? 'monthly'
         const resp = await fetch('/api/create-checkout-session', {
@@ -73,7 +73,7 @@ function LoginInner() {
         return
       }
 
-      /* Step 4 - active or trialing => members */
+      /* Step 4 – active or trialing ⇒ members */
       router.push(redirectTo)
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : String(err))
@@ -151,7 +151,7 @@ function LoginInner() {
             className="w-full bg-[#0c372b] hover:bg-[#0c372b]/90"
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in…' : 'Sign In'}
           </Button>
 
           {/* Forgot Password Link */}
@@ -166,7 +166,7 @@ function LoginInner() {
         </form>
 
         <p className="text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          No account?{' '}
           <Link
             href="/signup"
             className="font-semibold text-blue-600 hover:underline"
