@@ -32,7 +32,13 @@ export async function POST(request: Request) {
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
-      subscription_data: { trial_period_days: 14 },   // 14-day trial for everyone
+      payment_method_collection: "if_required", // start trial without collecting a card
+      subscription_data: {
+        trial_period_days: 14,
+        trial_settings: {
+          end_behavior: { missing_payment_method: "pause" },
+        },
+      },
       metadata: {
         plan: selectedPlan,
         trial_applied: "true",
