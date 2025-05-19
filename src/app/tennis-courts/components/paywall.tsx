@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { PlanSelector } from "@/components/PlanSelector";
 import { logEvent } from "@/lib/logEvent";
+import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
 
 const features = [
   "See today's availability for ALL public courts",
@@ -26,6 +27,7 @@ const headlines = [
 ];
 
 export default function PaywallPage() {
+  const [canShow, setCanShow] = useState<boolean | null>(null);
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const [assignedHeadline, setAssignedHeadline] = useState<{
     group: string;
@@ -33,6 +35,21 @@ export default function PaywallPage() {
   } | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    shouldShowPaywall()
+      .then((result) => {
+        if (mounted) setCanShow(result);
+      })
+      .catch(() => {
+        if (mounted) setCanShow(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canShow) return;
     const randomIndex = Math.random() < 0.5 ? 0 : 1;
     const selectedHeadline = headlines[randomIndex];
     setAssignedHeadline(selectedHeadline);
@@ -40,7 +57,7 @@ export default function PaywallPage() {
     logEvent("view_paywall", {
       headlineGroup: selectedHeadline.group,
     });
-  }, []);
+  }, [canShow]);
 
   const handleSubscribeClick = () => {
     logEvent("click_subscribe_cta", {
@@ -48,6 +65,8 @@ export default function PaywallPage() {
       headlineGroup: assignedHeadline?.group ?? null,
     });
   };
+
+  if (canShow !== true) return null;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white p-4">
