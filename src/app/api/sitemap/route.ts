@@ -30,7 +30,7 @@ export async function GET(_request: Request) {
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  {/* Add other URLs here */}
+  <!-- Add other URLs here -->
 </urlset>`;
 
   return new NextResponse(sitemapContent, {
