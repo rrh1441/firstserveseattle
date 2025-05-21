@@ -4,12 +4,18 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    // The payload structure should match what logEvent sends
     const { event, metadata, timestamp } = await req.json();
+
+    // Add validation if necessary, though Supabase schema validation is often sufficient
+    if (!event || !timestamp) {
+      return NextResponse.json({ error: "Missing event or timestamp" }, { status: 400 });
+    }
 
     const { error } = await supabase.from("event_logs").insert([
       {
         event,
-        metadata,
+        metadata: metadata || {}, // Ensure metadata is at least an empty object
         timestamp,
       },
     ]);

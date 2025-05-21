@@ -10,6 +10,7 @@ import TennisCourtList from './tennis-courts/components/TennisCourtList'
 import ViewsCounter from './tennis-courts/components/counter'
 import { ExternalLink } from 'lucide-react'
 import { logEvent } from '@/lib/logEvent'
+import { useRandomUserId } from './randomUserSetup' // Import the hook
 
 const exemptPaths = [
   '/reset-password',
@@ -18,7 +19,7 @@ const exemptPaths = [
   '/members',
   '/privacy-policy',
   '/terms-of-service',
-  '/courts',
+  '/courts', // Keep this exempt if the main courts page is separate
   '/request-password-reset',
 ]
 
@@ -30,11 +31,13 @@ const LoadingIndicator = () => (
 
 export default function HomePage() {
   const pathname = usePathname()
-  const [userId, setUserId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null) // State to hold the anonymous ID
   const [isLoading, setIsLoading] = useState(true)
   const [viewData, setViewData] =
     useState<{ count: number; showPaywall: boolean } | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  useRandomUserId(); // Call the hook to ensure a userId is generated/loaded
 
   const isPathExempt = useCallback((current: string) => {
     if (exemptPaths.includes(current)) return true
@@ -43,29 +46,10 @@ export default function HomePage() {
   }, [])
 
   /* ------------------------------------------------------------------ */
-  /*  Generate or read local UUID                                       */
+  /*  Update view count & paywall status                               */
   /* ------------------------------------------------------------------ */
-  useEffect(() => {
-    if (isPathExempt(pathname)) {
-      setIsLoading(false)
-      setViewData(null)
-      setUserId(null)
-      return
-    }
-
-    let storedId = localStorage.getItem('userId')
-    if (!storedId) {
-      storedId = crypto.randomUUID()
-      localStorage.setItem('userId', storedId)
-    }
-    setUserId(storedId)
-  }, [pathname, isPathExempt])
-
-  /* ------------------------------------------------------------------ */
-  /*  Update view count & paywall status                                */
-  /* ------------------------------------------------------------------ */
-  const updateAndCheckViewStatus = useCallback(async () => {
-    if (!userId || isPathExempt(pathname)) {
+  const updateAndCheckViewStatus = useCallback(async (currentUserId: string) => {
+    if (!currentUserId || isPathExempt(pathname)) {
       if (isPathExempt(pathname)) setIsLoading(false)
       return
     }
@@ -77,7 +61,7 @@ export default function HomePage() {
       const res = await fetch('/api/update-and-check-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId: currentUserId }),
       })
 
       if (!res.ok) {
@@ -100,13 +84,6 @@ export default function HomePage() {
           showPaywall: data.showPaywall,
           pathname,
         })
-
-        if (data.showPaywall) {
-          logEvent('view_paywall', {
-            visitNumber: data.viewsCount,
-            triggerPath: pathname,
-          })
-        }
       } else {
         throw new Error('Invalid data received from view update/check API.')
       }
@@ -119,12 +96,21 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [userId, pathname, isPathExempt])
+  }, [pathname, isPathExempt])
 
   useEffect(() => {
-    if (userId && !isPathExempt(pathname)) updateAndCheckViewStatus()
-    else if (!userId && !isPathExempt(pathname)) setIsLoading(true)
-    else setIsLoading(false)
+    const storedId = localStorage.getItem('userId');
+    setUserId(storedId);
+  }, [])
+
+  useEffect(() => {
+    if (userId && !isPathExempt(pathname)) {
+      updateAndCheckViewStatus(userId)
+    } else if (!userId && !isPathExempt(pathname)) {
+      setIsLoading(true)
+    } else {
+      setIsLoading(false)
+    }
   }, [userId, pathname, updateAndCheckViewStatus, isPathExempt])
 
   /* ------------------------------------------------------------------ */
@@ -159,10 +145,10 @@ export default function HomePage() {
             />
             <div>
               <h1 className="mb-1 text-3xl font-extrabold text-[#0c372b] md:text-4xl">
-                First&nbsp;Serve&nbsp;Seattle
+                First Serve Seattle
               </h1>
               <p className="text-base font-semibold md:text-lg">
-                Today&apos;s Open Tennis and Pickleball Courts
+                Today's Open Tennis and Pickleball Courts
               </p>
             </div>
           </div>
@@ -171,7 +157,7 @@ export default function HomePage() {
         <ViewsCounter viewsCount={viewData.count} />
 
         <Suspense fallback={<LoadingIndicator />}>
-          <TennisCourtList />
+          <TennisCourtList userId={userId} />
         </Suspense>
 
         <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">

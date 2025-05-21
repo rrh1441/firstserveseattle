@@ -1,22 +1,27 @@
-// src/app/login/page.tsx
+/* -------------------------------------------------------------------------- */
+/*  src/app/login/page.tsx – full file, lint-clean                            */
+/* -------------------------------------------------------------------------- */
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 
 /* -------------------------------------------------------------------------- */
-/*  The inner component contains all logic and calls useSearchParams.         */
-/*  It is wrapped in <Suspense> so Next.js build passes.                      */
+/*  Inner component → contains logic that needs access to hooks               */
 /* -------------------------------------------------------------------------- */
-
 function LoginInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const rawRedirect = searchParams.get('redirect_to')
+  const supabase = createClientComponentClient()
 
+  /* ---------------------------------------------------------------------- */
+  /*  Compute safe redirect target                                          */
+  /* ---------------------------------------------------------------------- */
+  const rawRedirect = searchParams.get('redirect_to')
   const redirectTo =
     rawRedirect &&
     rawRedirect.startsWith('/') &&
@@ -25,68 +30,68 @@ function LoginInner() {
       ? rawRedirect
       : '/members'
 
-  const router = useRouter()
-  const supabase = createClientComponentClient()
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
-
   /* ---------------------------------------------------------------------- */
-  /*  Submit handler                                                        */
+  /*  Post-sign-in handler (subscription check, Stripe hand-off)            */
   /* ---------------------------------------------------------------------- */
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setErrorMsg('')
-    setLoading(true)
+  async function handlePostSignIn(session: Session) {
+    /* Step 1 – look up subscriber row */
+    const { data: subRow, error: subErr } = await supabase
+      .from('subscribers')
+      .select('status, plan')
+      .eq('id', session.user.id)
+      .single()
 
-    try {
-      /* Step 1 – sign in */
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    if (subErr && subErr.code !== 'PGRST116') {
+      console.error(subErr)
+      router.replace('/auth/error')
+      return
+    }
+
+    /* Step 2 – pending  Stripe Checkout */
+    if (!subRow || subRow.status === 'pending') {
+      const plan = subRow?.plan ?? 'monthly'
+      const resp = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: session.user.email, plan }),
       })
-      if (error || !data.session) throw new Error('Invalid email or password.')
-
-      /* Step 2 – check subscription row */
-      const { data: subRow, error: subErr } = await supabase
-        .from('subscribers')
-        .select('status, plan')
-        .eq('id', data.session.user.id)
-        .single()
-
-      if (subErr && subErr.code !== 'PGRST116') throw subErr
-
-      /* Step 3 – send pending users straight to Checkout */
-      if (!subRow || subRow.status === 'pending') {
-        const plan = subRow?.plan ?? 'monthly'
-        const resp = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, plan }),
-        })
-        if (!resp.ok) throw new Error(await resp.text())
-        const { url } = (await resp.json()) as { url: string | null }
-        if (!url) throw new Error('Checkout URL missing.')
-        window.location.href = url
+      if (!resp.ok) {
+        console.error(await resp.text())
+        router.replace('/auth/error')
         return
       }
-
-      /* Step 4 – active or trialing ⇒ members */
-      router.push(redirectTo)
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : String(err))
-      setLoading(false)
+      const { url } = (await resp.json()) as { url: string | null }
+      if (!url) {
+        console.error('Missing Checkout URL')
+        router.replace('/auth/error')
+        return
+      }
+      window.location.href = url
+      return
     }
+
+    /* Step 3 – active or trialing  members */
+    router.replace(redirectTo)
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  Render                                                                */
+  /*  Listen for auth state changes and act once the user is signed in      */
+  /* ---------------------------------------------------------------------- */
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) handlePostSignIn(session)
+    })
+    return () => sub.subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // run once
+
+  /* ---------------------------------------------------------------------- */
+  /*  Render Supabase Auth UI                                               */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md space-y-8">
+        {/* logo + heading */}
         <div className="flex flex-col items-center gap-4">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -95,94 +100,40 @@ function LoginInner() {
             height={80}
             priority
           />
-          <h1 className="text-2xl font-bold">
-            Sign in to First Serve Seattle
-          </h1>
+          <h1 className="text-2xl font-bold">Sign in to First Serve Seattle</h1>
         </div>
 
-        {errorMsg && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Input */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-200"
-              placeholder="********"
-            />
-          </div>
-
-          {/* Sign In Button */}
-          <Button
-            type="submit"
-            className="w-full bg-[#0c372b] hover:bg-[#0c372b]/90"
-            disabled={loading}
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-
-          {/* Forgot Password Link */}
-          <div className="text-center text-sm text-gray-600">
-            <Link
-              href="/request-password-reset"
-              className="font-semibold text-blue-600 hover:underline"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-        </form>
-
-        <p className="text-center text-sm text-gray-600">
-          No account?{' '}
-          <Link
-            href="/signup"
-            className="font-semibold text-blue-600 hover:underline"
-          >
-            Sign up
-          </Link>
-        </p>
+        {/* Supabase pre-built form */}
+        <Auth
+          supabaseClient={supabase}
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#0c372b', // primary accent
+                  brandAccent: '#0c372b', // button hover
+                },
+              },
+            },
+          }}
+          /* providers shown as buttons above the email/password form */
+          providers={['google']}
+          /* → for OAuth redirect; email/password stays on page */
+          redirectTo={`${window.location.origin}/login`}
+          magicLink={false} /* keep password + OAuth only */
+          onlyThirdPartyProviders={false} /* show both */
+          localization={{ variables: { sign_in: { email_label: 'Email' } } }}
+        />
       </div>
     </div>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Root component returns Suspense wrapper                                   */
+/*  Export wrapper with Suspense – matches your existing structure           */
 /* -------------------------------------------------------------------------- */
-export default function LoginPageWrapper() {
+export default function LoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen" />}>
       <LoginInner />
