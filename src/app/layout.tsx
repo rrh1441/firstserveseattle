@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import type { ReactNode } from 'react'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
 import SiteFooter from '../components/SiteFooter'
 import ClientIdsInit from '../components/ClientIdsInit'
@@ -36,6 +37,7 @@ export default function RootLayout({
 
         {/* Vercel Analytics */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
