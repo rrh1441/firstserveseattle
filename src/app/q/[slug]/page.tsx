@@ -42,7 +42,7 @@ export default async function QRRedirect({ params }: QRProps) {
           user_agent: hdr.get('user-agent') ?? null,
           referer: hdr.get('referer') ?? null,
         })
-    } catch (error) {
+    } catch {
       // swallow DB errors - don't block redirect
     }
   }
