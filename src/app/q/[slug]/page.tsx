@@ -1,41 +1,53 @@
-/** /q/<slug> – record scan then redirect */
+/** @file /q/[slug]/page.tsx — record scan then redirect immediately */
 import { createClient } from '@supabase/supabase-js'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { redirect }     from 'next/navigation'
+import { headers }      from 'next/headers'
 
+/* ------------------------------------------------------------------ */
+/* 1.  Type expected by Next’s type-generator                          */
+/* ------------------------------------------------------------------ */
+export type PageProps = {
+  params: {
+    slug: string
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 2.  Supabase client (service-role key → server only)                */
+/* ------------------------------------------------------------------ */
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-side key
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export const dynamic = 'force-dynamic' // always run on the server
+/* Force this page to run on the server every request */
+export const dynamic = 'force-dynamic'
 
-type PageProps = { params: { slug: string } }
-
-export default async function QRRedirect({ params }: PageProps): Promise<never> {
-  /* 1 ─ look-up facility id (keeps table normalised) */
-  const { data: facility } = await supabase
+/* ------------------------------------------------------------------ */
+/* 3.  Handler                                                         */
+/* ------------------------------------------------------------------ */
+export default async function QRRedirect ({ params }: PageProps) {
+  /* look up facility id */
+  const { data: facility, error } = await supabase
     .from('tennis_facilities')
     .select('id')
     .eq('slug', params.slug)
-    .maybeSingle() // returns null when not found without throwing
-    .throwOnError()
+    .single()
 
-  /* 2 ─ insert scan record (ignore failures so redirect is never blocked) */
-  if (facility?.id) {
+  /* insert scan record (ignore failures so redirect never blocks) */
+  if (facility && !error) {
     const hdr = headers()
-    void supabase
+
+    await supabase
       .from('qr_scans')
       .insert({
         facility_id: facility.id,
         user_agent : hdr.get('user-agent') ?? null,
-        referer    : hdr.get('referer') ?? null,
+        referer    : hdr.get('referer')    ?? null,
       })
-      .catch(() => {
-        /* swallow – logging isn’t critical to UX */
-      })
+      .catch(() => {})             // swallow any DB errors
   }
 
-  /* 3 ─ send user on their way */
+  /* final redirect */
   redirect('https://firstserveseattle.com')
 }
