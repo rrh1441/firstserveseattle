@@ -30,8 +30,7 @@ export async function logEvent(
         timestamp: new Date().toISOString()
       })
     });
-  } catch (error) {
-    // eslint-disable-next-line no-console
+  } catch (error) {x
     console.warn("logEvent failed:", event, error);
   }
 }
