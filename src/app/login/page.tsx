@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
+import type { Session } from '@supabase/auth-helpers-nextjs'
 
 /* -------------------------------------------------------------------------- */
 /*  Inner component → contains logic that needs access to hooks               */
@@ -47,7 +48,7 @@ function LoginInner() {
       return
     }
 
-    /* Step 2 – pending  Stripe Checkout */
+    /* Step 2 – pending  Stripe Checkout */
     if (!subRow || subRow.status === 'pending') {
       const plan = subRow?.plan ?? 'monthly'
       const resp = await fetch('/api/create-checkout-session', {
@@ -70,7 +71,7 @@ function LoginInner() {
       return
     }
 
-    /* Step 3 – active or trialing  members */
+    /* Step 3 – active or trialing  members */
     router.replace(redirectTo)
   }
 
