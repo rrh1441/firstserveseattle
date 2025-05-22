@@ -34,14 +34,17 @@ export default async function QRRedirect({ params }: QRProps) {
   /* 2️⃣ Record the scan (ignore failure so redirect is never blocked) */
   if (facility) {
     const hdr = await headers()
-    await supabase
-      .from('qr_scans')
-      .insert({
-        facility_id: facility.id,
-        user_agent: hdr.get('user-agent') ?? null,
-        referer: hdr.get('referer') ?? null,
-      })
-      .catch(() => {}) // swallow DB errors
+    try {
+      await supabase
+        .from('qr_scans')
+        .insert({
+          facility_id: facility.id,
+          user_agent: hdr.get('user-agent') ?? null,
+          referer: hdr.get('referer') ?? null,
+        })
+    } catch (error) {
+      // swallow DB errors - don't block redirect
+    }
   }
 
   /* 3️⃣ Off you go */
