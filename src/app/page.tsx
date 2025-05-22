@@ -11,7 +11,6 @@ import ViewsCounter from './tennis-courts/components/counter'
 import { ExternalLink } from 'lucide-react'
 import { logEvent } from '@/lib/logEvent'
 import { useRandomUserId } from './randomUserSetup' // Import the hook
-import { UserProvider } from './UserContext'
 
 const exemptPaths = [
   '/reset-password',
@@ -158,9 +157,7 @@ export default function HomePage() {
         <ViewsCounter viewsCount={viewData.count} />
 
         <Suspense fallback={<LoadingIndicator />}>
-          <UserProvider value={{ userId }}>
-            <TennisCourtList />
-          </UserProvider>
+          <TennisCourtList />
         </Suspense>
 
         <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
