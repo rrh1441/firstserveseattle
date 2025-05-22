@@ -1,36 +1,46 @@
 // src/lib/logEvent.ts
 
+export type LogMetadata = Record<string, unknown>;
+
+/**
+ * Send a telemetry event to the `/api/log-event` endpoint.
+ */
 export async function logEvent(
   event: string,
-  metadata: Record<string, unknown> = {}
+  metadata: LogMetadata = {},
 ): Promise<void> {
   try {
-    const extras: Record<string, unknown> = {};
+    const extras: LogMetadata = {};
 
-    if (typeof window !== "undefined") {
-      const vn = parseInt(localStorage.getItem("visitNumber") ?? "0", 10);
-      if (!Number.isNaN(vn)) extras.visitNumber = vn;
+    if (typeof window !== 'undefined') {
+      const visitNumber = Number.parseInt(
+        localStorage.getItem('visitNumber') ?? '0',
+        10,
+      );
+      if (!Number.isNaN(visitNumber)) extras.visitNumber = visitNumber;
 
-      const ab = localStorage.getItem("abGroup");
-      if (ab) extras.abGroup = ab;
+      const abGroup = localStorage.getItem('abGroup');
+      if (abGroup) extras.abGroup = abGroup;
 
-      const uid = localStorage.getItem("userId");
-      if (uid) extras.userId = uid;
+      const userId = localStorage.getItem('userId');
+      if (userId) extras.userId = userId;
 
-      const scid = localStorage.getItem("stripeCustomerId");
-      if (scid) extras.stripeCustomerId = scid;
+      const stripeCustomerId = localStorage.getItem('stripeCustomerId');
+      if (stripeCustomerId) extras.stripeCustomerId = stripeCustomerId;
     }
 
-    await fetch("/api/log-event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await fetch('/api/log-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event,
         metadata: { ...metadata, ...extras },
-        timestamp: new Date().toISOString()
-      })
+        timestamp: new Date().toISOString(),
+      }),
     });
-  } catch (error) {x
-    console.warn("logEvent failed:", event, error);
+  } catch (err) {
+    // Non-critical: log to console and continue.
+    // eslint-disable-next-line no-console
+    console.warn('logEvent failed:', event, err);
   }
 }
