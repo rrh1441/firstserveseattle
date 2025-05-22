@@ -148,7 +148,7 @@ export default function HomePage() {
                 First Serve Seattle
               </h1>
               <p className="text-base font-semibold md:text-lg">
-                Today's Open Tennis and Pickleball Courts
+                Today&apos;s Open Tennis and Pickleball Courts
               </p>
             </div>
           </div>
