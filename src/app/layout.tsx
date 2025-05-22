@@ -6,7 +6,6 @@ import Script from 'next/script'
 import SiteFooter from '../components/SiteFooter'
 import ClientIdsInit from '../components/ClientIdsInit'
 import './globals.css'
-import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata = {
   title: 'First Serve Seattle',
