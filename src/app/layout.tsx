@@ -1,8 +1,10 @@
 // src/app/layout.tsx
 import type { ReactNode } from 'react'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
 import SiteFooter from '../components/SiteFooter'
+import ClientIdsInit from '../components/ClientIdsInit'
 import './globals.css'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -19,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col">
+        <ClientIdsInit />
         {/* Datafast tracking */}
         <Script
           src="https://datafa.st/js/script.js"
@@ -35,6 +38,7 @@ export default function RootLayout({
 
         {/* Vercel Analytics */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

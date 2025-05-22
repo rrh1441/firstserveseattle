@@ -22,8 +22,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.49.4",
     "@vercel/analytics": "^1.4.1",
-    "@vercel/speed-insights": "^1.2.0",
-    "canvas": "^3.1.0",
+    "@vercel/speed-insights": "^1.2.0",        // keep newer version
     "clsx": "^2.1.1",
     "dotenv": "^16.5.0",
     "jsdom": "^26.1.0",
