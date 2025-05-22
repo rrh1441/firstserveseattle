@@ -4,50 +4,43 @@ import { redirect }     from 'next/navigation'
 import { headers }      from 'next/headers'
 
 /* ------------------------------------------------------------------ */
-/* 1.  Type expected by Next’s type-generator                          */
+/*  Local props type – note the name is _not_ PageProps               */
 /* ------------------------------------------------------------------ */
-export type PageProps = {
-  params: {
-    slug: string
-  }
+type QRProps = {
+  params: { slug: string }
 }
 
-/* ------------------------------------------------------------------ */
-/* 2.  Supabase client (service-role key → server only)                */
-/* ------------------------------------------------------------------ */
+export const dynamic = 'force-dynamic'          // always server-render
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!       // server-side key
 )
 
-/* Force this page to run on the server every request */
-export const dynamic = 'force-dynamic'
-
 /* ------------------------------------------------------------------ */
-/* 3.  Handler                                                         */
+/*  Handler                                                            */
 /* ------------------------------------------------------------------ */
-export default async function QRRedirect ({ params }: PageProps) {
-  /* look up facility id */
-  const { data: facility, error } = await supabase
+export default async function QRRedirect ({ params }: QRProps) {
+  /* 1️⃣  Look up facility ID */
+  const { data: facility } = await supabase
     .from('tennis_facilities')
     .select('id')
     .eq('slug', params.slug)
     .single()
 
-  /* insert scan record (ignore failures so redirect never blocks) */
-  if (facility && !error) {
+  /* 2️⃣  Record the scan (ignore failure so redirect is never blocked) */
+  if (facility) {
     const hdr = headers()
-
     await supabase
       .from('qr_scans')
       .insert({
-        facility_id: facility.id,
-        user_agent : hdr.get('user-agent') ?? null,
-        referer    : hdr.get('referer')    ?? null,
+        facility_id : facility.id,
+        user_agent  : hdr.get('user-agent') ?? null,
+        referer     : hdr.get('referer')    ?? null,
       })
-      .catch(() => {})             // swallow any DB errors
+      .catch(() => {})                       // swallow DB errors
   }
 
-  /* final redirect */
+  /* 3️⃣  Off you go */
   redirect('https://firstserveseattle.com')
 }

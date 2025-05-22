@@ -10,6 +10,7 @@ export async function logEvent(
   try {
     const extras: LogMetadata = {}
 
+    // Only run the local-storage look-ups in the browser
     if (typeof window !== 'undefined') {
       const visitNumber = Number.parseInt(
         localStorage.getItem('visitNumber') ?? '0',
@@ -32,7 +33,7 @@ export async function logEvent(
       headers: { 'Content-Type': 'application/json' },
       body   : JSON.stringify({
         event,
-        metadata: { ...metadata, ...extras },
+        metadata : { ...metadata, ...extras },
         timestamp: new Date().toISOString(),
       }),
     })
