@@ -9,7 +9,7 @@ export async function logEvent(
 ): Promise<void> {
   try {
     const extras: LogMetadata = {}
-
+    
     // Only run the local-storage look-ups in the browser
     if (typeof window !== 'undefined') {
       const visitNumber = Number.parseInt(
@@ -17,29 +17,28 @@ export async function logEvent(
         10,
       )
       if (!Number.isNaN(visitNumber)) extras.visitNumber = visitNumber
-
+      
       const abGroup = localStorage.getItem('abGroup')
       if (abGroup) extras.abGroup = abGroup
-
+      
       const userId = localStorage.getItem('userId')
       if (userId) extras.userId = userId
-
+      
       const stripeCustomerId = localStorage.getItem('stripeCustomerId')
       if (stripeCustomerId) extras.stripeCustomerId = stripeCustomerId
     }
-
+    
     await fetch('/api/log-event', {
-      method : 'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({
+      body: JSON.stringify({
         event,
-        metadata : { ...metadata, ...extras },
+        metadata: { ...metadata, ...extras },
         timestamp: new Date().toISOString(),
       }),
     })
   } catch (err) {
     // Non-critical: log and continue
-    // eslint-disable-next-line no-console
     console.warn('logEvent failed:', event, err)
   }
 }

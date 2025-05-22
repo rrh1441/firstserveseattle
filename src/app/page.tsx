@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client'
 
-import { useEffect, useState, Suspense, useCallback } from 'react'
+import { useEffect, useState, Suspense, useCallback, createContext, useContext } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,10 @@ import ViewsCounter from './tennis-courts/components/counter'
 import { ExternalLink } from 'lucide-react'
 import { logEvent } from '@/lib/logEvent'
 import { useRandomUserId } from './randomUserSetup' // Import the hook
+
+// User Context for sharing userId across components
+const UserContext = createContext<{ userId: string | null }>({ userId: null })
+export const useUser = () => useContext(UserContext)
 
 const exemptPaths = [
   '/reset-password',
@@ -157,7 +161,9 @@ export default function HomePage() {
         <ViewsCounter viewsCount={viewData.count} />
 
         <Suspense fallback={<LoadingIndicator />}>
-          <TennisCourtList userId={userId} />
+          <UserContext.Provider value={{ userId }}>
+            <TennisCourtList />
+          </UserContext.Provider>
         </Suspense>
 
         <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
