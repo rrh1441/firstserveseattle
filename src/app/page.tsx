@@ -11,7 +11,7 @@ import ViewsCounter from './tennis-courts/components/counter'
 import { ExternalLink } from 'lucide-react'
 import { logEvent } from '@/lib/logEvent'
 import { useRandomUserId } from './randomUserSetup' // Import the hook
-import { UserProvider } from '@/contexts/UserContext'
+import { UserProvider } from './UserContext'
 
 const exemptPaths = [
   '/reset-password',
