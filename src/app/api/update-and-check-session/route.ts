@@ -1,33 +1,38 @@
 /* -------------------------------------------------------------------------- */
-/*  src/app/api/update-and-check-session/route.ts                             */
-/*  Hot-fix version: returns BOTH `uniqueDays` and legacy `viewsCount`        */
-/*  so the existing front-end can consume `viewsCount` without changes.       */
+/*  Fail-safe update-and-check-session                                        */
+/*  – Returns BOTH `viewsCount` and `uniqueDays` for legacy front-end         */
+/*  – Never emits 500 to the browser; logs internal errors server-side        */
 /* -------------------------------------------------------------------------- */
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-/* ---------- Supabase admin client --------------------------------------- */
-const supabaseUrl           = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRole   = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceRole, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+/* ---------- Environment -------------------------------------------------- */
+const supabaseUrl         = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-/* ---------- Free limit before paywall (unique days) --------------------- */
-const PAYWALL_LIMIT = 3;
+/* ---------- Utility to get a Supabase client or undefined --------------- */
+const getSupabase = () => {
+  if (!supabaseUrl || !supabaseServiceRole) return undefined;
+  return createClient(supabaseUrl, supabaseServiceRole, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+};
+
+const PAYWALL_LIMIT = 3; // unique days
 
 /* ------------------------------------------------------------------------ */
-/*  POST /api/update-and-check-session                                      */
+/*  POST handler                                                            */
 /* ------------------------------------------------------------------------ */
 export async function POST(request: Request) {
   let userId: string | undefined;
 
   try {
-    const body = await request.json();
-    userId = body.userId;
+    /* ---------- Parse body -------------------------------------------- */
+    const body = await request.json().catch(() => ({}));
+    userId = body.userId as string | undefined;
 
-    /* ---------- anonymous visitor: always allow ------------------------ */
+    /* ---------- Anonymous users → allow ------------------------------- */
     if (!userId) {
       return NextResponse.json(
         { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
@@ -36,27 +41,33 @@ export async function POST(request: Request) {
     }
 
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const supabase = getSupabase();
 
-    /* ---------- fetch existing row ------------------------------------ */
+    /* ---------- If Supabase unavailable, allow user ------------------- */
+    if (!supabase) {
+      console.error(
+        "[update-and-check] Supabase env vars missing – falling back to allow",
+      );
+      return NextResponse.json(
+        { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
+        { status: 200 },
+      );
+    }
+
+    /* ---------- Fetch or create session row --------------------------- */
     const { data: row, error: selErr } = await supabase
       .from("user_sessions")
       .select("id, unique_days, last_view_date")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (selErr) {
-      console.error("[update-and-check] select error:", selErr);
-      return NextResponse.json(
-        { error: "Database error selecting session." },
-        { status: 500 },
-      );
-    }
+    if (selErr) throw selErr;
 
     let uniqueDays = 1;
 
     if (row) {
-      const isNewDay = row.last_view_date !== today;
-      uniqueDays = isNewDay ? row.unique_days + 1 : row.unique_days;
+      const newDay = row.last_view_date !== today;
+      uniqueDays = newDay ? row.unique_days + 1 : row.unique_days;
 
       const { error: updErr } = await supabase
         .from("user_sessions")
@@ -67,13 +78,7 @@ export async function POST(request: Request) {
         })
         .eq("id", row.id);
 
-      if (updErr) {
-        console.error("[update-and-check] update error:", updErr);
-        return NextResponse.json(
-          { error: "Database error updating session." },
-          { status: 500 },
-        );
-      }
+      if (updErr) throw updErr;
     } else {
       const { error: insErr } = await supabase.from("user_sessions").insert({
         user_id: userId,
@@ -82,39 +87,27 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-
-      if (insErr) {
-        console.error("[update-and-check] insert error:", insErr);
-        return NextResponse.json(
-          { error: "Database error inserting session." },
-          { status: 500 },
-        );
-      }
+      if (insErr) throw insErr;
     }
 
-    /* ---------- paywall decision -------------------------------------- */
     const showPaywall = uniqueDays > PAYWALL_LIMIT;
 
-    /* ---------- response: add legacy alias ---------------------------- */
     return NextResponse.json(
-      {
-        showPaywall,
-        uniqueDays,
-        viewsCount: uniqueDays, // <-- legacy field for existing front-end
-      },
+      { showPaywall, uniqueDays, viewsCount: uniqueDays },
       { status: 200 },
     );
   } catch (err) {
-    console.error("[update-and-check] unhandled:", err);
+    /* ---------- Log and fail open ------------------------------------- */
+    console.error("[update-and-check] internal error – allowing user:", err);
     return NextResponse.json(
-      { error: "Internal server error." },
-      { status: 500 },
+      { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
+      { status: 200 },
     );
   }
 }
 
 /* ------------------------------------------------------------------------ */
-/*  GET – not allowed                                                       */
+/*  GET – still blocked                                                     */
 /* ------------------------------------------------------------------------ */
 export async function GET() {
   return NextResponse.json(
