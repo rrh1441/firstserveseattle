@@ -1,41 +1,40 @@
 /* -------------------------------------------------------------------------- */
 /*  src/app/api/update-and-check-session/route.ts                             */
+/*  Hot-fix version: returns BOTH `uniqueDays` and legacy `viewsCount`        */
+/*  so the existing front-end can consume `viewsCount` without changes.       */
 /* -------------------------------------------------------------------------- */
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-/* ---------- Supabase admin client (service role) ------------------------- */
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+/* ---------- Supabase admin client --------------------------------------- */
+const supabaseUrl           = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceRole   = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceRole, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-/* ---------- Free limit before paywall ----------------------------------- */
-const PAYWALL_LIMIT = 3; // unique *days* not views
+/* ---------- Free limit before paywall (unique days) --------------------- */
+const PAYWALL_LIMIT = 3;
 
-/* ---------------------------------------------------------------------- */
-/*  POST /api/update-and-check-session                                    */
-/* ---------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/*  POST /api/update-and-check-session                                      */
+/* ------------------------------------------------------------------------ */
 export async function POST(request: Request) {
   let userId: string | undefined;
 
   try {
-    /* ---------- read body --------------------------------------------- */
     const body = await request.json();
     userId = body.userId;
 
+    /* ---------- anonymous visitor: always allow ------------------------ */
     if (!userId) {
-      // anonymous users: always allow
       return NextResponse.json(
-        { showPaywall: false, uniqueDays: 0 },
+        { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
         { status: 200 },
       );
     }
 
-    /* ---------- today’s date (UTC) ------------------------------------ */
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     /* ---------- fetch existing row ------------------------------------ */
@@ -56,7 +55,6 @@ export async function POST(request: Request) {
     let uniqueDays = 1;
 
     if (row) {
-      /* --- row exists -------------------------------------------------- */
       const isNewDay = row.last_view_date !== today;
       uniqueDays = isNewDay ? row.unique_days + 1 : row.unique_days;
 
@@ -77,7 +75,6 @@ export async function POST(request: Request) {
         );
       }
     } else {
-      /* --- first record ------------------------------------------------ */
       const { error: insErr } = await supabase.from("user_sessions").insert({
         user_id: userId,
         unique_days: 1,
@@ -98,8 +95,13 @@ export async function POST(request: Request) {
     /* ---------- paywall decision -------------------------------------- */
     const showPaywall = uniqueDays > PAYWALL_LIMIT;
 
+    /* ---------- response: add legacy alias ---------------------------- */
     return NextResponse.json(
-      { showPaywall, uniqueDays },
+      {
+        showPaywall,
+        uniqueDays,
+        viewsCount: uniqueDays, // <-- legacy field for existing front-end
+      },
       { status: 200 },
     );
   } catch (err) {
@@ -111,9 +113,9 @@ export async function POST(request: Request) {
   }
 }
 
-/* ---------------------------------------------------------------------- */
-/*  GET – not allowed                                                     */
-/* ---------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------ */
+/*  GET – not allowed                                                       */
+/* ------------------------------------------------------------------------ */
 export async function GET() {
   return NextResponse.json(
     { error: "Method Not Allowed. Use POST." },
