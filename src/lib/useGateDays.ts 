@@ -1,0 +1,11 @@
+/* src/lib/useGateDays.ts */
+import { useEffect, useState } from "react";
+
+export function useGateDays(): number {
+  const [gate, setGate] = useState(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setGate(Number(localStorage.getItem("fss_gate") ?? "0"));
+  }, []);
+  return gate;
+}

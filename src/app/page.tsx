@@ -1,108 +1,151 @@
-// src/app/page.tsx
+/* -------------------------------------------------------------------------- */
+/*  src/app/page.tsx                                                          */
+/*  Home page with                                                           */
+/*   – anonymous-ID handling                                                 */
+/*   – unique-day gating (3 / 5 / 7)                                          */
+/*   – fail-open behaviour if API is down                                     */
+/* -------------------------------------------------------------------------- */
+
 'use client'
 
-import { useEffect, useState, Suspense, useCallback } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import { ExternalLink } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import Paywall from './tennis-courts/components/paywall'
 import TennisCourtList from './tennis-courts/components/TennisCourtList'
-import ViewsCounter from './tennis-courts/components/counter'
-import { ExternalLink } from 'lucide-react'
-import { logEvent } from '@/lib/logEvent'
-import { useRandomUserId } from './randomUserSetup' // Import the hook
+import DaysCounter from './tennis-courts/components/DaysCounter'
 
-const exemptPaths = [
+import { logEvent } from '@/lib/logEvent'
+import { useRandomUserId } from './randomUserSetup'
+
+/* -------------------------------------------------------------------------- */
+/*  Constants                                                                 */
+/* -------------------------------------------------------------------------- */
+const EXEMPT_PATHS = [
   '/reset-password',
   '/login',
   '/signup',
   '/members',
   '/privacy-policy',
   '/terms-of-service',
-  '/courts', // Keep this exempt if the main courts page is separate
+  '/courts',
   '/request-password-reset',
 ]
 
 const LoadingIndicator = () => (
-  <div className="flex items-center justify-center min-h-[50vh]">
-    <p className="text-lg text-gray-600 animate-pulse">Loading Courts...</p>
+  <div className="flex min-h-[50vh] items-center justify-center">
+    <p className="animate-pulse text-lg text-gray-600">Loading Courts…</p>
   </div>
 )
 
+/* -------------------------------------------------------------------------- */
+/*  Component                                                                 */
+/* -------------------------------------------------------------------------- */
+interface ViewState {
+  count: number
+  gate: number
+  showPaywall: boolean
+}
+
 export default function HomePage() {
   const pathname = usePathname()
-  const [userId, setUserId] = useState<string | null>(null) // State to hold the anonymous ID
+
+  /* ---------- local state --------------------------------------------- */
+  const [userId, setUserId]       = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [viewData, setViewData] =
-    useState<{ count: number; showPaywall: boolean } | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError]         = useState<string | null>(null)
+  const [viewData, setViewData]   = useState<ViewState | null>(null)
 
-  useRandomUserId(); // Call the hook to ensure a userId is generated/loaded
+  /* ---------- ensure anonymous ID exists ------------------------------ */
+  useRandomUserId()
 
-  const isPathExempt = useCallback((current: string) => {
-    if (exemptPaths.includes(current)) return true
-    if (current.startsWith('/courts/')) return true
-    return false
-  }, [])
+  /* ---------- helpers ------------------------------------------------- */
+  const isPathExempt = useCallback(
+    (p: string) => EXEMPT_PATHS.includes(p) || p.startsWith('/courts/'),
+    [],
+  )
 
-  /* ------------------------------------------------------------------ */
-  /*  Update view count & paywall status                               */
-  /* ------------------------------------------------------------------ */
-  const updateAndCheckViewStatus = useCallback(async (currentUserId: string) => {
-    if (!currentUserId || isPathExempt(pathname)) {
-      if (isPathExempt(pathname)) setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const res = await fetch('/api/update-and-check-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId }),
-      })
-
-      if (!res.ok) {
-        const detail = await res.text()
-        throw new Error(
-          `Failed to update/check view status (${res.status}): ${detail}`,
-        )
+  /* -------------------------------------------------------------------- */
+  /*  Update unique-day count & paywall status                            */
+  /* -------------------------------------------------------------------- */
+  const updateAndCheckViewStatus = useCallback(
+    async (currentUserId: string) => {
+      if (!currentUserId || isPathExempt(pathname)) {
+        if (isPathExempt(pathname)) setIsLoading(false)
+        return
       }
 
-      const data = await res.json()
-      if (
-        data &&
-        typeof data.viewsCount !== 'undefined' &&
-        typeof data.showPaywall !== 'undefined'
-      ) {
-        setViewData({ count: data.viewsCount, showPaywall: data.showPaywall })
+      setIsLoading(true)
+      setError(null)
 
-        logEvent('visit_home', {
-          visitNumber: data.viewsCount,
-          showPaywall: data.showPaywall,
-          pathname,
+      try {
+        const gateHeader =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('fss_gate') ?? ''
+            : ''
+
+        const res = await fetch('/api/update-and-check-session', {
+          method : 'POST',
+          headers: {
+            'Content-Type' : 'application/json',
+            'x-paywall-gate': gateHeader,
+          },
+          body: JSON.stringify({ userId: currentUserId }),
         })
-      } else {
-        throw new Error('Invalid data received from view update/check API.')
-      }
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : 'An unknown error occurred'
-      setError('Error loading view status. Please try refreshing.')
-      setViewData(null)
-      console.error('[page.tsx] ' + msg)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [pathname, isPathExempt])
 
+        if (!res.ok) {
+          const detail = await res.text()
+          throw new Error(
+            `Failed to update/check view status (${res.status}): ${detail}`,
+          )
+        }
+
+        const data = await res.json()
+        if (
+          data &&
+          typeof data.uniqueDays !== 'undefined' &&
+          typeof data.showPaywall !== 'undefined' &&
+          typeof data.gateDays   !== 'undefined'
+        ) {
+          setViewData({
+            count      : data.uniqueDays,
+            gate       : data.gateDays,
+            showPaywall: data.showPaywall,
+          })
+
+          logEvent('visit_home', {
+            uniqueDays : data.uniqueDays,
+            gateDays   : data.gateDays,
+            showPaywall: data.showPaywall,
+            pathname,
+          })
+        } else {
+          throw new Error('Invalid data received from view update/check API.')
+        }
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : 'An unknown error occurred'
+        console.error('[page.tsx] ' + msg)
+        setError('Error loading view status. Please try refreshing.')
+        setViewData(null)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [pathname, isPathExempt],
+  )
+
+  /* ---------- load anonymous ID from localStorage --------------------- */
   useEffect(() => {
-    const storedId = localStorage.getItem('userId');
-    setUserId(storedId);
+    if (typeof window !== 'undefined') {
+      setUserId(localStorage.getItem('userId'))
+    }
   }, [])
 
+  /* ---------- trigger API call on nav/userId change ------------------- */
   useEffect(() => {
     if (userId && !isPathExempt(pathname)) {
       updateAndCheckViewStatus(userId)
@@ -113,11 +156,11 @@ export default function HomePage() {
     }
   }, [userId, pathname, updateAndCheckViewStatus, isPathExempt])
 
-  /* ------------------------------------------------------------------ */
-  /*  Render guards                                                     */
-  /* ------------------------------------------------------------------ */
+  /* -------------------------------------------------------------------- */
+  /*  Render guards                                                       */
+  /* -------------------------------------------------------------------- */
   if (isPathExempt(pathname)) return null
-  if (isLoading) return <LoadingIndicator />
+  if (isLoading)              return <LoadingIndicator />
   if (error)
     return (
       <div className="container mx-auto p-4 text-center">
@@ -128,12 +171,13 @@ export default function HomePage() {
     )
   if (viewData?.showPaywall) return <Paywall />
 
-  /* ------------------------------------------------------------------ */
-  /*  Main public homepage                                              */
-  /* ------------------------------------------------------------------ */
+  /* -------------------------------------------------------------------- */
+  /*  Main public homepage                                                */
+  /* -------------------------------------------------------------------- */
   if (viewData && pathname === '/') {
     return (
-      <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8 text-black">
+      <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
+        {/* ---------- Header ---------- */}
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
           <div className="flex items-center gap-6">
             <Image
@@ -154,13 +198,16 @@ export default function HomePage() {
           </div>
         </header>
 
-        <ViewsCounter viewsCount={viewData.count} />
+        {/* ---------- Counter ---------- */}
+        <DaysCounter uniqueDays={viewData.count} gateDays={viewData.gate} />
 
+        {/* ---------- Courts list ------- */}
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />
         </Suspense>
 
-        <div className="mt-8 text-center space-y-3 sm:space-y-0 sm:space-x-4">
+        {/* ---------- Footer CTAs ------- */}
+        <div className="mt-8 space-y-3 text-center sm:space-y-0 sm:space-x-4">
           <Button asChild className="w-full gap-2 sm:w-auto">
             <a
               href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"

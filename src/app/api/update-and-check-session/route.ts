@@ -1,117 +1,86 @@
-/* -------------------------------------------------------------------------- */
-/*  Fail-safe update-and-check-session                                        */
-/*  – Returns BOTH `viewsCount` and `uniqueDays` for legacy front-end         */
-/*  – Never emits 500 to the browser; logs internal errors server-side        */
-/* -------------------------------------------------------------------------- */
-
+/* src/app/api/update-and-check-session/route.ts */
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-/* ---------- Environment -------------------------------------------------- */
-const supabaseUrl         = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { autoRefreshToken: false, persistSession: false } },
+);
 
-/* ---------- Utility to get a Supabase client or undefined --------------- */
-const getSupabase = () => {
-  if (!supabaseUrl || !supabaseServiceRole) return undefined;
-  return createClient(supabaseUrl, supabaseServiceRole, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-};
+const DEFAULT_GATE = 5;             // if header missing
+const TODAY = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-const PAYWALL_LIMIT = 3; // unique days
-
-/* ------------------------------------------------------------------------ */
-/*  POST handler                                                            */
-/* ------------------------------------------------------------------------ */
 export async function POST(request: Request) {
-  let userId: string | undefined;
+  const { userId } =
+    (await request.json().catch(() => ({}))) as { userId?: string };
+
+  /* ---------- anonymous fallback ------------------------------------- */
+  if (!userId)
+    return NextResponse.json(
+      { showPaywall: false, uniqueDays: 0 },
+      { status: 200 },
+    );
+
+  /* ---------- read header from browser – cohort assignment ----------- */
+  const gateDays = Number(request.headers.get("x-paywall-gate") ?? DEFAULT_GATE);
 
   try {
-    /* ---------- Parse body -------------------------------------------- */
-    const body = await request.json().catch(() => ({}));
-    userId = body.userId as string | undefined;
-
-    /* ---------- Anonymous users → allow ------------------------------- */
-    if (!userId) {
-      return NextResponse.json(
-        { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
-        { status: 200 },
-      );
-    }
-
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const supabase = getSupabase();
-
-    /* ---------- If Supabase unavailable, allow user ------------------- */
-    if (!supabase) {
-      console.error(
-        "[update-and-check] Supabase env vars missing – falling back to allow",
-      );
-      return NextResponse.json(
-        { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
-        { status: 200 },
-      );
-    }
-
-    /* ---------- Fetch or create session row --------------------------- */
-    const { data: row, error: selErr } = await supabase
+    const { data: row, error } = await supabase
       .from("user_sessions")
       .select("id, unique_days, last_view_date")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (selErr) throw selErr;
+    if (error) throw error;
 
     let uniqueDays = 1;
 
     if (row) {
-      const newDay = row.last_view_date !== today;
+      const newDay = row.last_view_date !== TODAY;
       uniqueDays = newDay ? row.unique_days + 1 : row.unique_days;
 
-      const { error: updErr } = await supabase
-        .from("user_sessions")
-        .update({
-          unique_days: uniqueDays,
-          last_view_date: today,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", row.id);
-
-      if (updErr) throw updErr;
+      if (newDay) {
+        await supabase
+          .from("user_sessions")
+          .update({
+            unique_days: uniqueDays,
+            last_view_date: TODAY,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", row.id);
+      }
     } else {
-      const { error: insErr } = await supabase.from("user_sessions").insert({
+      await supabase.from("user_sessions").insert({
         user_id: userId,
         unique_days: 1,
-        last_view_date: today,
+        last_view_date: TODAY,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
-      if (insErr) throw insErr;
     }
 
-    const showPaywall = uniqueDays > PAYWALL_LIMIT;
-
     return NextResponse.json(
-      { showPaywall, uniqueDays, viewsCount: uniqueDays },
+      {
+        showPaywall: uniqueDays >= gateDays,
+        uniqueDays,
+        gateDays,
+      },
       { status: 200 },
     );
-  } catch (err) {
-    /* ---------- Log and fail open ------------------------------------- */
-    console.error("[update-and-check] internal error – allowing user:", err);
+  } catch (e) {
+    console.error("[update-and-check] DB failure:", e);
+    /* fail open */
     return NextResponse.json(
-      { showPaywall: false, uniqueDays: 0, viewsCount: 0 },
+      { showPaywall: false, uniqueDays: 0 },
       { status: 200 },
     );
   }
 }
 
-/* ------------------------------------------------------------------------ */
-/*  GET – still blocked                                                     */
-/* ------------------------------------------------------------------------ */
-export async function GET() {
+export function GET() {
   return NextResponse.json(
-    { error: "Method Not Allowed. Use POST." },
+    { error: "Method Not Allowed" },
     { status: 405 },
   );
 }
