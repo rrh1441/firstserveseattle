@@ -1,30 +1,30 @@
-// src/app/api/check-paywall/route.ts
-import { supabase } from "@/lib/supabaseClient"
-import { NextResponse } from "next/server"
+import { supabase } from "@/lib/supabaseClient";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get("userId")
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
 
   if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from("user_sessions")
-    .select("views_count")
+    .select("unique_days")
     .eq("user_id", userId)
-    .single()
+    .single();
 
   if (error) {
-    console.error("Supabase error in check-paywall:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("Supabase error in check-paywall:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const viewsCount = data?.views_count ?? 0
-  
+  const uniqueDays = data?.unique_days ?? 0;
+  const gateDays = Number(request.headers.get("x-paywall-gate") ?? "5"); // optional override
   return NextResponse.json({
-    showPaywall: viewsCount > 3,
-    viewsCount: viewsCount
-  })
+    showPaywall: uniqueDays >= gateDays,
+    uniqueDays,
+    gateDays,
+  });
 }
