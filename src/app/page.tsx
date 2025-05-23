@@ -1,9 +1,5 @@
 /* -------------------------------------------------------------------------- */
 /*  src/app/page.tsx                                                          */
-/*  Home page with                                                           */
-/*   – anonymous-ID handling                                                 */
-/*   – unique-day gating (3 / 5 / 7)                                          */
-/*   – fail-open behaviour if API is down                                     */
 /* -------------------------------------------------------------------------- */
 
 'use client'
@@ -16,14 +12,13 @@ import { ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Paywall from './tennis-courts/components/paywall'
 import TennisCourtList from './tennis-courts/components/TennisCourtList'
-import DaysCounter from './tennis-courts/components/DaysCounter'
+import DaysCounter from './tennis-courts/components/DaysCounter' // new counter
+import ViewsCounter from './tennis-courts/components/counter'    // legacy
 
 import { logEvent } from '@/lib/logEvent'
 import { useRandomUserId } from './randomUserSetup'
 
-/* -------------------------------------------------------------------------- */
-/*  Constants                                                                 */
-/* -------------------------------------------------------------------------- */
+/* ---------- constants --------------------------------------------------- */
 const EXEMPT_PATHS = [
   '/reset-password',
   '/login',
@@ -41,28 +36,23 @@ const LoadingIndicator = () => (
   </div>
 )
 
-/* -------------------------------------------------------------------------- */
-/*  Component                                                                 */
-/* -------------------------------------------------------------------------- */
 interface ViewState {
   count: number
   gate: number
   showPaywall: boolean
 }
 
+/* ------------------------------------------------------------------------ */
 export default function HomePage() {
   const pathname = usePathname()
 
-  /* ---------- local state --------------------------------------------- */
   const [userId, setUserId]       = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError]         = useState<string | null>(null)
   const [viewData, setViewData]   = useState<ViewState | null>(null)
 
-  /* ---------- ensure anonymous ID exists ------------------------------ */
   useRandomUserId()
 
-  /* ---------- helpers ------------------------------------------------- */
   const isPathExempt = useCallback(
     (p: string) => EXEMPT_PATHS.includes(p) || p.startsWith('/courts/'),
     [],
@@ -91,20 +81,14 @@ export default function HomePage() {
           body: JSON.stringify({ userId: currentUserId }),
         })
 
-        if (!res.ok) {
-          const detail = await res.text()
-          throw new Error(
-            `Failed to update/check view status (${res.status}): ${detail}`,
-          )
-        }
+        const data = await res.json().catch(() => ({}))
+        console.log('[update-check response]', res.status, data) // <= inspect
 
-        const data = await res.json()
-        if (
-          data &&
-          typeof data.uniqueDays !== 'undefined' &&
-          typeof data.showPaywall !== 'undefined' &&
-          typeof data.gateDays   !== 'undefined'
-        ) {
+        if (res.ok &&
+            typeof data.uniqueDays  === 'number' &&
+            typeof data.showPaywall === 'boolean' &&
+            typeof data.gateDays    === 'number') {
+
           setViewData({
             count      : data.uniqueDays,
             gate       : data.gateDays,
@@ -118,14 +102,13 @@ export default function HomePage() {
             pathname,
           })
         } else {
-          throw new Error('Invalid data received from view update/check API.')
+          // fail-open: show courts, no paywall
+          console.warn('[update-check] invalid payload – allowing user')
+          setViewData({ count: 0, gate: 3, showPaywall: false })
         }
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : 'An unknown error occurred'
-        console.error('[page.tsx] ' + msg)
-        setError('Error loading view status. Please try refreshing.')
-        setViewData(null)
+        console.error('[update-check] network error – allowing user', err)
+        setViewData({ count: 0, gate: 3, showPaywall: false })
       } finally {
         setIsLoading(false)
       }
@@ -156,6 +139,7 @@ export default function HomePage() {
   /* -------------------------------------------------------------------- */
   if (isPathExempt(pathname)) return null
   if (isLoading)              return <LoadingIndicator />
+
   if (error)
     return (
       <div className="container mx-auto p-4 text-center">
@@ -164,6 +148,7 @@ export default function HomePage() {
         </p>
       </div>
     )
+
   if (viewData?.showPaywall) return <Paywall />
 
   /* -------------------------------------------------------------------- */
@@ -172,7 +157,6 @@ export default function HomePage() {
   if (viewData && pathname === '/') {
     return (
       <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
-        {/* ---------- Header ---------- */}
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
           <div className="flex items-center gap-6">
             <Image
@@ -193,15 +177,25 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* ---------- Counter ---------- */}
-        <DaysCounter uniqueDays={viewData.count} gateDays={viewData.gate} />
+        {/* Counter – wrap in try/catch so it never kills the page */}
+        {(() => {
+          try {
+            return (
+              <DaysCounter
+                uniqueDays={viewData.count}
+                gateDays={viewData.gate}
+              />
+            )
+          } catch (e) {
+            console.error('[DaysCounter crash] falling back to legacy', e)
+            return <ViewsCounter viewsCount={viewData.count} />
+          }
+        })()}
 
-        {/* ---------- Courts list ------- */}
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />
         </Suspense>
 
-        {/* ---------- Footer CTAs ------- */}
         <div className="mt-8 space-y-3 text-center sm:space-y-0 sm:space-x-4">
           <Button asChild className="w-full gap-2 sm:w-auto">
             <a
@@ -228,9 +222,6 @@ export default function HomePage() {
     )
   }
 
-  console.warn(
-    'HomePage reached unexpected render state for non-exempt path:',
-    pathname,
-  )
+  console.warn('HomePage reached unexpected render state:', pathname)
   return null
 }
