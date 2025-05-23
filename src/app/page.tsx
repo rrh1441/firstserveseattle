@@ -82,16 +82,11 @@ export default function HomePage() {
       setError(null)
 
       try {
-        const gateHeader =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('fss_gate') ?? ''
-            : ''
-
         const res = await fetch('/api/update-and-check-session', {
           method : 'POST',
           headers: {
             'Content-Type' : 'application/json',
-            'x-paywall-gate': gateHeader,
+            'x-paywall-gate': String(localStorage.getItem('fss_gate') ?? ''),
           },
           body: JSON.stringify({ userId: currentUserId }),
         })
