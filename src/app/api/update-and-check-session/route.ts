@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     );
 
   /* ---------- read header from browser – cohort assignment ----------- */
-  const gateDays = Number(request.headers.get("x-paywall-gate") ?? DEFAULT_GATE);
+  const gateHeader = request.headers.get("x-paywall-gate") ?? "";
+  const gateDays = Number.isNaN(parseInt(gateHeader, 10)) || parseInt(gateHeader, 10) <= 0
+    ? DEFAULT_GATE
+    : parseInt(gateHeader, 10);
 
   try {
     const { data: row, error } = await supabase
