@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------- */
 /*  src/app/layout.tsx                                                        */
-/*  Adds <ClientStorageInit /> so every visit runs initLocalStorage(),        */
-/*  repairing corrupted localStorage keys before the rest of the UI mounts.   */
+/*  – Unregisters any legacy service-worker before React loads                */
+/*  – Bootstraps anonymous-ID and localStorage repair                         */
 /* -------------------------------------------------------------------------- */
 
 import type { ReactNode } from 'react'
@@ -9,9 +9,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Script from 'next/script'
 
-import SiteFooter      from '../components/SiteFooter'
-import ClientIdsInit   from '../components/ClientIdsInit'
-import ClientStorageInit from '../components/ClientStorageInit'   // ← NEW
+import SiteFooter from '../components/SiteFooter'
+import ClientIdsInit from '../components/ClientIdsInit'
+import ClientStorageInit from '../components/ClientStorageInit'
 
 import './globals.css'
 
@@ -23,12 +23,26 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="flex min-h-screen flex-col">
-        {/* --- client-side boot-straps ----------------------------------- */}
-        <ClientIdsInit />        {/* ensures anonymous userId */}
-        <ClientStorageInit />    {/* repairs / versions localStorage */}
+      <head>
+        {/* --- one-time SW cleanup: removes stale service-worker that      */}
+        {/*     caused blank screens for returning visitors                 */}
+        <Script id="sw-sunset" strategy="beforeInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations()
+                .then(regs => regs.forEach(r => r.unregister()))
+                .catch(() => {});
+            }
+          `}
+        </Script>
+      </head>
 
-        {/* --- Datafast tracking ---------------------------------------- */}
+      <body className="flex min-h-screen flex-col">
+        {/* client-side boot-strap */}
+        <ClientIdsInit />
+        <ClientStorageInit />
+
+        {/* Datafast tracking */}
         <Script
           src="https://datafa.st/js/script.js"
           data-website-id="67e42faaad4cc8e626767b22"
@@ -36,10 +50,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           strategy="afterInteractive"
         />
 
-        {/* --- Main content --------------------------------------------- */}
+        {/* Main content */}
         <main className="flex-grow">{children}</main>
 
-        {/* --- Site-wide footer & analytics ----------------------------- */}
+        {/* Footer & analytics */}
         <SiteFooter />
         <Analytics />
         <SpeedInsights />
