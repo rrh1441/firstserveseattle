@@ -1,5 +1,12 @@
-/** @type {import('next').NextConfig} */
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
+  reactStrictMode: true,
+
+  /* -------------------------------------------------------------- */
+  /*  Rewrites (your existing Stripe webhook rewrite)               */
+  /* -------------------------------------------------------------- */
   async rewrites() {
     return [
       {
@@ -7,7 +14,21 @@ const nextConfig = {
         destination: '/api/stripe-webhook/',
       },
     ];
-  }
+  },
+
+  /* -------------------------------------------------------------- */
+  /*  Headers – ensure sw-kill.js is never cached                   */
+  /* -------------------------------------------------------------- */
+  async headers() {
+    return [
+      {
+        source: '/sw-kill.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
