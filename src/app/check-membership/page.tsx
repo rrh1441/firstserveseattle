@@ -23,7 +23,7 @@ export default async function CheckMembershipPage() {
 
     if (!response.ok) {
       console.error('Member status API failed:', response.status)
-      redirect('/checkout')
+      redirect('/signup')
     }
 
     const { isMember } = await response.json()
@@ -34,12 +34,12 @@ export default async function CheckMembershipPage() {
       console.log('✅ Is member, redirecting to /members')
       redirect('/members')
     } else {
-      console.log('❌ Not a member, redirecting to checkout')
-      redirect('/checkout')  
+      console.log('❌ Not a member, redirecting to signup')
+      redirect('/signup')
     }
 
   } catch (error) {
     console.error('Membership check error:', error)
-    redirect('/checkout')
+    redirect('/signup')
   }
 }
