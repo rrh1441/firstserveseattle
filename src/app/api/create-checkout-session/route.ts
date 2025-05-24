@@ -33,18 +33,18 @@ export async function POST(request: Request) {
     const selectedPlan = plan === "annual" ? "annual" : "monthly";
     const priceId      = selectedPlan === "annual" ? ANNUAL_ID : MONTHLY_ID;
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY); // default account API version
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
     const cookieStore = await cookies();
 
     const session = await stripe.checkout.sessions.create({
-      customer_email: email,
-      customer_creation: "always",
+      customer_email: email,                 // <-- keep
+      /* customer_creation removed */        // <-- delete this line
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
 
-      /* ---------- card-optional trial ---------------------------------- */
+      /* ---------- card-optional 14-day trial -------------------------- */
       payment_method_collection: "if_required",
       subscription_data: {
         trial_period_days: 14,
