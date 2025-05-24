@@ -9,7 +9,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Session } from '@supabase/auth-helpers-nextjs'
 
 /* -------------------------------------------------------------------------- */
-/*  Helper – runs on the server via a small API route                         */
+/*  Helper – server round-trip to verify Stripe membership                    */
 /* -------------------------------------------------------------------------- */
 async function fetchMemberStatus(): Promise<boolean> {
   const r = await fetch('/api/member-status', { cache: 'no-store' })
@@ -19,16 +19,14 @@ async function fetchMemberStatus(): Promise<boolean> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Inner component – requires access to client-side hooks                    */
+/*  Inner component                                                           */
 /* -------------------------------------------------------------------------- */
 function LoginInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
 
-  /* ---------------------------------------------------------------------- */
-  /*  Safe redirect target                                                  */
-  /* ---------------------------------------------------------------------- */
+  /* safe redirect target --------------------------------------------------- */
   const rawRedirect = searchParams.get('redirect_to')
   const redirectTo =
     rawRedirect &&
@@ -38,12 +36,9 @@ function LoginInner() {
       ? rawRedirect
       : '/members'
 
-  /* ---------------------------------------------------------------------- */
-  /*  Post-sign-in handler                                                  */
-  /* ---------------------------------------------------------------------- */
+  /* post-sign-in flow ------------------------------------------------------ */
   async function handlePostSignIn(session: Session) {
     const isMember = await fetchMemberStatus()
-
     if (!isMember) {
       const plan = 'monthly'
       const resp = await fetch('/api/create-checkout-session', {
@@ -59,9 +54,7 @@ function LoginInner() {
     router.replace(redirectTo)
   }
 
-  /* ---------------------------------------------------------------------- */
-  /*  Listen for auth state changes                                         */
-  /* ---------------------------------------------------------------------- */
+  /* listen for auth events ------------------------------------------------- */
   useEffect(() => {
     const {
       data: { subscription },
@@ -74,9 +67,7 @@ function LoginInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* ---------------------------------------------------------------------- */
-  /*  Render Supabase Auth UI                                               */
-  /* ---------------------------------------------------------------------- */
+  /* render ----------------------------------------------------------------- */
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md space-y-8">
@@ -95,6 +86,10 @@ function LoginInner() {
         {/* Supabase Auth form */}
         <Auth
           supabaseClient={supabase}
+          view="sign_in"            /* <— force sign-in view            */
+          providers={[]}            /* email/password only             */
+          magicLink={false}
+          onlyThirdPartyProviders={false}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -106,10 +101,6 @@ function LoginInner() {
               },
             },
           }}
-          providers={[]}
-          redirectTo={`${window.location.origin}/login`}
-          magicLink={false}
-          onlyThirdPartyProviders={false}
           localization={{ variables: { sign_in: { email_label: 'Email' } } }}
         />
       </div>
@@ -118,7 +109,7 @@ function LoginInner() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Wrapper with Suspense                                                    */
+/*  Suspense wrapper                                                          */
 /* -------------------------------------------------------------------------- */
 export default function LoginPage() {
   return (
