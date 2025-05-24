@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getMemberStatus } from '@/lib/getMemberStatus';
 
-export const runtime = 'edge';
-
 export async function GET() {
-  const isMember = await getMemberStatus();
-  return NextResponse.json({ isMember });
+  try {
+    const isMember = await getMemberStatus();
+    return NextResponse.json({ isMember });
+  } catch (error) {
+    console.error('Member status API error:', error);
+    return NextResponse.json({ isMember: false }, { status: 500 });
+  }
 }
