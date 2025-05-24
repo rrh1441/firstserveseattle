@@ -1,45 +1,55 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+/* --------------------------------------------------------------------------
+   src/app/check-membership/page.tsx
+   --------------------------------------------------------------------------
+   Server component that:
+     1. Ensures the user is signed-in
+     2. Hits /api/member-status (relative path → works in dev, preview, prod)
+     3. Redirects based on the result
+   -------------------------------------------------------------------------- */
+
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export default async function CheckMembershipPage() {
-  const supabase = createServerComponentClient({ cookies })
-  
-  // Get current user
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
+  const supabase = createServerComponentClient({ cookies });
+
+  /* ---------- 1️⃣  require login ---------------------------------------- */
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
   if (error || !user?.email) {
-    // No user, redirect to login
-    redirect('/login')
+    redirect('/login');
   }
 
-  console.log('🔍 Checking membership for:', user.email)
+  console.log('🔍 Checking membership for:', user.email);
 
+  /* ---------- 2️⃣  hit the membership API ------------------------------- */
   try {
-    // Call your existing API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/member-status?email=${encodeURIComponent(user.email)}`, {
-      cache: 'no-store'
-    })
+    const response = await fetch(
+      `/api/member-status?email=${encodeURIComponent(user.email)}`,
+      { cache: 'no-store' }, // never cache auth checks
+    );
 
     if (!response.ok) {
-      console.error('Member status API failed:', response.status)
-      redirect('/signup')
+      console.error('Member-status API failed:', response.status);
+      redirect('/signup');
     }
 
-    const { isMember } = await response.json()
-    
-    console.log('📊 Member status result:', isMember)
+    const { isMember } = (await response.json()) as { isMember: boolean };
 
+    console.log('📊 Member status result:', isMember);
+
+    /* ---------- 3️⃣  route based on result ------------------------------ */
     if (isMember) {
-      console.log('✅ Is member, redirecting to /members')
-      redirect('/members')
+      redirect('/members');
     } else {
-      console.log('❌ Not a member, redirecting to signup')
-      redirect('/signup')
+      redirect('/signup');
     }
-
-  } catch (error) {
-    console.error('Membership check error:', error)
-    redirect('/signup')
+  } catch (err) {
+    console.error('Membership check error:', err);
+    redirect('/signup');
   }
 }
