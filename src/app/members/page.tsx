@@ -9,8 +9,11 @@ import TennisCourtList from '../tennis-courts/components/TennisCourtList'
 import { Button } from '@/components/ui/button'
 
 /* NEW – helper that runs on the server via a tiny API route */
-async function fetchMemberStatus(): Promise<boolean> {
-  const r = await fetch('/api/member-status', { cache: 'no-store' })
+async function fetchMemberStatus(email: string | null | undefined): Promise<boolean> {
+  if (!email) return false
+  const r = await fetch(`/api/member-status?email=${encodeURIComponent(email)}`, {
+    cache: 'no-store',
+  })
   if (!r.ok) return false
   const { isMember } = (await r.json()) as { isMember: boolean }
   return isMember === true
@@ -43,7 +46,7 @@ export default function MembersPage() {
         setSessionAccessToken(session.access_token)
 
         /* ───────── 2) require active / trialing sub ───────── */
-        const ok = await fetchMemberStatus()
+        const ok = await fetchMemberStatus(session.user.email)
         if (!ok) {
           const resp = await fetch('/api/create-checkout-session', {
             method: 'POST',

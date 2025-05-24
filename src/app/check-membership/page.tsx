@@ -16,14 +16,14 @@ export default async function CheckMembershipPage() {
   console.log('🔍 Checking membership for:', user.email)
 
   try {
-    // Call your existing API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/member-status?email=${encodeURIComponent(user.email)}`, {
+    // Call your existing API using a relative URL to avoid env issues
+    const response = await fetch(`/api/member-status?email=${encodeURIComponent(user.email)}`, {
       cache: 'no-store'
     })
 
     if (!response.ok) {
       console.error('Member status API failed:', response.status)
-      redirect('/checkout')
+      redirect('/signup')
     }
 
     const { isMember } = await response.json()
@@ -34,12 +34,12 @@ export default async function CheckMembershipPage() {
       console.log('✅ Is member, redirecting to /members')
       redirect('/members')
     } else {
-      console.log('❌ Not a member, redirecting to checkout')
-      redirect('/checkout')  
+      console.log('❌ Not a member, redirecting to signup')
+      redirect('/signup')
     }
 
   } catch (error) {
     console.error('Membership check error:', error)
-    redirect('/checkout')
+    redirect('/signup')
   }
 }
