@@ -8,7 +8,9 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Session } from '@supabase/auth-helpers-nextjs'
 
-/* NEW – helper that runs on the server via a tiny API route */
+/* -------------------------------------------------------------------------- */
+/*  Helper – runs on the server via a small API route                         */
+/* -------------------------------------------------------------------------- */
 async function fetchMemberStatus(): Promise<boolean> {
   const r = await fetch('/api/member-status', { cache: 'no-store' })
   if (!r.ok) return false
@@ -17,7 +19,7 @@ async function fetchMemberStatus(): Promise<boolean> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Inner component → contains logic that needs access to hooks               */
+/*  Inner component – requires access to client-side hooks                    */
 /* -------------------------------------------------------------------------- */
 function LoginInner() {
   const router = useRouter()
@@ -25,7 +27,7 @@ function LoginInner() {
   const supabase = createClientComponentClient()
 
   /* ---------------------------------------------------------------------- */
-  /*  Compute safe redirect target                                          */
+  /*  Safe redirect target                                                  */
   /* ---------------------------------------------------------------------- */
   const rawRedirect = searchParams.get('redirect_to')
   const redirectTo =
@@ -37,13 +39,11 @@ function LoginInner() {
       : '/members'
 
   /* ---------------------------------------------------------------------- */
-  /*  Post-sign-in handler (subscription check, Stripe hand-off)            */
+  /*  Post-sign-in handler                                                  */
   /* ---------------------------------------------------------------------- */
   async function handlePostSignIn(session: Session) {
-    /* Step 1 – membership check via server helper */
     const isMember = await fetchMemberStatus()
 
-    /* Step 2 – needs Checkout */
     if (!isMember) {
       const plan = 'monthly'
       const resp = await fetch('/api/create-checkout-session', {
@@ -56,20 +56,23 @@ function LoginInner() {
       return
     }
 
-    /* Step 3 – active / trialing members */
     router.replace(redirectTo)
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  Listen for auth state changes and act once the user is signed in      */
+  /*  Listen for auth state changes                                         */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) handlePostSignIn(session)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        handlePostSignIn(session)
+      }
     })
-    return () => sub.subscription.unsubscribe()
+    return () => subscription.unsubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // run once
+  }, [])
 
   /* ---------------------------------------------------------------------- */
   /*  Render Supabase Auth UI                                               */
@@ -89,7 +92,7 @@ function LoginInner() {
           <h1 className="text-2xl font-bold">Sign in to First Serve Seattle</h1>
         </div>
 
-        {/* Supabase pre-built form */}
+        {/* Supabase Auth form */}
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -97,13 +100,12 @@ function LoginInner() {
             variables: {
               default: {
                 colors: {
-                  brand: '#0c372b', // primary accent
-                  brandAccent: '#0c372b', // button hover
+                  brand: '#0c372b',
+                  brandAccent: '#0c372b',
                 },
               },
             },
           }}
-          /* only show email/password fields */
           providers={[]}
           redirectTo={`${window.location.origin}/login`}
           magicLink={false}
@@ -116,7 +118,7 @@ function LoginInner() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Export wrapper with Suspense – matches your existing structure            */
+/*  Wrapper with Suspense                                                    */
 /* -------------------------------------------------------------------------- */
 export default function LoginPage() {
   return (
