@@ -1,39 +1,33 @@
 /* --------------------------------------------------------------------------
-   getMemberStatus()
-   – Runs on the server only (uses @supabase/ssr + service-role key).
-   – Returns TRUE when the signed-in user has status = 'active' | 'trialing'.
-   – No cookie “adapter” helper; we just implement the 3 methods inline.
+   Returns TRUE when the signed-in user’s row in `subscribers`
+   has status = 'active' OR 'trialing'.  Uses @supabase/ssr + service role.
    -------------------------------------------------------------------------- */
-
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
 
 export async function getMemberStatus(): Promise<boolean> {
-  /* cookie helpers that match CookieMethodsServer ------------------------ */
-  const store = cookies();                       // RequestCookies
-  const cookieMethods = {
-    get   : (name: string)                => store.get(name)?.value,
-    set   : (name: string,
-             value: string,
-             opts?: Parameters<typeof store.set>[0] & { value?: never }) =>
-             store.set({ name, value, ...opts }),
-    remove: (name: string,
-             opts?: Parameters<typeof store.delete>[0]) =>
-             store.delete({ name, ...opts }),
+  /* ----- Next-15: cookies() is async ----------------------------------- */
+  const store = await cookies();                 // RequestCookies (read-only)
+
+  /* read-only adapter just for Supabase --------------------------------- */
+  const cookieMethods: CookieMethodsServer = {
+    get   : (name) => store.get(name)?.value,
+    set   : () => {/* no-op – we don’t mutate cookies on the server */},
+    remove: () => {/* no-op */},
   };
 
-  /* Supabase client (service role = bypasses RLS) ------------------------ */
+  /* Supabase client (bypasses RLS with service role key) ---------------- */
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { cookies: cookieMethods },
   );
 
-  /* Identify current user ------------------------------------------------ */
+  /* identify user ------------------------------------------------------- */
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return false;
 
-  /* Query subscription status ------------------------------------------- */
+  /* check subscription row --------------------------------------------- */
   const { data, error } = await supabase
     .from('subscribers')
     .select('status')
