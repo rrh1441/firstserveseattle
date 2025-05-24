@@ -1,90 +1,31 @@
 'use client'
 
 import { Suspense, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import type { Session } from '@supabase/auth-helpers-nextjs'
 
-/* -------------------------------------------------------------------------- */
-/*  Inner component                                                           */
-/* -------------------------------------------------------------------------- */
 function LoginInner() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
 
-  /* safe redirect target --------------------------------------------------- */
-  const rawRedirect = searchParams.get('redirect_to')
-  const redirectTo =
-    rawRedirect &&
-    rawRedirect.startsWith('/') &&
-    !rawRedirect.startsWith('//') &&
-    !rawRedirect.includes(':')
-      ? rawRedirect
-      : '/members'
-
-  /* post-sign-in flow ------------------------------------------------------ */
-  async function handlePostSignIn(session: Session) {
-    if (!session.user.email) {
-      console.error('No email in session')
-      return
-    }
-
-    console.log('🔍 Checking membership for:', session.user.email)
-    
-    // Call API with email parameter
-    const r = await fetch(`/api/member-status?email=${encodeURIComponent(session.user.email)}`, { 
-      cache: 'no-store' 
-    })
-    
-    if (!r.ok) {
-      console.error('Member status API failed:', r.status, await r.text())
-      return
-    }
-    
-    const { isMember } = await r.json()
-    
-    console.log('📊 Member status result:', isMember)
-    
-    if (!isMember) {
-      console.log('❌ Not a member, redirecting to checkout')
-      const plan = 'monthly'
-      const resp = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: session.user.email, plan }),
-      })
-      const { url } = (await resp.json()) as { url: string | null }
-      window.location.href = url as string
-      return
-    }
-
-    console.log('✅ Is member, redirecting to:', redirectTo)
-    router.replace(redirectTo)
-  }
-
-  /* listen for auth events ------------------------------------------------- */
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state change:', event, session?.user?.email)
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-        handlePostSignIn(session)
+      if (event === 'SIGNED_IN' && session) {
+        // Just redirect to the membership check page
+        router.push('/check-membership')
       }
     })
     return () => subscription.unsubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [router])
 
-  /* render ----------------------------------------------------------------- */
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md space-y-8">
-        {/* logo + heading */}
         <div className="flex flex-col items-center gap-4">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
@@ -96,11 +37,10 @@ function LoginInner() {
           <h1 className="text-2xl font-bold">Sign in to First Serve Seattle</h1>
         </div>
 
-        {/* Supabase Auth form */}
         <Auth
           supabaseClient={supabase}
-          view="sign_in"            /* <— force sign-in view            */
-          providers={[]}            /* email/password only             */
+          view="sign_in"
+          providers={[]}
           magicLink={false}
           onlyThirdPartyProviders={false}
           appearance={{
@@ -121,9 +61,6 @@ function LoginInner() {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Suspense wrapper                                                          */
-/* -------------------------------------------------------------------------- */
 export default function LoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen" />}>
