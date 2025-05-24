@@ -5,7 +5,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Auth } from '@supabase/auth-ui-react';
@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 /* -------------------------------------------------------------------------- */
 function LoginInner() {
   const router       = useRouter();
-  const searchParams = useSearchParams();
   const supabase     = createClientComponentClient();
 
   /* `null`  = still checking, `true/false` = result */
