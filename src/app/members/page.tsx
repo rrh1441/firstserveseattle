@@ -1,11 +1,9 @@
-/* -------------------------------------------------------------------------- */
-/*  src/app/members/page.tsx                                                  */
-/*  Client-side page that:                                                    */
-/*    1. Requires a Supabase session (redirects to /login if missing)         */
-/*    2. Calls /api/member-status to verify “active” OR “trialing”            */
-/*       └→ If not a member it hands off to Stripe Checkout                   */
-/*    3. Displays the court list + a “Manage subscription” button             */
-/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- *
+ *  Members page                                                              *
+ *  – Requires a Supabase session                                             *
+ *  – Verifies the user is “active” OR “trialing” via /api/member-status      *
+ *  – If not subscribed → hands off to Stripe Checkout                        *
+ * -------------------------------------------------------------------------- */
 
 'use client';
 
@@ -19,109 +17,88 @@ import TennisCourtList from '../tennis-courts/components/TennisCourtList';
 import { Button } from '@/components/ui/button';
 
 /* -------------------------------------------------------------------------- */
-/*  Helpers                                                                   */
+/*  Helper — tiny fetch wrapper                                               */
 /* -------------------------------------------------------------------------- */
-
-/** Call tiny serverless API to decide if the user is an active / trialing
- *  subscriber. Fails closed → `false`. */
 async function fetchMemberStatus(email: string | null | undefined): Promise<boolean> {
   if (!email) return false;
 
   try {
     const r = await fetch(
       `/api/member-status?email=${encodeURIComponent(email)}`,
-      { cache: 'no-store' }, // never cache membership checks
+      { cache: 'no-store' },                   // never cache membership checks
     );
     if (!r.ok) return false;
 
     const { isMember } = (await r.json()) as { isMember: boolean };
     return isMember === true;
   } catch {
-    return false;
+    return false;                              // fail closed
   }
 }
 
 /* -------------------------------------------------------------------------- */
 /*  Component                                                                 */
 /* -------------------------------------------------------------------------- */
-
 export default function MembersPage() {
   const router   = useRouter();
   const supabase = createClientComponentClient();
 
-  const [isLoading,      setIsLoading]      = useState(true);
-  const [fetchError,     setFetchError]     = useState<string | null>(null);
-  const [portalLoading,  setPortalLoading]  = useState(false);
-  const [accessToken,    setAccessToken]    = useState<string | null>(null);
+  const [isLoading , setIsLoading ] = useState(true);
+  const [fatalErr  , setFatalErr  ] = useState<string | null>(null);
+  const [portalURL , setPortalURL ] = useState<string | null>(null);
 
-  /* ------------------------- auth + subscription check ------------------- */
+  /* --------------------- 1) auth & membership guard --------------------- */
   useEffect(() => {
     (async () => {
       try {
-        /* 1️⃣  Must be signed in */
+        /* ➜ require a Supabase session */
         const { data: { session } } = await supabase.auth.getSession();
-
         if (!session) {
           router.replace(
             `/login?redirect_to=${encodeURIComponent(window.location.pathname)}`,
           );
           return;
         }
-        setAccessToken(session.access_token);
 
-        /* 2️⃣  Must be active / trialing */
+        /* ➜ require active / trialing subscription */
         const ok = await fetchMemberStatus(session.user.email);
         if (!ok) {
-          const resp = await fetch('/api/create-checkout-session', {
-            method:  'POST',
+          /* hand-off to Stripe Checkout */
+          const r = await fetch('/api/create-checkout-session', {
+            method : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({
+            body   : JSON.stringify({
               email: session.user.email,
               plan : 'monthly',
             }),
           });
-
-          const { url } = (await resp.json()) as { url: string };
-          window.location.href = url;            // hand off to Stripe
+          const { url } = (await r.json()) as { url: string | null };
+          if (url) window.location.href = url;
+          else     throw new Error('Stripe Checkout URL missing');
           return;
         }
+
+        /* ➜ preload customer-portal URL (optional) */
+        const p = await fetch('/api/create-portal-link', {
+          method : 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        });
+        if (p.ok) {
+          const { url } = (await p.json()) as { url: string };
+          setPortalURL(url);
+        }
       } catch (err) {
-        setFetchError(err instanceof Error ? err.message : String(err));
+        setFatalErr(err instanceof Error ? err.message : String(err));
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [router, supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  /* --------------------------- customer-portal --------------------------- */
-  async function handleManageSubscription() {
-    if (!accessToken) {
-      setFetchError('Cannot open portal: session token missing.');
-      return;
-    }
-    setPortalLoading(true);
-    setFetchError(null);
-
-    try {
-      const r = await fetch('/api/create-portal-link', {
-        method:  'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization : `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!r.ok) throw new Error(await r.text());
-      const { url } = (await r.json()) as { url: string };
-      window.location.href = url;
-    } catch (err) {
-      setFetchError(err instanceof Error ? err.message : 'Portal link error');
-    } finally {
-      setPortalLoading(false);
-    }
-  }
-
-  /* ------------------------------- render -------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /*  Render states                                                         */
+  /* ---------------------------------------------------------------------- */
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -130,19 +107,22 @@ export default function MembersPage() {
     );
   }
 
-  if (fetchError) {
+  if (fatalErr) {
     return (
       <div className="container mx-auto p-4 text-center">
         <p className="rounded border border-red-300 bg-red-100 p-4 text-red-500">
-          {fetchError} — please refresh or contact support.
+          {fatalErr} — please refresh or contact support.
         </p>
       </div>
     );
   }
 
+  /* ---------------------------------------------------------------------- */
+  /*  Happy path                                                            */
+  /* ---------------------------------------------------------------------- */
   return (
     <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8">
-      {/* --------------------------- header --------------------------- */}
+      {/* header */}
       <header className="mb-8 flex flex-col items-center gap-4 md:flex-row md:justify-between">
         <div className="flex items-center gap-6">
           <Image
@@ -163,18 +143,18 @@ export default function MembersPage() {
         </div>
 
         <Button
-          onClick={handleManageSubscription}
+          onClick={() => portalURL && (window.location.href = portalURL)}
           className="w-full whitespace-nowrap bg-[#0c372b] text-white hover:bg-[#0c372b]/90 md:w-auto"
-          disabled={portalLoading}
+          disabled={!portalURL}
         >
-          {portalLoading ? 'Loading…' : 'Manage Subscription'}
+          Manage Subscription
         </Button>
       </header>
 
-      {/* ----------------------- court list -------------------------- */}
+      {/* court list */}
       <TennisCourtList />
 
-      {/* --------------------- helpful links ------------------------- */}
+      {/* helpful links */}
       <div className="mt-8 space-y-3 text-center sm:space-y-0 sm:space-x-4">
         <Button asChild className="w-full gap-2 sm:w-auto">
           <a
