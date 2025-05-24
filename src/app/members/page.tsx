@@ -8,6 +8,14 @@ import Image from 'next/image'
 import TennisCourtList from '../tennis-courts/components/TennisCourtList'
 import { Button } from '@/components/ui/button'
 
+/* NEW – helper that runs on the server via a tiny API route */
+async function fetchMemberStatus(): Promise<boolean> {
+  const r = await fetch('/api/member-status', { cache: 'no-store' })
+  if (!r.ok) return false
+  const { isMember } = (await r.json()) as { isMember: boolean }
+  return isMember === true
+}
+
 export default function MembersPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -27,21 +35,15 @@ export default function MembersPage() {
           data: { session },
         } = await supabase.auth.getSession()
 
+        /* ───────── 1) require login ───────── */
         if (!session) {
           router.push(`/login?redirect_to=${encodeURIComponent(window.location.pathname)}`)
           return
         }
         setSessionAccessToken(session.access_token)
 
-        const { data: sub, error: subErr } = await supabase
-          .from('subscribers')
-          .select('status')
-          .eq('id', session.user.id)
-          .single()
-
-        if (subErr && subErr.code !== 'PGRST116') throw subErr
-
-        const ok = sub && (sub.status === 'active' || sub.status === 'trialing')
+        /* ───────── 2) require active / trialing sub ───────── */
+        const ok = await fetchMemberStatus()
         if (!ok) {
           const resp = await fetch('/api/create-checkout-session', {
             method: 'POST',

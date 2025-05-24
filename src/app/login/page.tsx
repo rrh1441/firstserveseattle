@@ -1,6 +1,3 @@
-/* -------------------------------------------------------------------------- */
-/*  src/app/login/page.tsx – full file, lint-clean                            */
-/* -------------------------------------------------------------------------- */
 'use client'
 
 import { Suspense, useEffect } from 'react'
@@ -10,6 +7,14 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Session } from '@supabase/auth-helpers-nextjs'
+
+/* NEW – helper that runs on the server via a tiny API route */
+async function fetchMemberStatus(): Promise<boolean> {
+  const r = await fetch('/api/member-status', { cache: 'no-store' })
+  if (!r.ok) return false
+  const { isMember } = (await r.json()) as { isMember: boolean }
+  return isMember === true
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Inner component → contains logic that needs access to hooks               */
@@ -35,43 +40,23 @@ function LoginInner() {
   /*  Post-sign-in handler (subscription check, Stripe hand-off)            */
   /* ---------------------------------------------------------------------- */
   async function handlePostSignIn(session: Session) {
-    /* Step 1 – look up subscriber row */
-    const { data: subRow, error: subErr } = await supabase
-      .from('subscribers')
-      .select('status, plan')
-      .eq('id', session.user.id)
-      .single()
+    /* Step 1 – membership check via server helper */
+    const isMember = await fetchMemberStatus()
 
-    if (subErr && subErr.code !== 'PGRST116') {
-      console.error(subErr)
-      router.replace('/auth/error')
-      return
-    }
-
-    /* Step 2 – pending  Stripe Checkout */
-    if (!subRow || subRow.status === 'pending') {
-      const plan = subRow?.plan ?? 'monthly'
+    /* Step 2 – needs Checkout */
+    if (!isMember) {
+      const plan = 'monthly'
       const resp = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: session.user.email, plan }),
       })
-      if (!resp.ok) {
-        console.error(await resp.text())
-        router.replace('/auth/error')
-        return
-      }
       const { url } = (await resp.json()) as { url: string | null }
-      if (!url) {
-        console.error('Missing Checkout URL')
-        router.replace('/auth/error')
-        return
-      }
-      window.location.href = url
+      window.location.href = url as string
       return
     }
 
-    /* Step 3 – active or trialing  members */
+    /* Step 3 – active / trialing members */
     router.replace(redirectTo)
   }
 
@@ -118,12 +103,10 @@ function LoginInner() {
               },
             },
           }}
-          /* providers shown as buttons above the email/password form */
           providers={['google']}
-          /* → for OAuth redirect; email/password stays on page */
           redirectTo={`${window.location.origin}/login`}
-          magicLink={false} /* keep password + OAuth only */
-          onlyThirdPartyProviders={false} /* show both */
+          magicLink={false}
+          onlyThirdPartyProviders={false}
           localization={{ variables: { sign_in: { email_label: 'Email' } } }}
         />
       </div>
@@ -132,7 +115,7 @@ function LoginInner() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Export wrapper with Suspense – matches your existing structure           */
+/*  Export wrapper with Suspense – matches your existing structure            */
 /* -------------------------------------------------------------------------- */
 export default function LoginPage() {
   return (
