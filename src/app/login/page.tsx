@@ -9,21 +9,6 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 import type { Session } from '@supabase/auth-helpers-nextjs'
 
 /* -------------------------------------------------------------------------- */
-/*  Helper – server round-trip to verify Stripe membership                    */
-/* -------------------------------------------------------------------------- */
-async function fetchMemberStatus(email: string): Promise<boolean> {
-  const r = await fetch(`/api/member-status?email=${encodeURIComponent(email)}`, { 
-    cache: 'no-store' 
-  })
-  if (!r.ok) {
-    console.error('Member status API failed:', r.status, await r.text())
-    return false
-  }
-  const { isMember } = (await r.json()) as { isMember: boolean }
-  return isMember === true
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Inner component                                                           */
 /* -------------------------------------------------------------------------- */
 function LoginInner() {
@@ -50,7 +35,17 @@ function LoginInner() {
 
     console.log('🔍 Checking membership for:', session.user.email)
     
-    const isMember = await fetchMemberStatus(session.user.email)
+    // Call API with email parameter
+    const r = await fetch(`/api/member-status?email=${encodeURIComponent(session.user.email)}`, { 
+      cache: 'no-store' 
+    })
+    
+    if (!r.ok) {
+      console.error('Member status API failed:', r.status, await r.text())
+      return
+    }
+    
+    const { isMember } = await r.json()
     
     console.log('📊 Member status result:', isMember)
     
