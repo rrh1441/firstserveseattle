@@ -64,9 +64,13 @@ function LoginInner() {
   /*  Listen for auth state changes and act once the user is signed in      */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) handlePostSignIn(session)
-    })
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+          handlePostSignIn(session)
+        }
+      }
+    )
     return () => sub.subscription.unsubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // run once
@@ -103,8 +107,8 @@ function LoginInner() {
               },
             },
           }}
-          providers={['google']}
-          redirectTo={`${window.location.origin}/login`}
+          /* only show email/password fields */
+          providers={[]}
           magicLink={false}
           onlyThirdPartyProviders={false}
           localization={{ variables: { sign_in: { email_label: 'Email' } } }}
