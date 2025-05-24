@@ -11,8 +11,10 @@ import type { Session } from '@supabase/auth-helpers-nextjs'
 /* -------------------------------------------------------------------------- */
 /*  Helper – server round-trip to verify Stripe membership                    */
 /* -------------------------------------------------------------------------- */
-async function fetchMemberStatus(): Promise<boolean> {
-  const r = await fetch('/api/member-status', { cache: 'no-store' })
+async function fetchMemberStatus(email: string): Promise<boolean> {
+  const r = await fetch(`/api/member-status?email=${encodeURIComponent(email)}`, { 
+    cache: 'no-store' 
+  })
   if (!r.ok) return false
   const { isMember } = (await r.json()) as { isMember: boolean }
   return isMember === true
@@ -38,8 +40,19 @@ function LoginInner() {
 
   /* post-sign-in flow ------------------------------------------------------ */
   async function handlePostSignIn(session: Session) {
-    const isMember = await fetchMemberStatus()
+    if (!session.user.email) {
+      console.error('No email in session')
+      return
+    }
+
+    console.log('🔍 Checking membership for:', session.user.email)
+    
+    const isMember = await fetchMemberStatus(session.user.email)
+    
+    console.log('📊 Member status result:', isMember)
+    
     if (!isMember) {
+      console.log('❌ Not a member, redirecting to checkout')
       const plan = 'monthly'
       const resp = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -51,6 +64,7 @@ function LoginInner() {
       return
     }
 
+    console.log('✅ Is member, redirecting to:', redirectTo)
     router.replace(redirectTo)
   }
 
@@ -59,6 +73,7 @@ function LoginInner() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔐 Auth state change:', event, session?.user?.email)
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         handlePostSignIn(session)
       }
