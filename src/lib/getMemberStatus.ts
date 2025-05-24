@@ -1,11 +1,10 @@
 /* --------------------------------------------------------------------------
-   lib/getMemberStatus.ts
-   --------------------------------------------------------------------------
-   Returns true when the signed-in user has an **active OR trialing**
-   subscription in `public.subscribers`.  Uses @supabase/ssr and the
-   service-role key (bypasses RLS).
-   -------------------------------------------------------------------------- */
-
+ lib/getMemberStatus.ts
+ --------------------------------------------------------------------------
+ Returns true when the signed-in user has an **active OR trialing**
+ subscription in `public.subscribers`. Uses @supabase/ssr and the
+ service-role key (bypasses RLS).
+ -------------------------------------------------------------------------- */
 import { cookies as nextCookies } from 'next/headers';
 import {
   createServerClient,
@@ -13,17 +12,20 @@ import {
 } from '@supabase/ssr';
 
 /* ---------- wrap Next.js cookie store into the shape Supabase expects --- */
-const store = nextCookies();        // RequestCookies
+const store = nextCookies(); // RequestCookies
 const cookieAdapter: CookieMethodsServer = {
-  get   : (name)                   => store.get(name)?.value,
-  set   : (name, value, opts = {}) => store.set({ name, value, ...opts }),
-  remove: (name,        opts = {}) => store.delete({ name,        ...opts }),
+  getAll: () => store.getAll(),
+  setAll: (cookiesToSet) => {
+    cookiesToSet.forEach(({ name, value, options }) =>
+      store.set(name, value, options)
+    );
+  },
 };
 
 /* --------------------------- Supabase client ---------------------------- */
 const supabase = createServerClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,   // server-only key
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only key
   { cookies: cookieAdapter },
 );
 
