@@ -1,45 +1,42 @@
 /* --------------------------------------------------------------------------
- lib/getMemberStatus.ts
- --------------------------------------------------------------------------
- Returns true when the signed-in user has an **active OR trialing**
- subscription in `public.subscribers`. Uses @supabase/ssr and the
- service-role key (bypasses RLS).
- -------------------------------------------------------------------------- */
-import { cookies as nextCookies } from 'next/headers';
-import {
-  createServerClient,
-  type CookieMethodsServer,
-} from '@supabase/ssr';
+   lib/getMemberStatus.ts                — SERVER-ONLY HELPER
+   Returns TRUE when the signed-in user has status = 'active' OR 'trialing'
+   in public.subscribers.  Uses the service-role key → bypasses RLS.
+   -------------------------------------------------------------------------- */
 
-/* ----------------------------- main helper ------------------------------ */
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
+
 export async function getMemberStatus(): Promise<boolean> {
-  /* ---------- wrap Next.js cookie store into the shape Supabase expects --- */
-  const store = await nextCookies(); // RequestCookies (awaited for Next.js 15)
-  const cookieAdapter: CookieMethodsServer = {
-    getAll: () => store.getAll(),
-    setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) =>
-        store.set(name, value, options)
-      );
-    },
-  };
-
-  /* --------------------------- Supabase client ---------------------------- */
+  /* -------------------- Supabase client wired to Next cookies ----------- */
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only key
-    { cookies: cookieAdapter },
-  );
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,              // server-only
+    {
+      cookies: {
+        get(name) {
+          return cookies().get(name)?.value
+        },
+        set(name, value, options) {
+          cookies().set({ name, value, ...options })
+        },
+        remove(name, options) {
+          cookies().delete({ name, ...options })
+        },
+      },
+    },
+  )
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) return false;
+  /* -------------------- identify logged-in user (if any) ---------------- */
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return false
 
-  const { data, error } = await supabase
+  /* -------------------- subscription row lookup ------------------------- */
+  const { data } = await supabase
     .from('subscribers')
     .select('status')
     .eq('email', user.email)
-    .single();
+    .single()
 
-  if (error) return false;
-  return data?.status === 'active' || data?.status === 'trialing';
+  return data?.status === 'active' || data?.status === 'trialing'
 }
