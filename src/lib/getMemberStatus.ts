@@ -11,26 +11,26 @@ import {
   type CookieMethodsServer,
 } from '@supabase/ssr';
 
-/* ---------- wrap Next.js cookie store into the shape Supabase expects --- */
-const store = nextCookies(); // RequestCookies
-const cookieAdapter: CookieMethodsServer = {
-  getAll: () => store.getAll(),
-  setAll: (cookiesToSet) => {
-    cookiesToSet.forEach(({ name, value, options }) =>
-      store.set(name, value, options)
-    );
-  },
-};
-
-/* --------------------------- Supabase client ---------------------------- */
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only key
-  { cookies: cookieAdapter },
-);
-
 /* ----------------------------- main helper ------------------------------ */
 export async function getMemberStatus(): Promise<boolean> {
+  /* ---------- wrap Next.js cookie store into the shape Supabase expects --- */
+  const store = await nextCookies(); // RequestCookies (awaited for Next.js 15)
+  const cookieAdapter: CookieMethodsServer = {
+    getAll: () => store.getAll(),
+    setAll: (cookiesToSet) => {
+      cookiesToSet.forEach(({ name, value, options }) =>
+        store.set(name, value, options)
+      );
+    },
+  };
+
+  /* --------------------------- Supabase client ---------------------------- */
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only key
+    { cookies: cookieAdapter },
+  );
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return false;
 
