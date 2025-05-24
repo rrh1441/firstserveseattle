@@ -15,7 +15,10 @@ async function fetchMemberStatus(email: string): Promise<boolean> {
   const r = await fetch(`/api/member-status?email=${encodeURIComponent(email)}`, { 
     cache: 'no-store' 
   })
-  if (!r.ok) return false
+  if (!r.ok) {
+    console.error('Member status API failed:', r.status, await r.text())
+    return false
+  }
   const { isMember } = (await r.json()) as { isMember: boolean }
   return isMember === true
 }
