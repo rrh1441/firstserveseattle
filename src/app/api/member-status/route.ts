@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     console.log('🔍 Checking membership for email:', email);
 
     // First, let's see ALL records for debugging
-    const { data: allData, error: allError } = await supabase
+    const { data: allData } = await supabase
       .from('subscribers')
       .select('*');
     
