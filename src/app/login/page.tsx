@@ -103,7 +103,8 @@ function LoginInner() {
               },
             },
           }}
-          providers={['google']}
+          /* only show email/password fields */
+          providers={[]}
           redirectTo={`${window.location.origin}/login`}
           magicLink={false}
           onlyThirdPartyProviders={false}
