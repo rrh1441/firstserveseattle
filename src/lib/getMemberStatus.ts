@@ -1,41 +1,48 @@
 /* --------------------------------------------------------------------------
    lib/getMemberStatus.ts
    --------------------------------------------------------------------------
-   Server-only helper that returns `true` when the signed-in user has an
-   **active** Stripe subscription recorded in `public.subscribers`.
+   Server-only helper that returns `true` when the currently signed-in user has
+   an **active OR trialing** subscription in `public.subscribers`.
 
-   – Uses @supabase/ssr so the query runs on the server and bypasses RLS
-     (requires `SUPABASE_SERVICE_ROLE_KEY` in the environment).
-   – Returns            ▸ `true`   … user is active
-                        ▸ `false`  … user not found / not active / not signed in
-   – No exceptions leak; caller just handles a boolean.
-  -------------------------------------------------------------------------- */
+   – Uses @supabase/ssr (needs SUPABASE_SERVICE_ROLE_KEY in the env)
+   – Works with Next.js 15 cookie API
+   -------------------------------------------------------------------------- */
 
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { cookies as nextCookies, type CookieOptions } from 'next/headers';
+import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
 
-/** TRUE ⇢ user’s row exists and `status = 'active'` */
+/* --------------------------- cookie wrapper ----------------------------- */
+/* convert Next’s cookie-store to the interface @supabase/ssr expects       */
+const cookieStore = nextCookies(); // RequestCookies
+const cookieAdapter: CookieMethodsServer = {
+  get:  (name)                       => cookieStore.get(name)?.value,
+  set:  (name, value, opts: CookieOptions = {}) =>
+         cookieStore.set({ name, value, ...opts }),
+  remove: (name, opts: CookieOptions = {}) =>
+         cookieStore.delete({ name, ...opts }),
+};
+
+/* ----------------------- initialise Supabase client --------------------- */
+const supabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,  // service-role key, bypasses RLS
+  { cookies: cookieAdapter },
+);
+
+/* ------------------------- main exported helper ------------------------- */
 export async function getMemberStatus(): Promise<boolean> {
-  /* ----------------------- initialise server client ---------------------- */
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only key, bypasses RLS
-    { cookies },
-  );
-
-  /* --------------------- identify currently signed-in user -------------- */
+  /* identify user */
   const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user?.email) return false;
 
-  if (authErr || !user?.email) return false;   // not signed in
-
-  /* -------------------- look up subscription status --------------------- */
+  /* look up subscription row */
   const { data, error: subErr } = await supabase
     .from('subscribers')
     .select('status')
     .eq('email', user.email)
-    .single();                                 // LIMIT 1
+    .single();
 
-  if (subErr) return false;                    // row missing or other error
+  if (subErr) return false;
 
   return data?.status === 'active' || data?.status === 'trialing';
 }
