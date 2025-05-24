@@ -1,42 +1,33 @@
-/* --------------------------------------------------------------------------
-   lib/getMemberStatus.ts                — SERVER-ONLY HELPER
-   Returns TRUE when the signed-in user has status = 'active' OR 'trialing'
-   in public.subscribers.  Uses the service-role key → bypasses RLS.
-   -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- *
+ *  getMemberStatus()                                                         *
+ *  – Server-only helper                                                     *
+ *  – Returns TRUE when the signed-in user has status = 'active' | 'trialing' *
+ *    in public.subscribers.                                                  *
+ *  – Uses @supabase/ssr + SERVICE_ROLE key → bypasses RLS.                   *
+ * -------------------------------------------------------------------------- */
 
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 export async function getMemberStatus(): Promise<boolean> {
-  /* -------------------- Supabase client wired to Next cookies ----------- */
+  /* Supabase client (server-side, no cookie adapter needed) */
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,              // server-only
-    {
-      cookies: {
-        get(name) {
-          return cookies().get(name)?.value
-        },
-        set(name, value, options) {
-          cookies().set({ name, value, ...options })
-        },
-        remove(name, options) {
-          cookies().delete({ name, ...options })
-        },
-      },
-    },
-  )
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,   // server-only key
+    { cookies },                              // just pass Next.js helper
+  );
 
-  /* -------------------- identify logged-in user (if any) ---------------- */
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email) return false
+  /* Identify signed-in user */
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return false;
 
-  /* -------------------- subscription row lookup ------------------------- */
-  const { data } = await supabase
+  /* Look up subscription status */
+  const { data, error } = await supabase
     .from('subscribers')
     .select('status')
     .eq('email', user.email)
-    .single()
+    .single();
 
-  return data?.status === 'active' || data?.status === 'trialing'
+  if (error) return false;
+  return data?.status === 'active' || data?.status === 'trialing';
 }
