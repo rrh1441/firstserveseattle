@@ -1,5 +1,7 @@
 /* --------------------------------------------------------------------------
-   /  – anonymous landing + free-use gate
+   Public landing page
+   • Anonymous users get N free unique days (3 / 5 / 7, sticky cohort).
+   • On the day *after* the cap, redirect to /paywall.
    -------------------------------------------------------------------------- */
 
 'use client';
@@ -13,15 +15,14 @@ import { Button }          from '@/components/ui/button';
 import Paywall             from './tennis-courts/components/paywall';
 import TennisCourtList     from './tennis-courts/components/TennisCourtList';
 import DaysCounter         from './tennis-courts/components/DaysCounter';
-import ViewsCounter        from './tennis-courts/components/counter';
 
 import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
 import { logEvent }          from '@/lib/logEvent';
 import { useRandomUserId }   from './randomUserSetup';
 
-/* ---------- static ------------------------------------------------------ */
+/* ---------- constants -------------------------------------------------- */
 const EXEMPT_PATHS = new Set<string>([
-  '/paywall',               // avoid redirect loops
+  '/paywall',
   '/reset-password',
   '/login',
   '/signup',
@@ -44,31 +45,22 @@ interface ViewState {
   showPaywall: boolean;
 }
 
-/* ------------------------------------------------------------------------ */
+/* ---------------------------------------------------------------------- */
 export default function HomePage(): JSX.Element | null {
   const pathname  = usePathname();
   const router    = useRouter();
 
-  const [userId,     setUserId]     = useState<string | null>(null);
-  const [isLoading,  setIsLoading]  = useState<boolean>(true);
-  const [viewData,   setViewData]   = useState<ViewState | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [viewData,  setViewData]  = useState<ViewState | null>(null);
 
-  useRandomUserId();                           // assigns an anon ID once
+  useRandomUserId();                                   // assigns anon ID once
 
-  /* ---------- helper ---------------------------------------------------- */
   const pathIsExempt = useCallback(
     (p: string): boolean => p.startsWith('/courts/') || EXEMPT_PATHS.has(p),
     [],
   );
 
-  /* ---------- first client paint: grab anon ID ------------------------- */
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUserId(localStorage.getItem('userId'));
-    }
-  }, []);
-
-  /* ---------- pay-wall decision on nav + anon-ID ----------------------- */
+  /* ---------- decide on every navigation ------------------------------ */
   useEffect(() => {
     async function decide(): Promise<void> {
       if (pathIsExempt(pathname)) {
@@ -80,21 +72,22 @@ export default function HomePage(): JSX.Element | null {
 
       try {
         const show = await shouldShowPaywall();
+
         setViewData({
-          uniqueDays : Number(localStorage.getItem('fss_days')?.length ?? 0),
-          gateDays   : Number(localStorage.getItem('fss_gate')       ?? 3),
+          uniqueDays : JSON.parse(localStorage.getItem('fss_days') ?? '[]').length,
+          gateDays   : Number(localStorage.getItem('fss_gate') ?? 3),
           showPaywall: show,
         });
 
-        logEvent('visit_home', {
-          pathname,
-          showPaywall: show,
-        });
+        logEvent('visit_home', { pathname, showPaywall: show });
 
-        if (show) router.replace('/paywall');
+        if (show) {
+          router.replace('/paywall');
+          return;
+        }
       } catch {
-        /* safest fallback on any failure */
         router.replace('/paywall');
+        return;
       } finally {
         setIsLoading(false);
       }
@@ -104,13 +97,12 @@ export default function HomePage(): JSX.Element | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  /* ---------- guards ---------------------------------------------------- */
+  /* ---------- guards --------------------------------------------------- */
   if (pathIsExempt(pathname)) return null;
   if (isLoading)              return <LoadingIndicator />;
+  if (viewData?.showPaywall)  return <Paywall />;
 
-  if (viewData?.showPaywall) return <Paywall />;
-
-  /* ---------- main public UI ------------------------------------------- */
+  /* ---------- main public UI ------------------------------------------ */
   if (viewData && pathname === '/') {
     return (
       <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
@@ -134,7 +126,10 @@ export default function HomePage(): JSX.Element | null {
           </div>
         </header>
 
-        <DaysCounter uniqueDays={viewData.uniqueDays} gateDays={viewData.gateDays} />
+        <DaysCounter
+          uniqueDays={viewData.uniqueDays}
+          gateDays={viewData.gateDays}
+        />
 
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />

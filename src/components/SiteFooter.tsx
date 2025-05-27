@@ -28,6 +28,16 @@ export default function SiteFooter() {
         <Link href="/contact" className="underline hover:text-gray-500">
           Contact
         </Link>
+        <span aria-hidden="true">|</span>
+
+        <Link href="/login" className="underline hover:text-gray-500">
+          Sign In
+        </Link>
+        <span aria-hidden="true">|</span>
+
+        <Link href="/signup" className="underline hover:text-gray-500">
+          Sign Up
+        </Link>
       </nav>
 
       <p className="mb-1">
