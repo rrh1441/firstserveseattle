@@ -163,6 +163,6 @@ export default function HomePage(): ReactElement | null {
     );
   }
 
-  /* ---------- unreachable --------------------------------------------- */
+  /* ---------- unreachab le --------------------------------------------- */
   return null;
 }
