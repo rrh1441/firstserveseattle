@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
    Public landing page
-   • Anonymous users get N free unique days (3 / 5 / 7, sticky cohort).
-   • On the day *after* the cap, redirect to /paywall.
+   • Anonymous users receive 3 / 5 / 7 free unique days (sticky cohort).
+   • On the day *after* that cap, redirect to /paywall.
    -------------------------------------------------------------------------- */
 
 'use client';
@@ -10,6 +10,8 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter }                     from 'next/navigation';
 import Image                                          from 'next/image';
 import { ExternalLink }                               from 'lucide-react';
+
+import type { ReactElement } from 'react';
 
 import { Button }          from '@/components/ui/button';
 import Paywall             from './tennis-courts/components/paywall';
@@ -33,7 +35,7 @@ const EXEMPT_PATHS = new Set<string>([
   '/request-password-reset',
 ]);
 
-const LoadingIndicator = (): JSX.Element => (
+const LoadingIndicator = (): ReactElement => (
   <div className="flex min-h-[50vh] items-center justify-center">
     <p className="animate-pulse text-lg text-gray-600">Loading Courts…</p>
   </div>
@@ -46,7 +48,7 @@ interface ViewState {
 }
 
 /* ---------------------------------------------------------------------- */
-export default function HomePage(): JSX.Element | null {
+export default function HomePage(): ReactElement | null {
   const pathname  = usePathname();
   const router    = useRouter();
 
