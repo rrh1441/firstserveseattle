@@ -1,25 +1,27 @@
-/* -------------------------------------------------------------------------- */
-/*  src/app/page.tsx                                                          */
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   /  – anonymous landing + free-use gate
+   -------------------------------------------------------------------------- */
 
-'use client'
+'use client';
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
-import Image from 'next/image'
-import { ExternalLink } from 'lucide-react'
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter }                     from 'next/navigation';
+import Image                                          from 'next/image';
+import { ExternalLink }                               from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
-import Paywall from './tennis-courts/components/paywall'
-import TennisCourtList from './tennis-courts/components/TennisCourtList'
-import DaysCounter from './tennis-courts/components/DaysCounter' // new counter
-import ViewsCounter from './tennis-courts/components/counter'    // legacy
+import { Button }          from '@/components/ui/button';
+import Paywall             from './tennis-courts/components/paywall';
+import TennisCourtList     from './tennis-courts/components/TennisCourtList';
+import DaysCounter         from './tennis-courts/components/DaysCounter';
+import ViewsCounter        from './tennis-courts/components/counter';
 
-import { logEvent } from '@/lib/logEvent'
-import { useRandomUserId } from './randomUserSetup'
+import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
+import { logEvent }          from '@/lib/logEvent';
+import { useRandomUserId }   from './randomUserSetup';
 
-/* ---------- constants --------------------------------------------------- */
-const EXEMPT_PATHS = [
+/* ---------- static ------------------------------------------------------ */
+const EXEMPT_PATHS = new Set<string>([
+  '/paywall',               // avoid redirect loops
   '/reset-password',
   '/login',
   '/signup',
@@ -28,132 +30,87 @@ const EXEMPT_PATHS = [
   '/terms-of-service',
   '/courts',
   '/request-password-reset',
-]
+]);
 
-const LoadingIndicator = () => (
+const LoadingIndicator = (): JSX.Element => (
   <div className="flex min-h-[50vh] items-center justify-center">
     <p className="animate-pulse text-lg text-gray-600">Loading Courts…</p>
   </div>
-)
+);
 
 interface ViewState {
-  count: number
-  gate: number
-  showPaywall: boolean
+  uniqueDays : number;
+  gateDays   : number;
+  showPaywall: boolean;
 }
 
 /* ------------------------------------------------------------------------ */
-export default function HomePage() {
-  const pathname = usePathname()
+export default function HomePage(): JSX.Element | null {
+  const pathname  = usePathname();
+  const router    = useRouter();
 
-  const [userId, setUserId]       = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [viewData, setViewData]   = useState<ViewState | null>(null)
+  const [userId,     setUserId]     = useState<string | null>(null);
+  const [isLoading,  setIsLoading]  = useState<boolean>(true);
+  const [viewData,   setViewData]   = useState<ViewState | null>(null);
 
-  useRandomUserId()
+  useRandomUserId();                           // assigns an anon ID once
 
-  const isPathExempt = useCallback(
-    (p: string) => EXEMPT_PATHS.includes(p) || p.startsWith('/courts/'),
+  /* ---------- helper ---------------------------------------------------- */
+  const pathIsExempt = useCallback(
+    (p: string): boolean => p.startsWith('/courts/') || EXEMPT_PATHS.has(p),
     [],
-  )
+  );
 
-  /* -------------------------------------------------------------------- */
-  /*  Update unique-day count & paywall status                            */
-  /* -------------------------------------------------------------------- */
-  const updateAndCheckViewStatus = useCallback(
-    async (currentUserId: string) => {
-      if (!currentUserId || isPathExempt(pathname)) {
-        if (isPathExempt(pathname)) setIsLoading(false)
-        return
-      }
-
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const res = await fetch('/api/update-and-check-session', {
-          method : 'POST',
-          headers: {
-            'Content-Type' : 'application/json',
-            'x-paywall-gate': String(localStorage.getItem('fss_gate') ?? ''),
-          },
-          body: JSON.stringify({ userId: currentUserId }),
-        })
-
-        const data = await res.json().catch(() => ({}))
-        console.log('[update-check response]', res.status, data) // <= inspect
-
-        if (res.ok &&
-            typeof data.uniqueDays  === 'number' &&
-            typeof data.showPaywall === 'boolean' &&
-            typeof data.gateDays    === 'number') {
-
-          setViewData({
-            count      : data.uniqueDays,
-            gate       : data.gateDays,
-            showPaywall: data.showPaywall,
-          })
-
-          logEvent('visit_home', {
-            uniqueDays : data.uniqueDays,
-            gateDays   : data.gateDays,
-            showPaywall: data.showPaywall,
-            pathname,
-          })
-        } else {
-          // fail-open: show courts, no paywall
-          console.warn('[update-check] invalid payload – allowing user')
-          setViewData({ count: 0, gate: 3, showPaywall: false })
-        }
-      } catch (err) {
-        console.error('[update-check] network error – allowing user', err)
-        setViewData({ count: 0, gate: 3, showPaywall: false })
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [pathname, isPathExempt],
-  )
-
-  /* ---------- load anonymous ID from localStorage --------------------- */
+  /* ---------- first client paint: grab anon ID ------------------------- */
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setUserId(localStorage.getItem('userId'))
+      setUserId(localStorage.getItem('userId'));
     }
-  }, [])
+  }, []);
 
-  /* ---------- trigger API call on nav/userId change ------------------- */
+  /* ---------- pay-wall decision on nav + anon-ID ----------------------- */
   useEffect(() => {
-    if (userId && !isPathExempt(pathname)) {
-      updateAndCheckViewStatus(userId)
-    } else if (!userId && !isPathExempt(pathname)) {
-      setIsLoading(true)
-    } else {
-      setIsLoading(false)
+    async function decide(): Promise<void> {
+      if (pathIsExempt(pathname)) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const show = await shouldShowPaywall();
+        setViewData({
+          uniqueDays : Number(localStorage.getItem('fss_days')?.length ?? 0),
+          gateDays   : Number(localStorage.getItem('fss_gate')       ?? 3),
+          showPaywall: show,
+        });
+
+        logEvent('visit_home', {
+          pathname,
+          showPaywall: show,
+        });
+
+        if (show) router.replace('/paywall');
+      } catch {
+        /* safest fallback on any failure */
+        router.replace('/paywall');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [userId, pathname, updateAndCheckViewStatus, isPathExempt])
 
-  /* -------------------------------------------------------------------- */
-  /*  Render guards                                                       */
-  /* -------------------------------------------------------------------- */
-  if (isPathExempt(pathname)) return null
-  if (isLoading)              return <LoadingIndicator />
+    decide().catch(() => router.replace('/paywall'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
-  if (error)
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <p className="rounded border border-red-200 bg-red-50 p-4 text-red-600">
-          {error}
-        </p>
-      </div>
-    )
+  /* ---------- guards ---------------------------------------------------- */
+  if (pathIsExempt(pathname)) return null;
+  if (isLoading)              return <LoadingIndicator />;
 
-  if (viewData?.showPaywall) return <Paywall />
+  if (viewData?.showPaywall) return <Paywall />;
 
-  /* -------------------------------------------------------------------- */
-  /*  Main public homepage                                                */
-  /* -------------------------------------------------------------------- */
+  /* ---------- main public UI ------------------------------------------- */
   if (viewData && pathname === '/') {
     return (
       <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
@@ -177,20 +134,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Counter – wrap in try/catch so it never kills the page */}
-        {(() => {
-          try {
-            return (
-              <DaysCounter
-                uniqueDays={viewData.count}
-                gateDays={viewData.gate}
-              />
-            )
-          } catch (e) {
-            console.error('[DaysCounter crash] falling back to legacy', e)
-            return <ViewsCounter viewsCount={viewData.count} />
-          }
-        })()}
+        <DaysCounter uniqueDays={viewData.uniqueDays} gateDays={viewData.gateDays} />
 
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />
@@ -219,9 +163,9 @@ export default function HomePage() {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
-  console.warn('HomePage reached unexpected render state:', pathname)
-  return null
+  /* ---------- unreachable --------------------------------------------- */
+  return null;
 }
