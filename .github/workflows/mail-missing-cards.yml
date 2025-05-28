@@ -1,0 +1,30 @@
+name: Mail add-card reminders
+
+on:
+  # 17:30 UTC = 10:30 AM PDT / 9:30 AM PST
+  schedule:
+    - cron: '30 17 * * *'
+
+jobs:
+  mail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Send reminder e-mails
+        run: pnpm mail-missing-cards
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }} # "true" or "false"
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }} 
