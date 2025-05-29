@@ -29,12 +29,15 @@ export default function LoginFormClient({
     setError(null);
     setLoading(true);
 
+    console.log('🔐 Attempting login...');
+
     const { error: loginError, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (loginError || !data.user) {
+      console.error('❌ Login failed:', loginError);
       setError(
         loginError?.message === "Invalid login credentials"
           ? "Incorrect email or password. Please try again."
@@ -44,6 +47,7 @@ export default function LoginFormClient({
       return;
     }
 
+    console.log('✅ Login successful, redirecting to:', redirectTo);
     router.push(redirectTo);
   };
 

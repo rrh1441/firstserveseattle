@@ -84,18 +84,18 @@ export default function HomePage(): ReactElement | null {
         logEvent('visit_home', { pathname, showPaywall: show });
 
         if (show) {
-          router.replace('/paywall');
+          router.replace('/signup');
           return;
         }
       } catch {
-        router.replace('/paywall');
+        router.replace('/signup');
         return;
       } finally {
         setIsLoading(false);
       }
     }
 
-    decide().catch(() => router.replace('/paywall'));
+    decide().catch(() => router.replace('/signup'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 

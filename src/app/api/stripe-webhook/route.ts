@@ -35,7 +35,7 @@ function cardOnFile(cust: Stripe.Customer): boolean {
   );
 }
 
-/** Upsert row keyed on `stripe_customer_id` (single source of truth). */
+/** Upsert row - update by email first, then by stripe_customer_id */
 async function upsertSubscriber(fields: {
   stripeCustomerId:     string;
   stripeSubscriptionId?:string;
@@ -55,23 +55,42 @@ async function upsertSubscriber(fields: {
     trialEnd,
   } = fields;
 
+  const updateData = {
+    stripe_customer_id:     stripeCustomerId,
+    stripe_subscription_id: stripeSubscriptionId,
+    email,
+    plan,
+    status,
+    has_card:                hasCard,
+    trial_end:               trialEnd
+      ? new Date(trialEnd * 1e3).toISOString()
+      : null,
+    updated_at:              new Date().toISOString(),
+  };
+
+  // Try to update by email first (from signup)
+  if (email) {
+    const { data: existingByEmail, error: emailError } = await supa
+      .from('subscribers')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingByEmail && !emailError) {
+      const { error: updateError } = await supa
+        .from('subscribers')
+        .update(updateData)
+        .eq('email', email);
+      
+      if (updateError) console.error('Supabase update by email error:', updateError);
+      return;
+    }
+  }
+
+  // Fallback to upsert by stripe_customer_id
   const { error } = await supa
     .from('subscribers')
-    .upsert(
-      {
-        stripe_customer_id:     stripeCustomerId,
-        stripe_subscription_id: stripeSubscriptionId,
-        email,
-        plan,
-        status,
-        has_card:                hasCard,
-        trial_end:               trialEnd
-          ? new Date(trialEnd * 1e3).toISOString()
-          : null,
-        updated_at:              new Date().toISOString(),
-      },
-      { onConflict: 'stripe_customer_id' },
-    );
+    .upsert(updateData, { onConflict: 'stripe_customer_id' });
 
   if (error) console.error('Supabase upsert error:', error);
 }

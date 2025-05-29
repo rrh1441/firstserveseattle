@@ -6,14 +6,18 @@ import Image from 'next/image';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5); // Increased to 5 seconds
   
   useEffect(() => {
-    // Show success message for 3 seconds, then redirect
+    console.log('✅ CHECKOUT SUCCESS PAGE LOADED');
+    
+    // Show success message for 5 seconds, then redirect
     const timer = setInterval(() => {
       setCountdown((prev) => {
+        console.log(`⏰ Countdown: ${prev}`);
         if (prev <= 1) {
           clearInterval(timer);
+          console.log('🔄 Redirecting to login...');
           router.replace('/login?redirect_to=/members&from=checkout');
           return 0;
         }
@@ -21,11 +25,19 @@ export default function CheckoutSuccessPage() {
       });
     }, 1000);
     
-    return () => clearInterval(timer);
+    return () => {
+      console.log('🧹 Cleanup timer');
+      clearInterval(timer);
+    };
   }, [router]);
   
+  const handleSignInNow = () => {
+    console.log('👆 Manual sign in button clicked');
+    router.replace('/login?redirect_to=/members&from=checkout');
+  };
+  
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <div className="flex justify-center mb-8">
           <Image
@@ -37,27 +49,30 @@ export default function CheckoutSuccessPage() {
           />
         </div>
         
-        <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="rounded-full bg-green-100 w-20 h-20 flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
         
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to First Serve Seattle!</h1>
-        <p className="text-lg text-gray-600 mb-6">Your 14-day free trial is now active.</p>
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">🎉 Success!</h1>
+        <p className="text-xl text-gray-600 mb-2">Your trial is active!</p>
+        <p className="text-lg text-gray-600 mb-8">Welcome to First Serve Seattle</p>
         
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Next Step</h2>
-          <p className="text-gray-600 mb-4">Sign in to access your account and start checking court availability.</p>
-          <p className="text-sm text-gray-500">Redirecting in {countdown} seconds...</p>
+        <div className="bg-white rounded-lg border-2 border-green-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">✅ Next Step</h2>
+          <p className="text-gray-600 mb-4">Click below to sign in and start using your account</p>
+          <p className="text-lg font-bold text-green-600">Auto-redirecting in {countdown} seconds</p>
         </div>
         
         <button
-          onClick={() => router.replace('/login?redirect_to=/members&from=checkout')}
-          className="w-full bg-[#0c372b] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#0c372b]/90 transition-colors"
+          onClick={handleSignInNow}
+          className="w-full bg-[#0c372b] text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-[#0c372b]/90 transition-colors"
         >
-          Sign In Now
+          Sign In Now →
         </button>
+        
+        <p className="text-sm text-gray-500 mt-4">If you&apos;re seeing this page, the checkout worked!</p>
       </div>
     </div>
   );

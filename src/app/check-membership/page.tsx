@@ -26,14 +26,14 @@ export default async function CheckMembershipPage(): Promise<never> {
       { cache: 'no-store' },              // never cache auth checks
     );
 
-    if (!res.ok) redirect('/paywall');
+    if (!res.ok) redirect('/signup');
 
     const { isMember } = (await res.json()) as { isMember: boolean };
 
     /* ---------- 3️⃣  route --------------------------------------------- */
-    redirect(isMember ? '/members' : '/paywall');
+    redirect(isMember ? '/members' : '/signup');
   } catch {
     /* network / JSON error → safest fallback */
-    redirect('/paywall');
+    redirect('/signup');
   }
 }

@@ -37,25 +37,37 @@ export default function MembersPage() {
   const [token,    setToken]        = useState<string | null>(null);
   const [loadingPortal, setLP]      = useState(false);
 
+  console.log('🏠 Members page component loaded');
+
   /* ---------------- session + membership gate ---------------- */
   useEffect(() => {
+    console.log('🔄 Members page useEffect running...');
     (async () => {
       try {
+        console.log('🧪 Checking session...');
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log('❌ No session found, redirecting to login');
           router.replace(`/login?redirect_to=${encodeURIComponent(window.location.pathname)}`);
           return;
         }
+        console.log('✅ Session found for:', session.user.email);
         setToken(session.access_token);
 
+        console.log('🧪 Checking membership status...');
         const ok = await fetchMemberStatus(session.user.email);
+        console.log('📊 Membership status:', ok);
         if (!ok) {
-          router.replace('/paywall');
+          console.log('❌ No membership found, redirecting to paywall');
+          router.replace('/signup');
           return;
         }
+        console.log('✅ Membership confirmed, showing members content');
       } catch (e) {
+        console.error('💥 Error in members page:', e);
         setError(e instanceof Error ? e.message : String(e));
       } finally {
+        console.log('🏁 Members page check complete');
         setChecking(false);
       }
     })();
