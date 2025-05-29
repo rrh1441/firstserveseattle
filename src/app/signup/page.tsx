@@ -111,7 +111,8 @@ export default function SignUpPage() {
       if (!data.user) throw new Error("No user returned after sign-up.");
 
       /* -- store pending subscriber row -------------------------------- */
-      await supabase
+      console.log('📝 Creating subscriber record for:', email);
+      const { data: subData, error: subError } = await supabase
         .from("subscribers")
         .upsert(
           {
@@ -125,6 +126,12 @@ export default function SignUpPage() {
           },
           { onConflict: "email" },
         );
+      
+      if (subError) {
+        console.error('❌ Failed to create subscriber record:', subError);
+        throw new Error(`Failed to create subscriber record: ${subError.message}`);
+      }
+      console.log('✅ Subscriber record created:', subData);
 
       /* -- Stripe checkout --------------------------------------------- */
       const resp = await fetch("/api/create-checkout-session", {
