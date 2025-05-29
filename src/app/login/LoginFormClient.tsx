@@ -7,11 +7,19 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function LoginFormClient({ redirectTo }: { redirectTo: string }) {
+export default function LoginFormClient({ 
+  redirectTo, 
+  initialEmail = '',
+  showTrialMessage = false
+}: { 
+  redirectTo: string; 
+  initialEmail?: string;
+  showTrialMessage?: boolean;
+}) {
   const supabase = createClientComponentClient();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,6 +65,19 @@ export default function LoginFormClient({ redirectTo }: { redirectTo: string }) 
           <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
             Sign In
           </h1>
+
+          {showTrialMessage && (
+            <div className="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm font-medium text-green-800">
+                  Great! Your 14-day free trial is active. Sign in to access your account.
+                </p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
@@ -121,7 +142,7 @@ export default function LoginFormClient({ redirectTo }: { redirectTo: string }) 
 
             <div className="mt-6 text-center text-sm text-gray-600 space-y-1">
               <p>
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link
                   href="/signup"
                   className="font-medium text-blue-600 hover:underline"

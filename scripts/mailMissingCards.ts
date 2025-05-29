@@ -5,6 +5,10 @@
  *   • ends in ≤ 24 h
  * and who still has no card on file.
  *
+ * NOTE: With the switch to card-required trials (Jan 2025), new signups 
+ * will always have payment methods. This script is primarily for legacy 
+ * users who signed up during the card-optional period.
+ *
  * Optionally forces trial_end = now so Stripe invoices immediately.
  * Designed to be called by:
  *   • CLI:  pnpm mail-missing-cards          (via ts-node)

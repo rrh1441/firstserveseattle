@@ -120,9 +120,9 @@ export async function POST(req: NextRequest) {
           stripeCustomerId: custId,
           stripeSubscriptionId: subId,
           email:   customer.email ?? session.customer_details?.email ?? '',
-          plan:    planFromPrice(session.metadata?.plan_id ?? ''),
+          plan:    planFromPrice(session.metadata?.plan ?? ''),
           status:  'trialing',
-          hasCard: cardOnFile(customer),
+          hasCard: true,
           trialEnd: session.expires_at ?? null,
         });
         break;

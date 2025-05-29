@@ -7,8 +7,8 @@ import { cookies } from "next/headers";
 /* -------------------------------------------------------------------------- */
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
 
-const SUCCESS_URL = "https://www.firstserveseattle.com/members";
-const CANCEL_URL  = "https://www.firstserveseattle.com/";
+const SUCCESS_URL = "https://firstserveseattle.com/checkout-success";
+const CANCEL_URL  = "https://firstserveseattle.com/";
 
 const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
 const ANNUAL_ID  = "price_1QowMRKSaqiJUYkjgeqLADm4";
@@ -37,20 +37,17 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
 
     const session = await stripe.checkout.sessions.create({
-      customer_email: email,                 // <-- keep
-      /* customer_creation removed */        // <-- delete this line
+      customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
 
-      /* ---------- card-optional 14-day trial -------------------------- */
-      payment_method_collection: "if_required",
+      /* ---------- card-required 14-day trial -------------------------- */
+      payment_method_collection: "always", // require payment method upfront
       subscription_data: {
         trial_period_days: 14,
-        trial_settings: {
-          end_behavior: { missing_payment_method: "pause" },
-        },
+        // removed trial_settings since we're requiring payment method
       },
 
       allow_promotion_codes: true,

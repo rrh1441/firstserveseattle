@@ -79,7 +79,7 @@ export default function PaywallPage(): JSX.Element | null {
 
           <CardDescription className="text-base text-gray-600">
             Start your <span className="font-semibold">14-day free trial</span>{' '}
-            — no card required.
+            — no payment due today.
           </CardDescription>
 
           <p className="text-sm text-gray-500">{SOCIAL_PROOF}</p>
