@@ -50,13 +50,7 @@ export default function MembersPage() {
 
         const ok = await fetchMemberStatus(session.user.email);
         if (!ok) {
-          const res  = await fetch('/api/create-checkout-session', {
-            method : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify({ email: session.user.email, plan: 'monthly' }),
-          });
-          const { url } = (await res.json()) as { url: string };
-          window.location.href = url;
+          router.replace('/paywall');
           return;
         }
       } catch (e) {
@@ -120,7 +114,7 @@ export default function MembersPage() {
               First&nbsp;Serve&nbsp;Seattle
             </h1>
             <p className="text-base font-semibold md:text-lg">
-              Today’s Open Tennis &amp; Pickleball Courts
+              Today's Open Tennis &amp; Pickleball Courts
             </p>
           </div>
         </div>

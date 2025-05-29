@@ -115,6 +115,9 @@ export async function POST(req: NextRequest) {
           custId,
         )) as Stripe.Customer;
 
+        // Get the actual subscription to get the trial_end
+        const subscription = await stripe.subscriptions.retrieve(subId);
+
         await upsertSubscriber({
           stripeCustomerId: custId,
           stripeSubscriptionId: subId,
@@ -122,7 +125,7 @@ export async function POST(req: NextRequest) {
           plan:    planFromPrice(session.metadata?.plan ?? ''),
           status:  'trialing',
           hasCard: true,
-          trialEnd: session.expires_at ?? null,
+          trialEnd: subscription.trial_end ?? null,
         });
         break;
       }
