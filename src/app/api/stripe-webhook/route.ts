@@ -79,7 +79,7 @@ async function upsertSubscriber(fields: {
       .from('subscribers')
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 or multiple rows
 
     console.log('📋 Email lookup result:', { existingByEmail, emailError });
 
@@ -211,8 +211,12 @@ export async function POST(req: NextRequest) {
         const pm     = event.data.object as Stripe.PaymentMethod;
         const custId = pm.customer as string;
 
+        // Get customer details since payment_method doesn't include email
+        const customer = (await stripe.customers.retrieve(custId)) as Stripe.Customer;
+
         await upsertSubscriber({
           stripeCustomerId: custId,
+          email:            customer.email ?? '',
           hasCard:          true,
         });
         break;
