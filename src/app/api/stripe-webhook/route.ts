@@ -45,6 +45,8 @@ async function upsertSubscriber(fields: {
   hasCard?:             boolean;
   trialEnd?:            number | null;
 }) {
+  console.log('🔄 upsertSubscriber called with:', fields);
+
   const {
     stripeCustomerId,
     stripeSubscriptionId,
@@ -68,31 +70,48 @@ async function upsertSubscriber(fields: {
     updated_at:              new Date().toISOString(),
   };
 
+  console.log('📝 updateData:', updateData);
+
   // Try to update by email first (from signup)
   if (email) {
+    console.log('🔍 Looking for existing record by email:', email);
     const { data: existingByEmail, error: emailError } = await supa
       .from('subscribers')
       .select('id')
       .eq('email', email)
       .single();
 
+    console.log('📋 Email lookup result:', { existingByEmail, emailError });
+
     if (existingByEmail && !emailError) {
+      console.log('✅ Found existing record, updating by email');
       const { error: updateError } = await supa
         .from('subscribers')
         .update(updateData)
         .eq('email', email);
       
-      if (updateError) console.error('Supabase update by email error:', updateError);
+      if (updateError) {
+        console.error('❌ Supabase update by email error:', updateError);
+      } else {
+        console.log('✅ Successfully updated by email');
+      }
       return;
+    } else {
+      console.log('❌ No existing record found by email, falling back to stripe_customer_id upsert');
     }
   }
 
   // Fallback to upsert by stripe_customer_id
+  console.log('🔄 Upserting by stripe_customer_id:', stripeCustomerId);
   const { error } = await supa
     .from('subscribers')
     .upsert(updateData, { onConflict: 'stripe_customer_id' });
 
-  if (error) console.error('Supabase upsert error:', error);
+  if (error) {
+    console.error('❌ Supabase upsert error:', error);
+  } else {
+    console.log('✅ Successfully upserted by stripe_customer_id');
+  }
 }
 
 /** Map Stripe price → internal plan enum. */
@@ -106,6 +125,8 @@ function planFromPrice(priceId: string): string {
 //  3. Route handler
 // ──────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  console.log('🔔 Webhook received!');
+  
   /* 3-a  Verify webhook signature */
   const rawBody = Buffer.from(await req.arrayBuffer());
   const sig     = req.headers.get('stripe-signature') ?? '';
@@ -117,8 +138,9 @@ export async function POST(req: NextRequest) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!,
     );
+    console.log('✅ Webhook signature verified. Event type:', event.type);
   } catch (err) {
-    console.warn('Signature verification failed:', err);
+    console.warn('❌ Signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
