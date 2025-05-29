@@ -114,7 +114,7 @@ export default function MembersPage() {
               First&nbsp;Serve&nbsp;Seattle
             </h1>
             <p className="text-base font-semibold md:text-lg">
-              Today's Open Tennis &amp; Pickleball Courts
+              Today&apos;s Open Tennis &amp; Pickleball Courts
             </p>
           </div>
         </div>
