@@ -3,7 +3,6 @@
  * Handles all live-mode Stripe web-hooks and mirrors them into the `subscribers`
  * table.  Fully strict-mode compliant: noImplicitAny, strictNullChecks, etc.
  */
-/* eslint-disable no-console */
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
