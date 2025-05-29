@@ -237,9 +237,13 @@ export async function POST(req: NextRequest) {
         const custId = inv.customer as string;
         const subId  = inv.subscription as string | null;
 
+        // Get customer details since invoice doesn't include email
+        const customer = (await stripe.customers.retrieve(custId)) as Stripe.Customer;
+
         await upsertSubscriber({
           stripeCustomerId:     custId,
           stripeSubscriptionId: subId ?? undefined,
+          email:                customer.email ?? '',
           status:               inv.status as Stripe.Subscription.Status,
         });
         break;
