@@ -23,10 +23,10 @@ export async function GET(req: Request) {
     .single()
 
   if (error) {
-    // don’t leak PostgREST codes to client
+    // don't leak PostgREST codes to client
     return NextResponse.json({ isMember: false }, { status: 500 })
   }
 
-  const isMember = data?.status === 'active' || data?.status === 'trialing'
+  const isMember = data?.status === 'active' || data?.status === 'trialing' || data?.status === 'paid'
   return NextResponse.json({ isMember })
 }
