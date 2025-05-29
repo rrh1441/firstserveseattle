@@ -64,9 +64,7 @@ async function upsertSubscriber(fields: {
     plan,
     status,
     has_card:                hasCard,
-    trial_end:               trialEnd
-      ? new Date(trialEnd * 1e3).toISOString()
-      : null,
+    trial_end:               trialEnd,
     updated_at:              new Date().toISOString(),
   };
 
