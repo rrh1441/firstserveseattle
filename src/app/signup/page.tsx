@@ -112,26 +112,23 @@ export default function SignUpPage() {
 
       /* -- store pending subscriber row -------------------------------- */
       console.log('📝 Creating subscriber record for:', email);
-      const { data: subData, error: subError } = await supabase
-        .from("subscribers")
-        .upsert(
-          {
-            id: data.user.id,
-            email,
-            full_name: fullName,
-            plan,
-            status: "pending",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email" },
-        );
+      const subResp = await fetch('/api/create-subscriber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: data.user.id,
+          email,
+          fullName,
+          plan
+        })
+      });
       
-      if (subError) {
+      if (!subResp.ok) {
+        const subError = await subResp.text();
         console.error('❌ Failed to create subscriber record:', subError);
-        throw new Error(`Failed to create subscriber record: ${subError.message}`);
+        throw new Error(`Failed to create subscriber record: ${subError}`);
       }
-      console.log('✅ Subscriber record created:', subData);
+      console.log('✅ Subscriber record created');
 
       /* -- Stripe checkout --------------------------------------------- */
       const resp = await fetch("/api/create-checkout-session", {
