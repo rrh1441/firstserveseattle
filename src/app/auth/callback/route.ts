@@ -35,9 +35,33 @@ export async function GET(request: NextRequest) {
           .maybeSingle()
 
         if (!subscriber) {
-          console.log('💳 New Apple user needs payment setup, redirecting to signup')
-          // New user - redirect to signup to complete Stripe checkout
-          return NextResponse.redirect(new URL('/signup?apple_user=true', requestUrl.origin))
+          console.log('💳 Apple user needs payment setup, creating Stripe checkout with prefilled email')
+          
+          // Create Stripe checkout session with prefilled email
+          try {
+            const checkoutResponse = await fetch(`${requestUrl.origin}/api/create-checkout-session`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: data.user.email,
+                plan: 'monthly' // default to monthly
+              })
+            })
+
+            if (checkoutResponse.ok) {
+              const { url } = await checkoutResponse.json()
+              console.log('✅ Redirecting Apple user to Stripe checkout with prefilled email')
+              return NextResponse.redirect(url)
+            } else {
+              console.error('❌ Failed to create checkout session for Apple user')
+              return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
+            }
+          } catch (checkoutError) {
+            console.error('❌ Error creating checkout session:', checkoutError)
+            return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
+          }
         } else {
           console.log('✅ Apple user has payment setup, redirecting to members')
           // Existing user with payment - redirect to members

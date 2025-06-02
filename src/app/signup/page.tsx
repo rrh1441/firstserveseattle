@@ -251,27 +251,11 @@ export default function SignUpPage() {
               {isAppleUser ? "Complete Your Registration" : "Or create with email"}
             </h2>
 
-            {isAppleUser && (
-              <div className="mb-6 rounded-md bg-blue-50 p-4 border border-blue-200">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-sm font-medium text-blue-800">
-                    Complete your registration to continue to checkout
-                  </p>
-                </div>
-              </div>
-            )}
-
             {errorMsg && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {errorMsg}
               </div>
             )}
-
-            {/* Social Auth - Apple Sign In */}
-            <SocialAuthButtons mode="signup" />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
