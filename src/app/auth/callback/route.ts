@@ -17,44 +17,40 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('❌ OAuth exchange error:', error)
-      return NextResponse.redirect(`${requestUrl.origin}/login?error=oauth_error`)
+      return NextResponse.redirect(new URL('/login?error=oauth_error', requestUrl.origin))
     }
 
-    const user = data.user
-    if (!user || !user.email) {
-      console.error('❌ No user or email from OAuth')
-      return NextResponse.redirect(`${requestUrl.origin}/login?error=no_user`)
-    }
-
-    console.log('✅ OAuth successful for:', user.email)
-
-    // For signup mode, check if this is a new user who needs to go through checkout
-    if (mode === 'signup') {
-      // Check if user already has a subscription
-      const memberCheckResponse = await fetch(
-        `${requestUrl.origin}/api/member-status?email=${encodeURIComponent(user.email)}`,
-        { cache: 'no-store' }
-      )
-
-      if (memberCheckResponse.ok) {
-        const { isMember } = await memberCheckResponse.json()
+    if (data.user) {
+      console.log('✅ OAuth user authenticated:', data.user.email)
+      
+      // If this is signup mode, we need to check if user has completed payment
+      if (mode === 'signup' || redirectTo === '/signup') {
+        console.log('🔄 Checking if Apple user needs to complete payment setup')
         
-        if (!isMember) {
-          // New user needs to go through signup flow
-          console.log('🔀 New Apple user, redirecting to signup with prefilled email')
-          return NextResponse.redirect(
-            `${requestUrl.origin}/signup?email=${encodeURIComponent(user.email)}&apple_user=true`
-          )
+        // Check if user exists in subscribers table (has completed payment)
+        const { data: subscriber } = await supabase
+          .from('subscribers')
+          .select('id, status')
+          .eq('email', data.user.email)
+          .maybeSingle()
+
+        if (!subscriber) {
+          console.log('💳 New Apple user needs payment setup, redirecting to signup')
+          // New user - redirect to signup to complete Stripe checkout
+          return NextResponse.redirect(new URL('/signup?apple_user=true', requestUrl.origin))
+        } else {
+          console.log('✅ Apple user has payment setup, redirecting to members')
+          // Existing user with payment - redirect to members
+          return NextResponse.redirect(new URL('/members', requestUrl.origin))
         }
       }
     }
 
-    // Existing user or login mode - go to intended destination
-    console.log('🔀 Redirecting to:', redirectTo)
-    return NextResponse.redirect(`${requestUrl.origin}${redirectTo}`)
+    // Default redirect
+    return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
   }
 
-  // No code means something went wrong
-  console.error('❌ No code in OAuth callback')
-  return NextResponse.redirect(`${requestUrl.origin}/login?error=oauth_failed`)
+  // No code - redirect to error page
+  console.error('❌ No authorization code received')
+  return NextResponse.redirect(new URL('/login?error=no_code', requestUrl.origin))
 } 
