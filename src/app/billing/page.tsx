@@ -8,7 +8,8 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';            // never cache
 
 export default async function BillingRedirectPage() {
-  const authCookie = cookies().get('sb-access-token')?.value; // Supabase client cookie
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get('sb-access-token')?.value; // Supabase client cookie
 
   try {
     const url = await createBillingPortal(authCookie);

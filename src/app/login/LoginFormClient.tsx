@@ -1,11 +1,12 @@
 // src/app/login/LoginFormClient.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 export default function LoginFormClient({ 
   redirectTo, 
@@ -18,11 +19,32 @@ export default function LoginFormClient({
 }) {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Check for OAuth errors in URL
+  useEffect(() => {
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      switch (oauthError) {
+        case 'oauth_error':
+          setError('Sign in with Apple failed. Please try again.');
+          break;
+        case 'no_user':
+          setError('Unable to get user information from Apple. Please try again.');
+          break;
+        case 'oauth_failed':
+          setError('Authentication failed. Please try again.');
+          break;
+        default:
+          setError('An error occurred during sign in. Please try again.');
+      }
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +110,15 @@ export default function LoginFormClient({
               {error}
             </div>
           )}
+
+          {/* Social Auth Buttons */}
+          <div className="mb-6">
+            <SocialAuthButtons 
+              mode="login" 
+              redirectTo={redirectTo}
+              disabled={loading}
+            />
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
