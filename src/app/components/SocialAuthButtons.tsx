@@ -43,9 +43,9 @@ export default function SocialAuthButtons({
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
           <div>
-            <p className="font-medium text-blue-800">💡 Quick tip for Apple users</p>
+            <p className="font-medium text-blue-800">💡 Important for Apple users</p>
             <p className="text-blue-700 mt-1">
-              For the best experience, choose <strong>&ldquo;Share My Email&rdquo;</strong> when signing in so we can send you billing updates and account notifications.
+              If you use <strong>&ldquo;Hide My Email&rdquo;</strong>, make sure to copy that exact private email address and use it during checkout. This ensures your account links properly with billing.
             </p>
           </div>
         </div>
