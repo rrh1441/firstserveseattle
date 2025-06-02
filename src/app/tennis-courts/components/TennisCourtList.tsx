@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -12,6 +13,7 @@ import {
   MapPin,
   Footprints,
   ThumbsUp,
+  X,
 } from "lucide-react";
 import { logEvent } from "@/lib/logEvent";
 
@@ -69,6 +71,7 @@ const CardSkeleton = () => (
 );
 
 export default function TennisCourtList() {
+  const searchParams = useSearchParams();
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [fav, setFav] = useState<number[]>([]);
   const [search, setSearch] = useState("");
@@ -83,6 +86,25 @@ export default function TennisCourtList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [about, setAbout] = useState(false);
+  const [qrCourtFilter, setQrCourtFilter] = useState<string | null>(null);
+
+  // Check for court parameter from QR code on mount
+  useEffect(() => {
+    const courtParam = searchParams.get('court');
+    if (courtParam) {
+      console.log(`🎾 QR court filter detected: ${courtParam}`);
+      setSearch(courtParam);
+      setQrCourtFilter(courtParam);
+      // Log that user came from QR code
+      logEvent('qr_court_filter_applied', { courtName: courtParam });
+    }
+  }, [searchParams]);
+
+  const clearQrFilter = () => {
+    setSearch("");
+    setQrCourtFilter(null);
+    logEvent('qr_court_filter_cleared');
+  };
 
   useEffect(() => {
     getTennisCourts()
@@ -108,13 +130,14 @@ export default function TennisCourtList() {
     });
 
   useEffect(() => {
-    if (search.trim()) {
+    if (search.trim() && !qrCourtFilter) {
+      // Only log manual search, not QR filter
       const timeout = setTimeout(() => {
         logEvent("search_courts", { query: search.trim() });
       }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [search]);
+  }, [search, qrCourtFilter]);
 
   useEffect(() => {
     logEvent("filter_applied", { amenities, popFilter });
@@ -183,10 +206,41 @@ export default function TennisCourtList() {
       <div className="sticky top-0 z-10 bg-white border-b pb-3 pt-6 space-y-3">
         <div className="text-xl font-semibold">{today}</div>
 
+        {/* QR Filter Notice */}
+        {qrCourtFilter && (
+          <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span className="text-sm font-medium text-blue-900">
+                  Showing courts for: <strong>{qrCourtFilter}</strong>
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearQrFilter}
+                className="text-blue-700 hover:text-blue-900 h-auto p-1"
+              >
+                <X size={16} />
+              </Button>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              Clear filter to see all courts
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-2 items-center">
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              // Clear QR filter state when user manually types
+              if (qrCourtFilter && e.target.value !== qrCourtFilter) {
+                setQrCourtFilter(null);
+              }
+            }}
             placeholder="Search courts…"
             className="flex-1 p-2 border rounded"
           />

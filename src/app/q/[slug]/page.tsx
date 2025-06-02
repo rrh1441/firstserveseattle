@@ -24,10 +24,10 @@ export default async function QRRedirect({ params }: QRProps) {
   /* 0️⃣ Await the params promise */
   const { slug } = await params
   
-  /* 1️⃣ Look up facility ID */
+  /* 1️⃣ Look up facility details */
   const { data: facility } = await supabase
     .from('tennis_facilities')
-    .select('id')
+    .select('id, title')
     .eq('slug', slug)
     .single()
 
@@ -47,6 +47,17 @@ export default async function QRRedirect({ params }: QRProps) {
     }
   }
 
-  /* 3️⃣ Off you go */
-  redirect('https://firstserveseattle.com')
+  /* 3️⃣ Redirect with court name filter */
+  const baseUrl = 'https://firstserveseattle.com'
+  
+  if (facility?.title) {
+    // Redirect with court name as search parameter
+    const courtParam = encodeURIComponent(facility.title)
+    console.log(`🎾 QR scan for ${facility.title}, redirecting with filter`)
+    redirect(`${baseUrl}?court=${courtParam}`)
+  } else {
+    // Fallback to regular redirect if no facility found
+    console.log(`❓ QR scan for unknown facility ${slug}, regular redirect`)
+    redirect(baseUrl)
+  }
 }
