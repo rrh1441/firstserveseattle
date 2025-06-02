@@ -16,21 +16,6 @@ export default function SocialAuthButtons({
   const supabase = createClientComponentClient();
 
   const handleAppleSignIn = async () => {
-    // Show warning about Hide My Email
-    const userConfirmed = window.confirm(
-      "⚠️ Apple ID Sign-In Warning\n\n" +
-      "When signing in with Apple, please choose \"Share My Email\" instead of \"Hide My Email\".\n\n" +
-      "If you hide your email:\n" +
-      "• Stripe won't be able to find your account for billing\n" +
-      "• You won't receive important billing notifications\n" +
-      "• Account recovery will be difficult\n\n" +
-      "Click OK to continue with Apple sign-in, or Cancel to use email instead."
-    );
-
-    if (!userConfirmed) {
-      return; // User cancelled
-    }
-
     console.log(`🍎 Apple sign-in initiated (${mode} mode)`);
     
     // For signup mode, redirect to signup page to complete Stripe checkout
@@ -51,16 +36,16 @@ export default function SocialAuthButtons({
 
   return (
     <div className="space-y-3">
-      {/* Apple ID Warning */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+      {/* Friendly Apple ID tip */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm">
         <div className="flex items-start gap-2">
-          <svg className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.19-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          <svg className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
           <div>
-            <p className="font-medium text-amber-800">Apple ID Users: Please Don&apos;t Hide Your Email</p>
-            <p className="text-amber-700 mt-1">
-              When signing in with Apple, choose <strong>&ldquo;Share My Email&rdquo;</strong> so Stripe can manage your billing properly.
+            <p className="font-medium text-blue-800">💡 Quick tip for Apple users</p>
+            <p className="text-blue-700 mt-1">
+              For the best experience, choose <strong>&ldquo;Share My Email&rdquo;</strong> when signing in so we can send you billing updates and account notifications.
             </p>
           </div>
         </div>
