@@ -91,7 +91,7 @@ export default async function QRRedirect({ params }: QRProps) {
     console.log(`🎾 QR scan for ${facilityTitle}, redirecting with filter`)
     redirect(`${baseUrl}?court=${courtParam}`)
   } else {
-    // Fallback to regular redirect if no facility found
+    // Fallback to main page if no facility found
     console.log(`❓ QR scan for unknown facility ${slug}, regular redirect`)
     redirect(baseUrl)
   }
