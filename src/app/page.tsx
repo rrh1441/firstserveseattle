@@ -83,10 +83,11 @@ export default function HomePage(): ReactElement | null {
 
         logEvent('visit_home', { pathname, showPaywall: show });
 
-        if (show) {
-          router.replace('/signup');
-          return;
-        }
+        // Don't auto-redirect to signup - let them see the paywall first
+        // if (show) {
+        //   router.replace('/signup');
+        //   return;
+        // }
       } catch {
         router.replace('/signup');
         return;

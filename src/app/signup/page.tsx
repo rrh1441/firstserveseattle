@@ -72,16 +72,53 @@ export default function SignUpPage() {
           setCurrentUser(session.user);
           setEmail(session.user.email || emailParam || '');
           
-          // For Apple users, skip the account creation form
-          // They just need to select a plan and go to checkout
-          if (appleUser && session.user.email) {
-            console.log('🔄 Auto-filling Apple user email and skipping form');
-            setEmail(session.user.email);
-          }
+          // Check if Apple user already has a subscription
+          supabase
+            .from('subscribers')
+            .select('id, status')
+            .eq('email', session.user.email)
+            .maybeSingle()
+            .then(({ data: subscriber }) => {
+              if (subscriber) {
+                console.log('✅ Apple user already has subscription, redirecting to members');
+                window.location.href = '/members';
+                return;
+              }
+              
+              // For Apple users without subscription, skip the account creation form
+              if (appleUser && session.user.email) {
+                console.log('🔄 Auto-filling Apple user email and skipping form');
+                setEmail(session.user.email);
+              }
+            });
         }
       });
     }
-  }, [supabase.auth]);
+  }, [supabase.auth, supabase]);
+
+  /* -------------------------------------------------------------------- */
+  /*  Check if email user is already a subscriber                        */
+  /* -------------------------------------------------------------------- */
+  const checkExistingSubscriber = async (emailToCheck: string) => {
+    if (!emailToCheck || emailToCheck.length < 3) return;
+    
+    try {
+      const { data: subscriber } = await supabase
+        .from('subscribers')
+        .select('id, status')
+        .eq('email', emailToCheck)
+        .maybeSingle();
+        
+      if (subscriber) {
+        setErrorMsg(`This email already has an active subscription. Please sign in instead.`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking subscriber:', error);
+      return false;
+    }
+  };
 
   /* -------------------------------------------------------------------- */
   /*  Helpers                                                             */
@@ -136,6 +173,13 @@ export default function SignUpPage() {
 
     setLoading(true);
     try {
+      // Check if email already has a subscription
+      const isExistingSubscriber = await checkExistingSubscriber(email);
+      if (isExistingSubscriber) {
+        setLoading(false);
+        return;
+      }
+
       console.log(`📝 Creating account for ${email}`);
       
       const { data, error } = await supabase.auth.signUp({
@@ -262,6 +306,13 @@ export default function SignUpPage() {
             {errorMsg && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {errorMsg}
+                {errorMsg.includes('already has an active subscription') && (
+                  <div className="mt-2">
+                    <Link href="/login" className="font-medium text-red-600 hover:text-red-800 underline">
+                      Go to Sign In →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
