@@ -247,26 +247,23 @@ export default function SignUpPage() {
             )}
 
             {/* ---------------- Account form ---------------- */}
-            <h2 className="text-center text-xl font-bold text-gray-900 mb-6">
-              {isAppleUser ? "Complete Your Registration" : "Or create with email"}
-            </h2>
+            {!isAppleUser && (
+              <h2 className="text-center text-xl font-bold text-gray-900 mb-6">
+                Or create with email
+              </h2>
+            )}
+
+            {isAppleUser && (
+              <h2 className="text-center text-xl font-bold text-gray-900 mb-6">
+                Complete Your Registration
+              </h2>
+            )}
 
             {errorMsg && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {errorMsg}
               </div>
             )}
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">
-                  Or continue with email
-                </span>
-              </div>
-            </div>
 
             {/* Account Creation Form */}
             {currentUser ? (
@@ -376,10 +373,15 @@ export default function SignUpPage() {
             {/* Action Button */}
             <button
               onClick={currentUser ? proceedToCheckout : handleSubmit}
-              disabled={loading || (!currentUser && !plan)}
-              className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              disabled={loading || (!currentUser && (!plan || (!currentUser && (!fullName || !email || !allMet()))))}
+              className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Processing..." : `Start ${plan} Plan - ${plan === "monthly" ? "$9.99/month" : "$99.99/year"}`}
+              {loading 
+                ? "Processing..." 
+                : currentUser 
+                  ? `Start ${plan} Plan - ${plan === "monthly" ? "$9.99/month" : "$99.99/year"}`
+                  : "Create Account"
+              }
             </button>
 
             {/* Footer links */}
