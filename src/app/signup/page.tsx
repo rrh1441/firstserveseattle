@@ -249,7 +249,7 @@ export default function SignUpPage() {
             {/* ---------------- Account form ---------------- */}
             {!isAppleUser && (
               <h2 className="text-center text-xl font-bold text-gray-900 mb-6">
-                Or create with email
+                Create with email
               </h2>
             )}
 
