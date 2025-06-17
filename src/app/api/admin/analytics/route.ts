@@ -218,7 +218,7 @@ async function getTopEvents(startDate: Date) {
       .slice(0, 10);
     
     return topEvents;
-  } catch (error) {
+  } catch {
     return [
       { event: 'court_view', count: 2841, rate: 85.2 },
       { event: 'filter_applied', count: 1247, rate: 37.4 },
@@ -267,7 +267,7 @@ async function getCourtMetrics(startDate: Date) {
     return Array.from(courtStats.values())
       .sort((a, b) => b.views - a.views)
       .slice(0, 10);
-  } catch (error) {
+  } catch {
     return [
       { courtId: '1', name: 'Green Lake Park', views: 234, interactions: 45 },
       { courtId: '2', name: 'Lincoln Park', views: 189, interactions: 38 },

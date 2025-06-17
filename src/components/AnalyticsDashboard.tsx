@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { OfferConfig } from '@/lib/offerExperiments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { OfferExperimentManager } from '@/lib/offerExperiments';
@@ -21,7 +22,7 @@ interface AnalyticsData {
 export default function AnalyticsDashboard() {
   const [isVisible, setIsVisible] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [currentExperiment, setCurrentExperiment] = useState<any>(null);
+  const [currentExperiment, setCurrentExperiment] = useState<OfferConfig | null>(null);
 
   // Only show in development or for admin users
   useEffect(() => {

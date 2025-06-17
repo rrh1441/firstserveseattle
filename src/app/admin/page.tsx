@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Badge } from '@/app/components/ui/badge';
@@ -30,11 +30,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d');
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [timeRange, fetchAnalytics]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/analytics?range=${timeRange}`);
       const analyticsData = await response.json();
@@ -81,7 +77,11 @@ export default function AdminDashboard() {
       });
     }
     setLoading(false);
-  };
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
     return (

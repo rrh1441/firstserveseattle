@@ -55,8 +55,8 @@ class FilterEventTracker {
     
     // Get active filters only (more actionable data)
     const activeFilters = Object.entries(amenities)
-      .filter(([_, active]) => active)
-      .map(([filter, _]) => filter);
+      .filter(([, active]) => active)
+      .map(([filter]) => filter);
 
     logEvent('filter_applied', {
       activeFilters,
@@ -236,7 +236,7 @@ export {
 // Backward compatibility wrapper for existing code
 export function enhancedLogEvent(
   event: string, 
-  metadata: Record<string, any> = {},
+  metadata: Record<string, unknown> = {},
   context: EnhancedEventContext = {}
 ) {
   // Add enhanced context to all events
