@@ -130,7 +130,9 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{data?.userMetrics.activeUsers}</div>
             <p className="text-xs text-muted-foreground">
-              {((data?.userMetrics.activeUsers / data?.userMetrics.totalUsers) * 100).toFixed(1)}% of total
+              {data?.userMetrics.activeUsers && data?.userMetrics.totalUsers 
+                ? ((data.userMetrics.activeUsers / data.userMetrics.totalUsers) * 100).toFixed(1) 
+                : '0'}% of total
             </p>
           </CardContent>
         </Card>
@@ -156,7 +158,9 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{data?.userMetrics.paywallHits}</div>
             <p className="text-xs text-muted-foreground">
-              {((data?.userMetrics.paywallHits / data?.userMetrics.activeUsers) * 100).toFixed(1)}% of active users
+              {data?.userMetrics.paywallHits && data?.userMetrics.activeUsers 
+                ? ((data.userMetrics.paywallHits / data.userMetrics.activeUsers) * 100).toFixed(1) 
+                : '0'}% of active users
             </p>
           </CardContent>
         </Card>
@@ -292,7 +296,7 @@ export default function AdminDashboard() {
                         <div className="text-sm text-muted-foreground">interactions</div>
                       </div>
                       <div>
-                        <div className="font-bold">{((court.interactions / court.views) * 100).toFixed(1)}%</div>
+                        <div className="font-bold">{court.views > 0 ? ((court.interactions / court.views) * 100).toFixed(1) : '0'}%</div>
                         <div className="text-sm text-muted-foreground">engagement</div>
                       </div>
                     </div>
