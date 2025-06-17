@@ -68,7 +68,15 @@ class FilterEventTracker {
       isHighIntentFilter: this.isHighIntentCombination(amenities, popFilter),
     });
 
-    this.lastFilters = currentFilters;
+    this.lastFilters = { 
+      amenities: {
+        lights: amenities.lights || false,
+        hitting_wall: amenities.hitting_wall || false,
+        pickleball_lined: amenities.pickleball_lined || false,
+        ball_machine: amenities.ball_machine || false,
+      }, 
+      popFilter 
+    };
   }
 
   private static getConversionIntent(amenities: Record<string, boolean>, popFilter: string | null): ConversionIntent {

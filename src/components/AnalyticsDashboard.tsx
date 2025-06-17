@@ -73,14 +73,13 @@ export default function AnalyticsDashboard() {
           <div className="p-2 bg-blue-50 rounded">
             <div className="font-medium text-blue-900">Current Experiment</div>
             <div className="text-blue-700">
-              Offer: {currentExperiment?.currentOffer?.name || 'Loading...'}
+              Offer: {currentExperiment?.name || 'Loading...'}
             </div>
             <div className="text-blue-600">
-              Progress: {currentExperiment?.progressToPaywall ? 
-                Math.round(currentExperiment.progressToPaywall * 100) : 0}% to paywall
+              Progress: Loading...
             </div>
             <div className="text-blue-600">
-              Days remaining: {currentExperiment?.daysRemaining || 0}
+              Days remaining: Loading...
             </div>
           </div>
 
