@@ -221,7 +221,7 @@ export default function SignUpPage() {
         body: JSON.stringify({
           email,
           plan,
-          headlineGroup,
+          headlineGroup: headlineGroupParam,
           userId: currentUser?.id,
         }),
       });

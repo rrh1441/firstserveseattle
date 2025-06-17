@@ -35,7 +35,7 @@ export default function AnalyticsDashboard() {
     if (isVisible) {
       // Get current experiment info
       const experimentInfo = OfferExperimentManager.getExperimentMetrics();
-      setCurrentExperiment(experimentInfo);
+      setCurrentExperiment(experimentInfo.currentOffer);
       
       // In a real implementation, you'd fetch this from your analytics API
       // For now, show simulated data based on current setup
