@@ -114,13 +114,20 @@ export default function HomePage(): ReactElement | null {
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
           <div className="flex items-center gap-6">
             <Image
-              src="/first-serve-logo.png"
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
               alt="First Serve Seattle Logo"
-              width={100}
-              height={40}
-              className="md:w-[120px] md:h-[48px]"
+              width={80}
+              height={80}
+              priority
             />
-            <DaysCounter uniqueDays={viewData.uniqueDays} gateDays={viewData.gateDays} />
+            <div>
+              <h1 className="mb-1 text-3xl font-extrabold text-[#0c372b] md:text-4xl">
+                First Serve Seattle
+              </h1>
+              <p className="text-base font-semibold md:text-lg">
+                Today&apos;s Open Tennis and Pickleball Courts
+              </p>
+            </div>
           </div>
           {/* Admin link - only show if user has admin session */}
           {typeof window !== 'undefined' && localStorage.getItem('admin_auth') === 'true' && (
@@ -135,6 +142,11 @@ export default function HomePage(): ReactElement | null {
             </div>
           )}
         </header>
+
+        <DaysCounter
+          uniqueDays={viewData.uniqueDays}
+          gateDays={viewData.gateDays}
+        />
 
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />
