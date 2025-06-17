@@ -120,7 +120,7 @@ export default function HomePage(): ReactElement | null {
               height={40}
               className="md:w-[120px] md:h-[48px]"
             />
-            <DaysCounter days={viewData.uniqueDays} gate={viewData.gateDays} />
+            <DaysCounter uniqueDays={viewData.uniqueDays} gateDays={viewData.gateDays} />
           </div>
           {/* Admin link - only show if user has admin session */}
           {typeof window !== 'undefined' && localStorage.getItem('admin_auth') === 'true' && (
