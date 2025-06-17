@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { logEvent } from '@/lib/logEvent';
+import { ConversionTracker } from '@/lib/eventLogging';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
@@ -10,6 +12,16 @@ export default function CheckoutSuccessPage() {
   
   useEffect(() => {
     console.log('✅ CHECKOUT SUCCESS PAGE LOADED');
+    
+    // Track successful signup completion
+    logEvent('signup_completed', {
+      timestamp: new Date().toISOString(),
+      userJourneyStage: 'conversion',
+      conversionIntent: 'subscribing',
+    });
+    
+    // Enhanced conversion tracking
+    ConversionTracker.trackOfferImpression('checkout_success');
     
     // Show success message for 5 seconds, then redirect
     const timer = setInterval(() => {

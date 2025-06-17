@@ -9,11 +9,8 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter }                     from 'next/navigation';
 import Image                                          from 'next/image';
-import { ExternalLink }                               from 'lucide-react';
 
 import type { ReactElement } from 'react';
-
-import { Button }          from '@/components/ui/button';
 import Paywall             from './tennis-courts/components/paywall';
 import TennisCourtList     from './tennis-courts/components/TennisCourtList';
 import DaysCounter         from './tennis-courts/components/DaysCounter';
@@ -21,6 +18,7 @@ import DaysCounter         from './tennis-courts/components/DaysCounter';
 import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
 import { logEvent }          from '@/lib/logEvent';
 import { useRandomUserId }   from './randomUserSetup';
+import { ConversionTracker } from '@/lib/eventLogging';
 
 /* ---------- constants -------------------------------------------------- */
 const EXEMPT_PATHS = new Set<string>([
@@ -33,6 +31,7 @@ const EXEMPT_PATHS = new Set<string>([
   '/terms-of-service',
   '/courts',
   '/request-password-reset',
+  '/admin',
 ]);
 
 const LoadingIndicator = (): ReactElement => (
@@ -82,6 +81,9 @@ export default function HomePage(): ReactElement | null {
         });
 
         logEvent('visit_home', { pathname, showPaywall: show });
+        
+        // Enhanced visit tracking with better paywall context
+        ConversionTracker.trackVisit(pathname, show);
 
         // Don't auto-redirect to signup - let them see the paywall first
         // if (show) {
@@ -112,54 +114,31 @@ export default function HomePage(): ReactElement | null {
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
           <div className="flex items-center gap-6">
             <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Untitled%20design-Gg0C0vPvYqsQxqpotsKmDJRrhnQzej.svg"
+              src="/first-serve-logo.png"
               alt="First Serve Seattle Logo"
-              width={80}
-              height={80}
-              priority
+              width={100}
+              height={40}
+              className="md:w-[120px] md:h-[48px]"
             />
-            <div>
-              <h1 className="mb-1 text-3xl font-extrabold text-[#0c372b] md:text-4xl">
-                First Serve Seattle
-              </h1>
-              <p className="text-base font-semibold md:text-lg">
-                Today&apos;s Open Tennis and Pickleball Courts
-              </p>
-            </div>
+            <DaysCounter days={viewData.uniqueDays} gate={viewData.gateDays} />
           </div>
+          {/* Admin link - only show if user has admin session */}
+          {typeof window !== 'undefined' && localStorage.getItem('admin_auth') === 'true' && (
+            <div className="flex items-center">
+              <a 
+                href="/admin" 
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300 hover:border-gray-400 transition-colors"
+                title="Admin Dashboard"
+              >
+                Admin
+              </a>
+            </div>
+          )}
         </header>
-
-        <DaysCounter
-          uniqueDays={viewData.uniqueDays}
-          gateDays={viewData.gateDays}
-        />
 
         <Suspense fallback={<LoadingIndicator />}>
           <TennisCourtList />
         </Suspense>
-
-        <div className="mt-8 space-y-3 text-center sm:space-y-0 sm:space-x-4">
-          <Button asChild className="w-full gap-2 sm:w-auto">
-            <a
-              href="https://anc.apm.activecommunities.com/seattle/reservation/search?facilityTypeIds=39%2C115&resourceType=0&equipmentQty=0"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book Future Reservations
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-          <Button asChild className="w-full gap-2 sm:w-auto">
-            <a
-              href="http://www.tennis-seattle.com?From=185415"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Join a Local Tennis League
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
-        </div>
       </div>
     );
   }

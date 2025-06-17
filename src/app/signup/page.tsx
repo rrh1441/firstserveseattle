@@ -11,6 +11,7 @@ import { FEATURES } from "@/lib/paywallCopy";
 import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 import { Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { OfferExperimentManager } from "@/lib/offerExperiments";
 
 type PlanType = "monthly" | "annual";
 
@@ -208,22 +209,20 @@ export default function SignUpPage() {
     }
   };
 
-  const proceedToCheckout = async () => {
+  async function proceedToCheckout() {
     try {
-      setLoading(true);
       
-      const userEmail = currentUser?.email || email;
-      const userName = currentUser?.user_metadata?.full_name || fullName;
+      // Track offer conversion at checkout start
+      OfferExperimentManager.trackOfferConversion('start_checkout', plan);
       
-      console.log(`💳 Creating checkout session for ${userEmail}`);
-      
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: userEmail,
-          full_name: userName,
-          plan: plan,
+          email,
+          plan,
+          headlineGroup,
+          userId: currentUser?.id,
         }),
       });
 
@@ -234,12 +233,15 @@ export default function SignUpPage() {
       const { url } = await response.json();
       console.log("🔀 Redirecting to Stripe checkout");
       window.location.href = url;
+
+      // Track successful signup completion
+      OfferExperimentManager.trackOfferConversion('complete_signup', plan);
     } catch (err: unknown) {
       console.error("Checkout error:", err);
       setErrorMsg(err instanceof Error ? err.message : "Failed to create checkout session");
       setLoading(false);
     }
-  };
+  }
 
   /* -------------------------------------------------------------------- */
   /*  Render                                                              */

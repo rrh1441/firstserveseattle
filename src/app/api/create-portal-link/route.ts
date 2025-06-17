@@ -40,17 +40,17 @@ export async function POST(req: NextRequest) {
     const { data: subscriberData, error: subIdError } = await supabaseAdmin
        .from("subscribers")
        .select("stripe_subscription_id") // Fetch subscription ID
-       .eq("id", user.id) // Match logged-in user's ID
+       .eq("email", user.email) // Match logged-in user's email
        .maybeSingle(); // Use maybeSingle in case user exists but has no subscription ID yet
 
     // Handle case where user has no subscription ID in your DB
     if (subIdError || !subscriberData?.stripe_subscription_id) {
-       console.error(`Create Portal Link Error: No subscription ID found for user ${user.id}:`, subIdError);
+       console.error(`Create Portal Link Error: No subscription ID found for user ${user.email}:`, subIdError);
        // It's possible the user exists but doesn't have an active/recorded subscription
        return NextResponse.json({ error: "Active subscription information not found." }, { status: 404 });
     }
     const subscriptionId = subscriberData.stripe_subscription_id;
-    console.log(`Create Portal Link: Found subscription ID ${subscriptionId} for user ${user.id}`);
+    console.log(`Create Portal Link: Found subscription ID ${subscriptionId} for user ${user.email}`);
 
     // Fetch the subscription from Stripe to get the customer ID
     let customerId: string | null = null;
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     // 3. Create a Billing Portal Session
     if (!customerId) {
          // This check is redundant if error handling above is correct, but added for safety
-         console.error(`Create Portal Link Error: Customer ID is null or undefined before creating portal session for user ${user.id}`);
+         console.error(`Create Portal Link Error: Customer ID is null or undefined before creating portal session for user ${user.email}`);
          return NextResponse.json({ error: "Could not determine customer details." }, { status: 500 });
     }
 

@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { logEvent } from "@/lib/logEvent";
+import { FilterEventTracker, EngagementTracker } from "@/lib/eventLogging";
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
@@ -140,7 +141,8 @@ export default function TennisCourtList() {
   }, [search, qrCourtFilter]);
 
   useEffect(() => {
-    logEvent("filter_applied", { amenities, popFilter });
+    // Use enhanced filter tracking that only logs meaningful changes
+    FilterEventTracker.trackFilterChange(amenities, popFilter);
   }, [amenities, popFilter]);
 
   const median = useMemo(() => {
@@ -193,7 +195,9 @@ export default function TennisCourtList() {
     setExpanded((e) =>
       e.includes(courtId) ? e.filter((x) => x !== courtId) : [...e, courtId]
     );
-    logEvent("toggle_court_detail", { courtId, title });
+    
+    // Track as high-value engagement action
+    EngagementTracker.trackHighValueAction("court_detail_expand", courtId, title);
   };
 
   if (loading) return <div className="p-4"><CardSkeleton /></div>;
@@ -362,7 +366,8 @@ export default function TennisCourtList() {
                     size="sm"
                     className="w-full"
                     onClick={() => {
-                      logEvent("click_open_maps", { courtId: court.id, title: court.title });
+                      // Enhanced maps tracking with engagement context
+                      EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
                       window.open(mapsUrl(court), "_blank");
                     }}
                   >
@@ -376,7 +381,8 @@ export default function TennisCourtList() {
                   size="sm"
                   className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
                   onClick={() => {
-                    logEvent("click_ball_machine_link", { courtId: court.id, title: court.title });
+                    // Track ball machine as high conversion intent action
+                    EngagementTracker.trackHighValueAction("ball_machine_click", court.id, court.title);
                     window.open("https://seattleballmachine.com", "_blank");
                   }}
                 >

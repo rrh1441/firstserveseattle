@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------- *
    Client-side pay-wall screen
    • Unique-day gate already decided; simply renders.
-   • No unused eslint directives.
+   • Enhanced with offer experiments and better analytics.
  * -------------------------------------------------------------------------- */
 
 'use client';
@@ -23,6 +23,7 @@ import { HERO_HEADLINES,
          FEATURES,
          SOCIAL_PROOF }          from '@/lib/paywallCopy';
 import { usePaywallAnalytics }   from '@/lib/usePaywallAnalytics';
+import { OfferExperimentManager } from '@/lib/offerExperiments';
 
 type Plan = 'monthly' | 'annual';
 
@@ -32,6 +33,7 @@ export default function PaywallPage(): JSX.Element | null {
   const [plan,      setPlan]      = useState<Plan>('monthly');
   const [headline,  setHeadline]  = useState<{ group: string; text: string }>();
   const [gateDays,  setGateDays]  = useState<number>(0);
+  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number; duration: string }; description: string; freeTrialDays: number } | null>(null);
 
   /* ---------------- gate check ---------------------------------------- */
   useEffect(() => {
@@ -55,6 +57,18 @@ export default function PaywallPage(): JSX.Element | null {
     }
   }, [canShow]);
 
+  /* ---------------- offer experiment assignment ----------------------- */
+  useEffect(() => {
+    if (!canShow) return;
+    
+    // Assign user to offer experiment and track impression
+    const offer = OfferExperimentManager.assignOfferCohort();
+    setAssignedOffer(offer);
+    
+    // Track that the paywall was shown with this offer
+    OfferExperimentManager.trackOfferImpression();
+  }, [canShow]);
+
   /* ---------------- read gateDays ------------------------------------- */
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -65,8 +79,41 @@ export default function PaywallPage(): JSX.Element | null {
   /* ---------------- analytics hook ------------------------------------ */
   const { markCTA } = usePaywallAnalytics(headline?.group ?? null, gateDays);
 
+  /* ---------------- CTA handler with offer tracking ------------------- */
+  const handleCTAClick = (selectedPlan: Plan) => {
+    // Track the offer conversion
+    OfferExperimentManager.trackOfferConversion('click_cta', selectedPlan);
+    
+    // Original analytics
+    markCTA(selectedPlan);
+  };
+
   /* ---------------- guard --------------------------------------------- */
   if (canShow !== true) return null;
+
+  /* ---------------- dynamic offer content ----------------------------- */
+  const getOfferDescription = () => {
+    if (!assignedOffer) return "Start your 14-day free trial — no payment due today.";
+    
+    if (assignedOffer.discount) {
+      return `Get ${assignedOffer.freeTrialDays} free days, then ${assignedOffer.discount.percentage}% off your ${assignedOffer.discount.duration.replace('_', ' ')}.`;
+    }
+    
+    return assignedOffer.description;
+  };
+
+  const getCtaText = () => {
+    if (!assignedOffer || !assignedOffer.discount) {
+      return plan === 'monthly'
+        ? 'Start Free Trial – Monthly'
+        : 'Start Free Trial – Annual';
+    }
+    
+    // For discount offers
+    return plan === 'monthly'
+      ? `Get ${assignedOffer.discount.percentage}% Off – Monthly`
+      : `Get ${assignedOffer.discount.percentage}% Off – Annual`;
+  };
 
   /* ---------------- UI ------------------------------------------------ */
   return (
@@ -78,8 +125,7 @@ export default function PaywallPage(): JSX.Element | null {
           </CardTitle>
 
           <CardDescription className="text-base text-gray-600">
-            Start your <span className="font-semibold">14-day free trial</span>{' '}
-            — no payment due today.
+            {getOfferDescription()}
           </CardDescription>
 
           <p className="text-sm text-gray-500">{SOCIAL_PROOF}</p>
@@ -95,18 +141,12 @@ export default function PaywallPage(): JSX.Element | null {
 
           {/* CTA */}
           <Link
-            href={`/signup?plan=${plan}&headline_group=${headline?.group ?? ''}`}
-            onClick={() => markCTA(plan)}
-            aria-label={
-              plan === 'monthly'
-                ? 'Start free trial – Monthly'
-                : 'Start free trial – Annual'
-            }
+            href={`/signup?plan=${plan}&headline_group=${headline?.group ?? ''}&offer_id=${assignedOffer?.id ?? ''}`}
+            onClick={() => handleCTAClick(plan)}
+            aria-label={getCtaText()}
             className="block w-full rounded-md bg-[#0c372b] py-3 text-center text-lg font-semibold text-white transition-colors hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >
-            {plan === 'monthly'
-              ? 'Start Free Trial – Monthly'
-              : 'Start Free Trial – Annual'}
+            {getCtaText()}
           </Link>
 
           <p className="text-xs text-center text-gray-500">
