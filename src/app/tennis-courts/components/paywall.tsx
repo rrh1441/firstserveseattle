@@ -107,7 +107,7 @@ export default function PaywallPage() {
           <Link
             href={`/signup?plan=${plan}${
               assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ""
-            }`}
+            }&offer_id=${assignedOffer?.id ?? ''}`}
             onClick={handleSubscribeClick}
             className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >
