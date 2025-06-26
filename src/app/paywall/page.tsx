@@ -103,16 +103,14 @@ export default function PaywallPage(): JSX.Element | null {
   };
 
   const getCtaText = () => {
-    if (!assignedOffer || !assignedOffer.discount) {
+    if (!assignedOffer || !assignedOffer.discount || plan === 'annual') {
       return plan === 'monthly'
         ? 'Start Free Trial – Monthly'
         : 'Start Free Trial – Annual';
     }
     
-    // For discount offers
-    return plan === 'monthly'
-      ? `Get ${assignedOffer.discount.percentage}% Off – Monthly`
-      : `Get ${assignedOffer.discount.percentage}% Off – Annual`;
+    // For discount offers on monthly plans only
+    return `Get ${assignedOffer.discount.percentage}% Off – Monthly`;
   };
 
   /* ---------------- UI ------------------------------------------------ */

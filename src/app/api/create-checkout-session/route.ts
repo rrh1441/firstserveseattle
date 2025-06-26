@@ -57,8 +57,8 @@ export async function POST(request: Request) {
       },
     };
 
-    // Apply discount for first month if applicable
-    if (isDiscountOffer) {
+    // Apply discount for first month if applicable (monthly plans only)
+    if (isDiscountOffer && selectedPlan === 'monthly') {
       sessionConfig.discounts = [
         {
           coupon: 'fifty_percent_first_month',

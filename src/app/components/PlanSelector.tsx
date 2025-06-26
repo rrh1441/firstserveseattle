@@ -54,9 +54,9 @@ export function PlanSelector({
 
       {/* Price display */}
       <div className="text-center space-y-2">
-        {assignedOffer?.discount ? (
+        {assignedOffer?.discount && selectedPlan === 'monthly' ? (
           <>
-            {/* Show discounted pricing */}
+            {/* Show discounted pricing for monthly only */}
             <div className="flex items-baseline justify-center gap-2">
               <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
                 ${prices[selectedPlan]}
