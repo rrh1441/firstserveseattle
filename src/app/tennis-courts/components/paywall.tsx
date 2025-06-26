@@ -12,7 +12,6 @@ import Link from "next/link";
 import { PlanSelector } from "@/components/PlanSelector";
 import { logEvent } from "@/lib/logEvent";
 import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
-import { OfferExperimentManager, OfferConfig } from "@/lib/offerExperiments";
 
 const features = [
   "See today's availability for ALL public courts",
@@ -29,7 +28,7 @@ const headlines = [
 
 export default function PaywallPage() {
   const [canShow, setCanShow] = useState<boolean | null>(null);
-  const [assignedOffer, setAssignedOffer] = useState<OfferConfig | null>(null);
+  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number } } | null>(null);
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const [assignedHeadline, setAssignedHeadline] = useState<{
     group: string;

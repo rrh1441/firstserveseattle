@@ -11,7 +11,6 @@ import { FEATURES } from "@/lib/paywallCopy";
 import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 import { Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
-import { OfferExperimentManager, OfferConfig } from "@/lib/offerExperiments";
 
 type PlanType = "monthly" | "annual";
 
@@ -48,7 +47,7 @@ export default function SignUpPage() {
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState(prefilledEmail);
   const [password, setPassword]   = useState("");
-  const [assignedOffer, setAssignedOffer] = useState<OfferConfig | null>(null);
+  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number } } | null>(null);
   const [loading, setLoading]     = useState(false);
   const [errorMsg, setErrorMsg]   = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -99,8 +98,11 @@ export default function SignUpPage() {
   }, [supabase.auth, supabase]);
 
   useEffect(() => {
-    // Get assigned offer on component mount
-    const offer = OfferExperimentManager.getAssignedOffer() || OfferExperimentManager.assignOfferCohort();
+    // Everyone gets the 50% off offer
+    const offer = { 
+      id: 'fifty_percent_off_first_month', 
+      discount: { percentage: 50 }
+    };
     setAssignedOffer(offer);
   }, []);
 
@@ -245,8 +247,7 @@ export default function SignUpPage() {
       console.log("🔀 Redirecting to Stripe checkout");
       window.location.href = url;
 
-      // Track successful signup completion
-      OfferExperimentManager.trackOfferConversion('complete_signup', plan);
+      // Redirecting to checkout
     } catch (err: unknown) {
       console.error("Checkout error:", err);
       setErrorMsg(err instanceof Error ? err.message : "Failed to create checkout session");

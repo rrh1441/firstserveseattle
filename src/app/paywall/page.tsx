@@ -23,7 +23,6 @@ import { HERO_HEADLINES,
          FEATURES,
          SOCIAL_PROOF }          from '@/lib/paywallCopy';
 import { usePaywallAnalytics }   from '@/lib/usePaywallAnalytics';
-import { OfferExperimentManager } from '@/lib/offerExperiments';
 
 type Plan = 'monthly' | 'annual';
 
