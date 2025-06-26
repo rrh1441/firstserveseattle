@@ -40,6 +40,10 @@ export async function POST(request: Request) {
     // Check if this is the 50% off first month offer
     const isDiscountOffer = offerId === 'fifty_percent_off_first_month';
     
+    // Debug logging
+    console.log('💰 Discount check:', { offerId, isDiscountOffer, selectedPlan });
+    console.log('🔍 Full request body:', { email, plan, offerId });
+    
     // Create checkout session with discount instead of trial
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer_email: email,
@@ -59,12 +63,15 @@ export async function POST(request: Request) {
 
     // Apply 50% discount for first month if applicable (monthly plans only)
     if (isDiscountOffer && selectedPlan === 'monthly') {
+      console.log('✅ APPLYING DISCOUNT: fifty_percent_first_month');
       sessionConfig.discounts = [
         {
           coupon: 'fifty_percent_first_month',
         }
       ];
       sessionConfig.metadata!.discount_applied = "50_percent_first_month";
+    } else {
+      console.log('❌ NO DISCOUNT APPLIED:', { isDiscountOffer, selectedPlan });
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);

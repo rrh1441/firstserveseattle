@@ -16,17 +16,6 @@ export interface OfferConfig {
 
 export const OFFERS: Record<string, OfferConfig> = {
   // Current experimental offers
-  THREE_DAYS_50_OFF: {
-    id: 'three_days_50_off',
-    name: '3 Free Days + 50% Off First Month',
-    freeTrialDays: 3,
-    discount: {
-      percentage: 50,
-      duration: 'first_month',
-    },
-    trialType: 'anonymous_views',
-    description: 'Get 3 free days of access, then 50% off your first month when you subscribe.',
-  },
   
   FIFTY_PERCENT_OFF_FIRST_MONTH: {
     id: 'fifty_percent_off_first_month',
@@ -51,7 +40,6 @@ export const OFFERS: Record<string, OfferConfig> = {
 };
 
 class OfferExperimentManager {
-  private static EXPERIMENT_KEY = 'current_offer_experiment';
   private static COHORT_KEY = 'offer_cohort_assignment';
 
   // Assign user to an offer cohort
@@ -92,13 +80,10 @@ class OfferExperimentManager {
 
   // Select offer based on experiment and user
   private static selectOfferForUser(experiment: string): OfferConfig {
-    const userId = localStorage.getItem('userId') ?? '';
-    const hash = userId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    
     switch (experiment) {
       case 'q2_2024_five_days_vs_trial':
-        // 50/50 split between new offer and 50% off first month
-        return hash % 2 === 0 ? OFFERS.THREE_DAYS_50_OFF : OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH;
+        // All users get 50% off first month
+        return OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH;
         
       case 'gate_days_experiment':
         // All users get 3 days now
