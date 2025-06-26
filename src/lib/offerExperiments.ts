@@ -37,7 +37,7 @@ export const OFFERS: Record<string, OfferConfig> = {
       duration: 'first_month',
     },
     trialType: 'full_trial',
-    description: 'Get 50% off your first month when you subscribe today.',
+    description: 'Get 50% off your first month when you subscribe',
   },
   
   THREE_DAY_TRIAL: {

@@ -87,9 +87,9 @@ export default function PaywallPage() {
           </CardTitle>
           <CardDescription className="text-base text-gray-600">
             {assignedOffer?.discount && plan === 'monthly' ? (
-              <>Get <span className="font-semibold">{assignedOffer.discount.percentage}% off your first month</span> when you subscribe today.</>
+              <>Get <span className="font-semibold">{assignedOffer.discount.percentage}% off your first month</span> when you subscribe</>
             ) : plan === 'annual' ? (
-              <>Subscribe annually and <span className="font-semibold">save 33%</span> vs monthly billing.</>
+              <>Subscribe annually and <span className="font-semibold">save 33%</span> vs monthly billing</>
             ) : (
               <>Subscribe to see <span className="font-semibold">all court availability</span>.</>
             )}
