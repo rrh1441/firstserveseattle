@@ -50,7 +50,6 @@ export async function POST(request: Request) {
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       payment_method_collection: "always",
-      allow_promotion_codes: true,
       metadata: {
         plan: selectedPlan,
         offerId: offerId ?? "default",
@@ -67,6 +66,9 @@ export async function POST(request: Request) {
         }
       ];
       sessionConfig.metadata!.discount_applied = "50_percent_first_month";
+    } else {
+      // Only allow promotion codes if we're not applying automatic discount
+      sessionConfig.allow_promotion_codes = true;
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
