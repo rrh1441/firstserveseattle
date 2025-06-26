@@ -4,13 +4,11 @@
 import React from "react";
 import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OfferConfig } from "@/lib/offerExperiments";
-
 interface PlanSelectorProps {
   selectedPlan: "monthly" | "annual";
   onPlanSelect: (plan: "monthly" | "annual") => void;
   features: string[];
-  assignedOffer?: OfferConfig | null;
+  assignedOffer?: { id: string; discount?: { percentage: number } } | null;
 }
 
 const prices = { monthly: 8, annual: 64 };
