@@ -18,9 +18,10 @@ const ANNUAL_ID  = "price_1QowMRKSaqiJUYkjgeqLADm4";
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {
-    const { email, plan } = (await request.json()) as {
+    const { email, plan, offerId } = (await request.json()) as {
       email?: string;
       plan?: string;
+      offerId?: string;
     };
 
     if (!email || !plan) {
@@ -36,29 +37,37 @@ export async function POST(request: Request) {
     const stripe = new Stripe(STRIPE_SECRET_KEY);
     const cookieStore = await cookies();
 
-    const session = await stripe.checkout.sessions.create({
+    // Check if this is the 50% off first month offer
+    const isDiscountOffer = offerId === 'fifty_percent_off_first_month';
+    
+    // Create checkout session with discount instead of trial
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
-
-      /* ---------- card-required 14-day trial -------------------------- */
-      payment_method_collection: "always", // require payment method upfront
-      subscription_data: {
-        trial_period_days: 14,
-        // removed trial_settings since we're requiring payment method
-      },
-
+      payment_method_collection: "always",
       allow_promotion_codes: true,
-
       metadata: {
         plan: selectedPlan,
-        trial_applied: "true",
+        offerId: offerId ?? "default",
         visitorId: cookieStore.get("datafast_visitor_id")?.value ?? null,
         sessionId: cookieStore.get("datafast_session_id")?.value ?? null,
       },
-    });
+    };
+
+    // Apply discount for first month if applicable
+    if (isDiscountOffer) {
+      sessionConfig.discounts = [
+        {
+          coupon: 'fifty_percent_first_month',
+        }
+      ];
+      sessionConfig.metadata!.discount_applied = "50_percent_first_month";
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {

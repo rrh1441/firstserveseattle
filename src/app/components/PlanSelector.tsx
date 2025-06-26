@@ -4,11 +4,13 @@
 import React from "react";
 import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OfferConfig } from "@/lib/offerExperiments";
 
 interface PlanSelectorProps {
   selectedPlan: "monthly" | "annual";
   onPlanSelect: (plan: "monthly" | "annual") => void;
   features: string[];
+  assignedOffer?: OfferConfig | null;
 }
 
 const prices = { monthly: 8, annual: 64 };
@@ -17,6 +19,7 @@ export function PlanSelector({
   selectedPlan,
   onPlanSelect,
   features,
+  assignedOffer,
 }: PlanSelectorProps) {
   const isMonthly = selectedPlan === "monthly";
   const isAnnual  = selectedPlan === "annual";
@@ -51,20 +54,40 @@ export function PlanSelector({
 
       {/* Price display */}
       <div className="text-center space-y-2">
-        {/* Regular price struck-through + FREE today */}
-        <div className="flex items-baseline justify-center gap-2">
-          <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
-            ${prices[selectedPlan]}
-          </span>
-          <span className="text-3xl font-bold text-green-700">Free for Two Weeks</span>
-        </div>
-
-        {/* After-trial price explanation */}
-        <p className="text-sm font-semibold text-[#0c372b]">
-          {isAnnual
-            ? `$${(prices.annual / 12).toFixed(2)} / month after 14-day trial`
-            : `$${prices.monthly} / month after 14-day trial`}
-        </p>
+        {assignedOffer?.discount ? (
+          <>
+            {/* Show discounted pricing */}
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
+                ${prices[selectedPlan]}
+              </span>
+              <span className="text-3xl font-bold text-green-700">
+                ${assignedOffer.discount.percentage === 50 
+                  ? Math.round(prices[selectedPlan] * 0.5) 
+                  : prices[selectedPlan]
+                } first month
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-[#0c372b]">
+              {assignedOffer.discount.percentage}% off your first month, then ${prices[selectedPlan]} / month
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Show trial pricing */}
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
+                ${prices[selectedPlan]}
+              </span>
+              <span className="text-3xl font-bold text-green-700">Free for Two Weeks</span>
+            </div>
+            <p className="text-sm font-semibold text-[#0c372b]">
+              {isAnnual
+                ? `$${(prices.annual / 12).toFixed(2)} / month after 14-day trial`
+                : `$${prices.monthly} / month after 14-day trial`}
+            </p>
+          </>
+        )}
 
         <p className="text-sm text-gray-600">
           {isAnnual

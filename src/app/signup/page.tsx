@@ -11,7 +11,7 @@ import { FEATURES } from "@/lib/paywallCopy";
 import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 import { Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
-import { OfferExperimentManager } from "@/lib/offerExperiments";
+import { OfferExperimentManager, OfferConfig } from "@/lib/offerExperiments";
 
 type PlanType = "monthly" | "annual";
 
@@ -48,6 +48,7 @@ export default function SignUpPage() {
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState(prefilledEmail);
   const [password, setPassword]   = useState("");
+  const [assignedOffer, setAssignedOffer] = useState<OfferConfig | null>(null);
   const [loading, setLoading]     = useState(false);
   const [errorMsg, setErrorMsg]   = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -96,6 +97,12 @@ export default function SignUpPage() {
       });
     }
   }, [supabase.auth, supabase]);
+
+  useEffect(() => {
+    // Get assigned offer on component mount
+    const offer = OfferExperimentManager.getAssignedOffer() || OfferExperimentManager.assignOfferCohort();
+    setAssignedOffer(offer);
+  }, []);
 
   /* -------------------------------------------------------------------- */
   /*  Check if email user is already a subscriber                        */
@@ -215,12 +222,16 @@ export default function SignUpPage() {
       // Track offer conversion at checkout start
       OfferExperimentManager.trackOfferConversion('start_checkout', plan);
       
+      // Get the assigned offer to pass to checkout
+      const assignedOffer = OfferExperimentManager.getAssignedOffer();
+      
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           plan,
+          offerId: assignedOffer?.id,
           headlineGroup: headlineGroupParam,
           userId: currentUser?.id,
         }),
@@ -274,6 +285,7 @@ export default function SignUpPage() {
                 selectedPlan={plan}
                 onPlanSelect={handlePlanChange}
                 features={FEATURES}
+                assignedOffer={assignedOffer}
               />
             </div>
 

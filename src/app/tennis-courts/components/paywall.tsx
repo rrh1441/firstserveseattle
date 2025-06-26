@@ -12,6 +12,7 @@ import Link from "next/link";
 import { PlanSelector } from "@/components/PlanSelector";
 import { logEvent } from "@/lib/logEvent";
 import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
+import { OfferExperimentManager, OfferConfig } from "@/lib/offerExperiments";
 
 const features = [
   "See today's availability for ALL public courts",
@@ -28,6 +29,7 @@ const headlines = [
 
 export default function PaywallPage() {
   const [canShow, setCanShow] = useState<boolean | null>(null);
+  const [assignedOffer, setAssignedOffer] = useState<OfferConfig | null>(null);
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const [assignedHeadline, setAssignedHeadline] = useState<{
     group: string;
@@ -59,6 +61,12 @@ export default function PaywallPage() {
     });
   }, [canShow]);
 
+  useEffect(() => {
+    // Get assigned offer on component mount
+    const offer = OfferExperimentManager.getAssignedOffer() || OfferExperimentManager.assignOfferCohort();
+    setAssignedOffer(offer);
+  }, []);
+
   const handleSubscribeClick = () => {
     logEvent("click_subscribe_cta", {
       plan,
@@ -78,8 +86,11 @@ export default function PaywallPage() {
               : "You've reached your free limit"}
           </CardTitle>
           <CardDescription className="text-base text-gray-600">
-            Start your <span className="font-semibold">14-day free trial</span>{" "}
-            — no payment due today.
+            {assignedOffer?.discount ? (
+              <>Get <span className="font-semibold">{assignedOffer.discount.percentage}% off your first month</span> when you subscribe today.</>
+            ) : (
+              <>Start your <span className="font-semibold">14-day free trial</span> — no payment due today.</>
+            )}
           </CardDescription>
         </CardHeader>
 
@@ -88,6 +99,7 @@ export default function PaywallPage() {
             selectedPlan={plan}
             onPlanSelect={setPlan}
             features={features}
+            assignedOffer={assignedOffer}
           />
 
           <Link

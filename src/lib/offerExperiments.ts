@@ -28,12 +28,16 @@ export const OFFERS: Record<string, OfferConfig> = {
     description: 'Get 5 free days of access, then 50% off your first month when you subscribe.',
   },
   
-  TWO_WEEK_TRIAL: {
-    id: 'two_week_trial',
-    name: '14-Day Free Trial',
-    freeTrialDays: 14,
+  FIFTY_PERCENT_OFF_FIRST_MONTH: {
+    id: 'fifty_percent_off_first_month',
+    name: '50% Off First Month',
+    freeTrialDays: 0,
+    discount: {
+      percentage: 50,
+      duration: 'first_month',
+    },
     trialType: 'full_trial',
-    description: 'Start your 14-day free trial — no payment due today.',
+    description: 'Get 50% off your first month when you subscribe today.',
   },
   
   THREE_DAY_TRIAL: {
@@ -100,8 +104,8 @@ class OfferExperimentManager {
     
     switch (experiment) {
       case 'q2_2024_five_days_vs_trial':
-        // 50/50 split between new offer and existing trial
-        return hash % 2 === 0 ? OFFERS.FIVE_DAYS_50_OFF : OFFERS.TWO_WEEK_TRIAL;
+        // 50/50 split between new offer and 50% off first month
+        return hash % 2 === 0 ? OFFERS.FIVE_DAYS_50_OFF : OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH;
         
       case 'gate_days_experiment':
         // Test different free day amounts
@@ -111,7 +115,7 @@ class OfferExperimentManager {
         return OFFERS.SEVEN_DAY_TRIAL;
         
       default:
-        return OFFERS.TWO_WEEK_TRIAL; // Default fallback
+        return OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH; // Default fallback
     }
   }
 
