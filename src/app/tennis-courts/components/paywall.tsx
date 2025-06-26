@@ -86,10 +86,12 @@ export default function PaywallPage() {
               : "You've reached your free limit"}
           </CardTitle>
           <CardDescription className="text-base text-gray-600">
-            {assignedOffer?.discount ? (
+            {assignedOffer?.discount && plan === 'monthly' ? (
               <>Get <span className="font-semibold">{assignedOffer.discount.percentage}% off your first month</span> when you subscribe today.</>
+            ) : plan === 'annual' ? (
+              <>Subscribe annually and <span className="font-semibold">save 33%</span> vs monthly billing.</>
             ) : (
-              <>Start your <span className="font-semibold">14-day free trial</span> — no payment due today.</>
+              <>Subscribe to see <span className="font-semibold">all court availability</span>.</>
             )}
           </CardDescription>
         </CardHeader>

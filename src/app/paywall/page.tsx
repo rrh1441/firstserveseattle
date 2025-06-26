@@ -93,10 +93,14 @@ export default function PaywallPage(): JSX.Element | null {
 
   /* ---------------- dynamic offer content ----------------------------- */
   const getOfferDescription = () => {
-    if (!assignedOffer) return "Start your 14-day free trial — no payment due today.";
+    if (!assignedOffer) return "Subscribe to see all court availability.";
     
-    if (assignedOffer.discount) {
+    if (assignedOffer.discount && plan === 'monthly') {
       return `Get ${assignedOffer.freeTrialDays} free days, then ${assignedOffer.discount.percentage}% off your ${assignedOffer.discount.duration.replace('_', ' ')}.`;
+    }
+    
+    if (plan === 'annual') {
+      return "Subscribe annually and save 33% vs monthly billing.";
     }
     
     return assignedOffer.description;
