@@ -62,12 +62,12 @@ export async function POST(request: Request) {
     if (isDiscountOffer && selectedPlan === 'monthly') {
       sessionConfig.discounts = [
         {
-          coupon: 'fifty_percent_first_month',
+          promotion_code: 'promo_1R8o3pKSaqiJUYkjLMJ3UX4z',
         }
       ];
-      sessionConfig.metadata!.discount_applied = "50_percent_first_month";
+      sessionConfig.metadata!.discount_applied = "FIRST50";
     } else {
-      // Only allow promotion codes if we're not applying automatic discount
+      // Allow promotion codes
       sessionConfig.allow_promotion_codes = true;
     }
 
