@@ -110,8 +110,8 @@ export default function PaywallPage() {
             className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >
             {plan === "monthly"
-              ? "Start Free Trial – Monthly"
-              : "Start Free Trial – Annual"}
+              ? "Subscribe – Monthly"
+              : "Subscribe – Annual"}
           </Link>
 
           <p className="text-xs text-center text-gray-500">

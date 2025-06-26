@@ -105,8 +105,8 @@ export default function PaywallPage(): JSX.Element | null {
   const getCtaText = () => {
     if (!assignedOffer || !assignedOffer.discount || plan === 'annual') {
       return plan === 'monthly'
-        ? 'Start Free Trial – Monthly'
-        : 'Start Free Trial – Annual';
+        ? 'Subscribe – Monthly'
+        : 'Subscribe – Annual';
     }
     
     // For discount offers on monthly plans only
