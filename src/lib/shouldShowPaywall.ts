@@ -17,9 +17,8 @@ export async function shouldShowPaywall(): Promise<boolean> {
 
   /* ---------- 1️⃣  assign (sticky) gate cohort -------------------------- */
   let gateDays = Number(localStorage.getItem(FSS_GATE_KEY));
-  if (![3, 5, 7].includes(gateDays)) {
-    const roll = Math.random();
-    gateDays = roll < 0.34 ? 3 : roll < 0.67 ? 5 : 7;
+  if (![3].includes(gateDays)) {
+    gateDays = 3;
     localStorage.setItem(FSS_GATE_KEY, String(gateDays));
   }
 

@@ -72,19 +72,31 @@ export function PlanSelector({
               {assignedOffer.discount.percentage}% off your first month, then ${prices[selectedPlan]} / month
             </p>
           </>
-        ) : (
+        ) : isAnnual ? (
           <>
-            {/* Show trial pricing */}
+            {/* Show annual pricing with discount appearance */}
             <div className="flex items-baseline justify-center gap-2">
               <span className="text-3xl font-bold line-through decoration-2 decoration-gray-400">
-                ${prices[selectedPlan]}
+                $96
               </span>
-              <span className="text-3xl font-bold text-green-700">Free for Two Weeks</span>
+              <span className="text-3xl font-bold text-[#0c372b]">
+                ${prices.annual}
+              </span>
             </div>
             <p className="text-sm font-semibold text-[#0c372b]">
-              {isAnnual
-                ? `$${(prices.annual / 12).toFixed(2)} / month after 14-day trial`
-                : `$${prices.monthly} / month after 14-day trial`}
+              $${(prices.annual / 12).toFixed(2)} / month billed annually
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Show monthly pricing */}
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-3xl font-bold text-[#0c372b]">
+                ${prices.monthly}
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-[#0c372b]">
+              ${prices.monthly} / month
             </p>
           </>
         )}

@@ -16,16 +16,16 @@ export interface OfferConfig {
 
 export const OFFERS: Record<string, OfferConfig> = {
   // Current experimental offers
-  FIVE_DAYS_50_OFF: {
-    id: 'five_days_50_off',
-    name: '5 Free Days + 50% Off First Month',
-    freeTrialDays: 5,
+  THREE_DAYS_50_OFF: {
+    id: 'three_days_50_off',
+    name: '3 Free Days + 50% Off First Month',
+    freeTrialDays: 3,
     discount: {
       percentage: 50,
       duration: 'first_month',
     },
     trialType: 'anonymous_views',
-    description: 'Get 5 free days of access, then 50% off your first month when you subscribe.',
+    description: 'Get 3 free days of access, then 50% off your first month when you subscribe.',
   },
   
   FIFTY_PERCENT_OFF_FIRST_MONTH: {
@@ -48,13 +48,6 @@ export const OFFERS: Record<string, OfferConfig> = {
     description: 'Get 3 free days of court access, then subscribe for unlimited access.',
   },
   
-  SEVEN_DAY_TRIAL: {
-    id: 'seven_day_trial',
-    name: '7 Free Anonymous Views',
-    freeTrialDays: 7,
-    trialType: 'anonymous_views',
-    description: 'Get 7 free days of court access, then subscribe for unlimited access.',
-  },
 };
 
 class OfferExperimentManager {
@@ -105,14 +98,11 @@ class OfferExperimentManager {
     switch (experiment) {
       case 'q2_2024_five_days_vs_trial':
         // 50/50 split between new offer and 50% off first month
-        return hash % 2 === 0 ? OFFERS.FIVE_DAYS_50_OFF : OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH;
+        return hash % 2 === 0 ? OFFERS.THREE_DAYS_50_OFF : OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH;
         
       case 'gate_days_experiment':
-        // Test different free day amounts
-        const variant = hash % 3;
-        if (variant === 0) return OFFERS.THREE_DAY_TRIAL;
-        if (variant === 1) return OFFERS.FIVE_DAYS_50_OFF;
-        return OFFERS.SEVEN_DAY_TRIAL;
+        // All users get 3 days now
+        return OFFERS.THREE_DAY_TRIAL;
         
       default:
         return OFFERS.FIFTY_PERCENT_OFF_FIRST_MONTH; // Default fallback
