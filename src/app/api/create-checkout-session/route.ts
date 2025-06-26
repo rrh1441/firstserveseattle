@@ -57,14 +57,22 @@ export async function POST(request: Request) {
       },
     };
 
-    // Apply discount for first month if applicable (monthly plans only)
+    // Apply 50% discount for first month if applicable (monthly plans only)
     if (isDiscountOffer && selectedPlan === 'monthly') {
+      // Create a one-time 50% discount coupon dynamically
+      const coupon = await stripe.coupons.create({
+        percent_off: 50,
+        duration: 'once',
+        name: '50% Off First Month',
+      });
+      
       sessionConfig.discounts = [
         {
-          coupon: 'fifty_percent_first_month',
+          coupon: coupon.id,
         }
       ];
       sessionConfig.metadata!.discount_applied = "50_percent_first_month";
+      sessionConfig.metadata!.coupon_id = coupon.id;
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
