@@ -62,8 +62,8 @@ export default function PaywallPage() {
   }, [canShow]);
 
   useEffect(() => {
-    // Get assigned offer on component mount
-    const offer = OfferExperimentManager.getAssignedOffer() || OfferExperimentManager.assignOfferCohort();
+    // Everyone gets the 50% off offer
+    const offer = { id: 'fifty_percent_off_first_month', discount: { percentage: 50 } };
     setAssignedOffer(offer);
   }, []);
 
@@ -107,7 +107,7 @@ export default function PaywallPage() {
           <Link
             href={`/signup?plan=${plan}${
               assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ""
-            }&offer_id=${assignedOffer?.id ?? ''}`}
+            }&offer_id=fifty_percent_off_first_month`}
             onClick={handleSubscribeClick}
             className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >

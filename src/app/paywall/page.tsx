@@ -57,16 +57,18 @@ export default function PaywallPage(): JSX.Element | null {
     }
   }, [canShow]);
 
-  /* ---------------- offer experiment assignment ----------------------- */
+  /* ---------------- offer assignment ---------------------------------- */
   useEffect(() => {
     if (!canShow) return;
     
-    // Assign user to offer experiment and track impression
-    const offer = OfferExperimentManager.assignOfferCohort();
+    // Everyone gets the 50% off offer
+    const offer = { 
+      id: 'fifty_percent_off_first_month', 
+      discount: { percentage: 50, duration: 'first_month' },
+      description: 'Get 50% off your first month when you subscribe today.',
+      freeTrialDays: 0
+    };
     setAssignedOffer(offer);
-    
-    // Track that the paywall was shown with this offer
-    OfferExperimentManager.trackOfferImpression();
   }, [canShow]);
 
   /* ---------------- read gateDays ------------------------------------- */
@@ -79,12 +81,9 @@ export default function PaywallPage(): JSX.Element | null {
   /* ---------------- analytics hook ------------------------------------ */
   const { markCTA } = usePaywallAnalytics(headline?.group ?? null, gateDays);
 
-  /* ---------------- CTA handler with offer tracking ------------------- */
+  /* ---------------- CTA handler ---------------------------------------- */
   const handleCTAClick = (selectedPlan: Plan) => {
-    // Track the offer conversion
-    OfferExperimentManager.trackOfferConversion('click_cta', selectedPlan);
-    
-    // Original analytics
+    // Track analytics
     markCTA(selectedPlan);
   };
 
@@ -143,7 +142,7 @@ export default function PaywallPage(): JSX.Element | null {
 
           {/* CTA */}
           <Link
-            href={`/signup?plan=${plan}&headline_group=${headline?.group ?? ''}&offer_id=${assignedOffer?.id ?? ''}`}
+            href={`/signup?plan=${plan}&headline_group=${headline?.group ?? ''}&offer_id=fifty_percent_off_first_month`}
             onClick={() => handleCTAClick(plan)}
             aria-label={getCtaText()}
             className="block w-full rounded-md bg-[#0c372b] py-3 text-center text-lg font-semibold text-white transition-colors hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"

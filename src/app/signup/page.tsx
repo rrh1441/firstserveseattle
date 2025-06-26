@@ -219,11 +219,11 @@ export default function SignUpPage() {
   async function proceedToCheckout() {
     try {
       
-      // Track offer conversion at checkout start
-      OfferExperimentManager.trackOfferConversion('start_checkout', plan);
+      // Track checkout start
       
-      // Get the assigned offer to pass to checkout
-      const assignedOffer = OfferExperimentManager.getAssignedOffer();
+      // Everyone gets the 50% off offer
+      const offerId = 'fifty_percent_off_first_month';
+      console.log('🎯 Signup page - offer ID:', offerId);
       
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -231,7 +231,7 @@ export default function SignUpPage() {
         body: JSON.stringify({
           email,
           plan,
-          offerId: assignedOffer?.id,
+          offerId: offerId,
           headlineGroup: headlineGroupParam,
           userId: currentUser?.id,
         }),
