@@ -12,7 +12,6 @@ import Script from 'next/script';
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
-import MaintenanceModal from './components/MaintenanceModal';
 
 import './globals.css';
 
