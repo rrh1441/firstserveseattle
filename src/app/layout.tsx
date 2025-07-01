@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* ---------- client boot-straps ---------------------------------- */}
         <ClientIdsInit />
         <ClientStorageInit />
-        <MaintenanceModal />
+        {/* <MaintenanceModal /> */}
 
         {/* ---------- 3rd-party analytics -------------------------------- */}
         <Script
