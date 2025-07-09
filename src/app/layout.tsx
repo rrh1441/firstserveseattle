@@ -12,6 +12,7 @@ import Script from 'next/script';
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
+import { PostHogProvider } from '../components/PostHogProvider';
 
 import './globals.css';
 
@@ -49,26 +50,28 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
 
       <body className="flex min-h-screen flex-col">
-        {/* ---------- client boot-straps ---------------------------------- */}
-        <ClientIdsInit />
-        <ClientStorageInit />
-        {/* <MaintenanceModal /> */}
+        <PostHogProvider>
+          {/* ---------- client boot-straps ---------------------------------- */}
+          <ClientIdsInit />
+          <ClientStorageInit />
+          {/* <MaintenanceModal /> */}
 
-        {/* ---------- 3rd-party analytics -------------------------------- */}
-        <Script
-          src="https://datafa.st/js/script.js"
-          data-website-id="67e42faaad4cc8e626767b22"
-          data-domain="firstserveseattle.com"
-          strategy="afterInteractive"
-        />
+          {/* ---------- 3rd-party analytics -------------------------------- */}
+          <Script
+            src="https://datafa.st/js/script.js"
+            data-website-id="67e42faaad4cc8e626767b22"
+            data-domain="firstserveseattle.com"
+            strategy="afterInteractive"
+          />
 
-        {/* ---------- Main content --------------------------------------- */}
-        <main className="flex-grow">{children}</main>
+          {/* ---------- Main content --------------------------------------- */}
+          <main className="flex-grow">{children}</main>
 
-        {/* ---------- Footer & Vercel analytics -------------------------- */}
-        <SiteFooter />
-        <Analytics />
-        <SpeedInsights />
+          {/* ---------- Footer & Vercel analytics -------------------------- */}
+          <SiteFooter />
+          <Analytics />
+          <SpeedInsights />
+        </PostHogProvider>
       </body>
     </html>
   );
