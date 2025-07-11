@@ -54,7 +54,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
       <main className="px-4 md:px-8">
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6 md:text-7xl md:mb-8 leading-tight">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6 md:text-7xl md:mb-8 leading-none">
             Find an open Seattle public court before you leave home.
           </h1>
           <p className="text-xl mb-8 md:text-2xl md:mb-10 max-w-2xl mx-auto text-gray-700">
