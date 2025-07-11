@@ -14,8 +14,9 @@ import type { ReactElement } from 'react';
 import Paywall             from './tennis-courts/components/paywall';
 import TennisCourtList     from './tennis-courts/components/TennisCourtList';
 import DaysCounter         from './tennis-courts/components/DaysCounter';
+import LandingPage         from './components/LandingPage';
 
-import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
+import { shouldShowPaywall, isFirstTimeVisitor, markLandingSeen } from '@/lib/shouldShowPaywall';
 import { logEvent }          from '@/lib/logEvent';
 import { useRandomUserId }   from './randomUserSetup';
 import { ConversionTracker } from '@/lib/eventLogging';
@@ -44,6 +45,7 @@ interface ViewState {
   uniqueDays : number;
   gateDays   : number;
   showPaywall: boolean;
+  isFirstTime: boolean;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -73,11 +75,13 @@ export default function HomePage(): ReactElement | null {
 
       try {
         const show = await shouldShowPaywall();
+        const isFirstTime = isFirstTimeVisitor();
 
         setViewData({
           uniqueDays : JSON.parse(localStorage.getItem('fss_days') ?? '[]').length,
           gateDays   : Number(localStorage.getItem('fss_gate') ?? 3),
           showPaywall: show,
+          isFirstTime: isFirstTime,
         });
 
         logEvent('visit_home', { pathname, showPaywall: show });
@@ -106,6 +110,7 @@ export default function HomePage(): ReactElement | null {
   if (pathIsExempt(pathname)) return null;
   if (isLoading)              return <LoadingIndicator />;
   if (viewData?.showPaywall)  return <Paywall />;
+  if (viewData?.isFirstTime)  return <LandingPage />;
 
   /* ---------- main public UI ------------------------------------------ */
   if (viewData && pathname === '/') {

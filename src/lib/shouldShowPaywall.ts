@@ -11,6 +11,7 @@
 
 const FSS_GATE_KEY = 'fss_gate';
 const FSS_DAYS_KEY = 'fss_days';
+const FSS_SEEN_LANDING_KEY = 'fss_seen_landing';
 
 export async function shouldShowPaywall(): Promise<boolean> {
   if (typeof window === 'undefined') return false; // SSR / bots
@@ -33,4 +34,14 @@ export async function shouldShowPaywall(): Promise<boolean> {
 
   /* ---------- 3️⃣  show pay-wall on the day AFTER the cap -------------- */
   return days.length > gateDays;
+}
+
+export function isFirstTimeVisitor(): boolean {
+  if (typeof window === 'undefined') return true; // SSR safe
+  return !localStorage.getItem(FSS_SEEN_LANDING_KEY);
+}
+
+export function markLandingSeen(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(FSS_SEEN_LANDING_KEY, 'true');
 }
