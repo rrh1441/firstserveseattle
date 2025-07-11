@@ -2,12 +2,20 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { usePostHog } from "posthog-js/react"
 
 export default function LandingPage() {
   const [isStarting, setIsStarting] = useState(false)
   const router = useRouter()
+  const posthog = usePostHog()
 
   const handleGetStarted = async () => {
+    // Track the click event
+    posthog.capture('landing_cta_clicked', {
+      button_text: 'Try Free for 3 Days',
+      location: 'hero_section'
+    })
+    
     setIsStarting(true)
     // Mark that they've seen landing
     if (typeof window !== 'undefined') {
@@ -15,14 +23,19 @@ export default function LandingPage() {
     }
     // Simulate navigation to main app
     await new Promise((resolve) => setTimeout(resolve, 800))
+    
+    // Track navigation
+    posthog.capture('landing_to_courts_navigation')
     router.push("/")
   }
 
   const handleSignIn = () => {
+    posthog.capture('landing_signin_clicked')
     router.push("/login")
   }
 
   const handleSignUp = () => {
+    posthog.capture('landing_signup_clicked')
     router.push("/signup")
   }
 
@@ -163,7 +176,13 @@ export default function LandingPage() {
         {/* CTA */}
         <div className="py-6">
           <button
-            onClick={handleGetStarted}
+            onClick={() => {
+              posthog.capture('landing_cta_clicked', {
+                button_text: 'Start Free Trial',
+                location: 'bottom_section'
+              })
+              handleGetStarted()
+            }}
             className="w-full bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
             Start Free Trial

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { logEvent } from "@/lib/logEvent";
 import { FilterEventTracker, EngagementTracker } from "@/lib/eventLogging";
+import { courtMatchesSearch } from "@/lib/neighborhoodMapping";
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
@@ -73,6 +75,7 @@ const CardSkeleton = () => (
 
 export default function TennisCourtList() {
   const searchParams = useSearchParams();
+  const posthog = usePostHog();
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [fav, setFav] = useState<number[]>([]);
   const [search, setSearch] = useState("");
@@ -156,7 +159,7 @@ export default function TennisCourtList() {
   const list = useMemo(() => {
     return courts
       .filter((c) =>
-        search ? c.title.toLowerCase().includes(search.toLowerCase()) : true
+        search ? courtMatchesSearch(c.title, search) : true
       )
       .filter((c) =>
         (Object.keys(amenities) as AmenityKey[]).every(
@@ -239,9 +242,21 @@ export default function TennisCourtList() {
           <input
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value);
+              const searchValue = e.target.value;
+              setSearch(searchValue);
+              
+              // Track search events
+              if (searchValue.length > 2) {
+                posthog.capture('court_search', {
+                  search_term: searchValue,
+                  results_count: courts.filter(c => 
+                    courtMatchesSearch(c.title, searchValue)
+                  ).length
+                });
+              }
+              
               // Clear QR filter state when user manually types
-              if (qrCourtFilter && e.target.value !== qrCourtFilter) {
+              if (qrCourtFilter && searchValue !== qrCourtFilter) {
                 setQrCourtFilter(null);
               }
             }}
@@ -274,7 +289,19 @@ export default function TennisCourtList() {
                     ? "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-300"
                     : "bg-transparent"
                 }`}
-                onClick={() => setAmenities((f) => ({ ...f, [k]: !f[k] }))}
+                onClick={() => {
+                  const newValue = !amenities[k];
+                  setAmenities((f) => ({ ...f, [k]: newValue }));
+                  
+                  // Track filter usage
+                  posthog.capture('court_filter_clicked', {
+                    filter_type: k,
+                    filter_value: newValue,
+                    active_filters: Object.entries({...amenities, [k]: newValue})
+                      .filter(([, v]) => v)
+                      .map(([key]) => key)
+                  });
+                }}
                 aria-pressed={active}
               >
                 <Image src={icon} alt="" width={14} height={14} />
@@ -368,6 +395,15 @@ export default function TennisCourtList() {
                     onClick={() => {
                       // Enhanced maps tracking with engagement context
                       EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
+                      
+                      // PostHog tracking
+                      posthog.capture('court_maps_opened', {
+                        court_id: court.id,
+                        court_name: court.title,
+                        has_address: !!court.address,
+                        has_maps_url: !!court.Maps_url
+                      });
+                      
                       window.open(mapsUrl(court), "_blank");
                     }}
                   >

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -54,6 +55,7 @@ export default function SignUpPage() {
   const [currentUser, setCurrentUser] = useState<{ id: string; email?: string; user_metadata?: { full_name?: string } } | null>(null);
 
   const supabase = createClientComponentClient();
+  const posthog = usePostHog();
 
   /* -------------------------------------------------------------------- */
   /*  Check if user is already signed in (from Apple OAuth)              */
@@ -208,6 +210,16 @@ export default function SignUpPage() {
 
       if (data.user) {
         console.log("✅ Account created, proceeding to checkout");
+        
+        // Track successful signup
+        posthog.capture('user_signup_completed', {
+          plan_type: plan,
+          signup_method: 'email',
+          has_existing_subscription: false,
+          email_prefilled: !!prefilledEmail,
+          is_apple_user: isAppleUser
+        });
+        
         await proceedToCheckout();
       }
     } catch (err: unknown) {
@@ -220,8 +232,13 @@ export default function SignUpPage() {
 
   async function proceedToCheckout() {
     try {
-      
       // Track checkout start
+      posthog.capture('checkout_initiated', {
+        plan_type: plan,
+        user_email: email,
+        offer_id: 'fifty_percent_off_first_month',
+        from_page: 'signup'
+      });
       
       // Everyone gets the 50% off offer
       const offerId = 'fifty_percent_off_first_month';
