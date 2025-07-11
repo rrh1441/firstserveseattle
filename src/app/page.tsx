@@ -45,7 +45,6 @@ interface ViewState {
   uniqueDays : number;
   gateDays   : number;
   showPaywall: boolean;
-  isFirstTime: boolean;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -75,13 +74,11 @@ export default function HomePage(): ReactElement | null {
 
       try {
         const show = await shouldShowPaywall();
-        const isFirstTime = isFirstTimeVisitor();
 
         setViewData({
           uniqueDays : JSON.parse(localStorage.getItem('fss_days') ?? '[]').length,
           gateDays   : Number(localStorage.getItem('fss_gate') ?? 3),
           showPaywall: show,
-          isFirstTime: isFirstTime,
         });
 
         logEvent('visit_home', { pathname, showPaywall: show });
