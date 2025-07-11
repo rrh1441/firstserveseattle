@@ -1,29 +1,21 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-// import { usePostHog } from "posthog-js/react"
 import Image from "next/image"
 
-export default function LandingPage() {
-  const [isStarting, setIsStarting] = useState(false)
+interface LandingPageProps {
+  isLoading: boolean;
+  onGetFreeViews: () => void;
+}
+
+export default function LandingPage({ isLoading, onGetFreeViews }: LandingPageProps) {
   const router = useRouter()
 
-  const handleGetStarted = () => {
-    setIsStarting(true)
-    // Mark that they've seen landing
-    localStorage.setItem('fss_seen_landing', 'true')
-    // Simple redirect to main page - let it handle paywall logic
-    router.push("/")
-  }
-
   const handleSignIn = () => {
-    // posthog.capture('landing_signin_clicked')
     router.push("/login")
   }
 
   const handleSignUp = () => {
-    // posthog.capture('landing_signup_clicked')
     router.push("/signup")
   }
 
@@ -71,11 +63,11 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={handleGetStarted}
-            disabled={isStarting}
+            onClick={onGetFreeViews}
+            disabled={isLoading}
             className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors disabled:opacity-50"
           >
-            {isStarting ? (
+            {isLoading ? (
               <div className="flex items-center justify-center gap-2">
                 <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -85,13 +77,13 @@ export default function LandingPage() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Loading courts...
+                Checking status...
               </div>
             ) : (
-              "Try Free for 3 Days"
+              "Get Free Views"
             )}
           </button>
-          <p className="text-sm text-gray-500 mt-2 text-center md:text-base">No credit card required</p>
+          <p className="text-sm text-gray-500 mt-2 text-center md:text-base">No credit card required for free views</p>
         </div>
 
         {/* Trust */}
@@ -166,7 +158,7 @@ export default function LandingPage() {
         {/* CTA */}
         <div className="py-6 md:py-8 flex flex-col items-center">
           <button
-            onClick={handleGetStarted}
+            onClick={onGetFreeViews}
             className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
             Start Free Trial

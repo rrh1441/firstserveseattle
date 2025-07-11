@@ -6,12 +6,11 @@
    • Visitor counter : every new calendar day adds one element to the "fss_days"
      array.  No network call required.
    • Returns `true` *after* the allocation is exhausted
-     (uniqueDays  >  gateDays) so the pay-wall appears on day 4 / 6 / 8.
+     (uniqueDays  >  gateDays) so the pay-wall appears on day 4 / 6 / 8.
  * -------------------------------------------------------------------------- */
 
 const FSS_GATE_KEY = 'fss_gate';
 const FSS_DAYS_KEY = 'fss_days';
-const FSS_SEEN_LANDING_KEY = 'fss_seen_landing';
 
 export async function shouldShowPaywall(): Promise<boolean> {
   if (typeof window === 'undefined') return false; // SSR / bots
@@ -19,6 +18,7 @@ export async function shouldShowPaywall(): Promise<boolean> {
   /* ---------- 1️⃣  assign (sticky) gate cohort -------------------------- */
   let gateDays = Number(localStorage.getItem(FSS_GATE_KEY));
   if (![3].includes(gateDays)) {
+    // For now, all users get a 3-day gate. This can be expanded for A/B testing.
     gateDays = 3;
     localStorage.setItem(FSS_GATE_KEY, String(gateDays));
   }
@@ -34,14 +34,4 @@ export async function shouldShowPaywall(): Promise<boolean> {
 
   /* ---------- 3️⃣  show pay-wall on the day AFTER the cap -------------- */
   return days.length > gateDays;
-}
-
-export function isFirstTimeVisitor(): boolean {
-  if (typeof window === 'undefined') return true; // SSR safe
-  return !localStorage.getItem(FSS_SEEN_LANDING_KEY);
-}
-
-export function markLandingSeen(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(FSS_SEEN_LANDING_KEY, 'true');
 }
