@@ -7,7 +7,6 @@ import Image from 'next/image';
 import type { ReactElement } from 'react';
 import TennisCourtList from '@/app/tennis-courts/components/TennisCourtList';
 import DaysCounter from '@/app/tennis-courts/components/DaysCounter';
-import Paywall from '@/app/tennis-courts/components/paywall';
 import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
 import { logEvent } from '@/lib/logEvent';
 import { ConversionTracker } from '@/lib/eventLogging';
