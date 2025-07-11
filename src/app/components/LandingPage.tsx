@@ -55,10 +55,10 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-6 md:text-7xl md:mb-8 leading-none">
-            Find an open Seattle public court before you leave home.
+            Find an open Seattle public court before you leave home
           </h1>
           <p className="text-xl mb-8 md:text-2xl md:mb-10 max-w-2xl mx-auto text-gray-700">
-            We check all 100+ city tennis and pickleball courts every day and show you which are free for walk-up play.
+            We check all 100+ city tennis and pickleball courts every day and show you which are free for walk-up play
           </p>
 
           <button
@@ -82,7 +82,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
               "See today's free courts"
             )}
           </button>
-          <p className="text-sm text-gray-500 mt-2 text-center md:text-base">No credit card needed • 2,500+ local players use us monthly</p>
+          <p className="text-md text-gray-500 mt-2 text-center md:text-base">No credit card needed • 2,500+ local players use us monthly</p>
         </div>
 
 
