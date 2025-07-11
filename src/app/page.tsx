@@ -106,11 +106,13 @@ export default function HomePage(): ReactElement | null {
   /* ---------- guards --------------------------------------------------- */
   if (pathIsExempt(pathname)) return null;
   if (isLoading)              return <LoadingIndicator />;
+  
+  // Check for first-time visitor BEFORE paywall logic
+  if (isFirstTimeVisitor())   return <LandingPage />;
   if (viewData?.showPaywall)  return <Paywall />;
-  if (viewData?.isFirstTime)  return <LandingPage />;
 
   /* ---------- main public UI ------------------------------------------ */
-  if (viewData && pathname === '/' && !viewData.showPaywall && !viewData.isFirstTime) {
+  if (viewData && pathname === '/') {
     return (
       <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
@@ -157,12 +159,6 @@ export default function HomePage(): ReactElement | null {
     );
   }
 
-  /* ---------- fallback: redirect to landing page -------------------- */
-  // If we somehow get here, user should see the landing page
-  if (viewData && !viewData.showPaywall) {
-    return <LandingPage />;
-  }
-  
   /* ---------- unreachable ---------------------------------------------- */
   return null;
 }

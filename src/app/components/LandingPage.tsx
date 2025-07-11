@@ -1,24 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 // import { usePostHog } from "posthog-js/react"
 import Image from "next/image"
 
 export default function LandingPage() {
   const [isStarting, setIsStarting] = useState(false)
-  const [shouldShowPaywall, setShouldShowPaywall] = useState(false)
   const router = useRouter()
-  // const posthog = usePostHog()
-
-  // Check paywall status when landing page loads
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const days = JSON.parse(localStorage.getItem('fss_days') ?? '[]')
-      const gateDays = Number(localStorage.getItem('fss_gate') ?? 3)
-      setShouldShowPaywall(days.length > gateDays)
-    }
-  }, [])
 
   const handleGetStarted = () => {
     setIsStarting(true)
@@ -26,13 +15,8 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('fss_seen_landing', 'true')
     }
-    
-    // Immediate redirect based on pre-checked paywall status
-    if (shouldShowPaywall) {
-      router.push("/paywall")
-    } else {
-      router.push("/")
-    }
+    // Simple redirect to main page - let it handle paywall logic
+    router.push("/")
   }
 
   const handleSignIn = () => {
