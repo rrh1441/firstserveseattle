@@ -55,7 +55,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
           <h1 className="text-5xl font-bold text-gray-900 mb-6 md:text-7xl md:mb-8 leading-tight">
-            Find an open Seattle tennis or pickleball court—before you leave home.
+            Find an open Seattle public court before you leave home.
           </h1>
           <p className="text-xl mb-8 md:text-2xl md:mb-10 max-w-2xl mx-auto text-gray-700">
             We check all 100+ city courts before 5 AM every day and show you which are free for walk-up play.
