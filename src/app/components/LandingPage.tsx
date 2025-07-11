@@ -105,7 +105,7 @@ export default function LandingPage() {
           <div className="space-y-4 mb-6 max-w-sm mx-auto">
             <div className="text-center">
               <p className="font-medium text-gray-900">Seattle locks court reservations daily</p>
-              <p className="text-sm text-gray-600">You can't see which courts are actually free for walk-up play</p>
+              <p className="text-sm text-gray-600">You can&apos;t see which courts are actually free for walk-up play</p>
             </div>
             
             <div className="text-center">
@@ -155,7 +155,7 @@ export default function LandingPage() {
         {/* Testimonial */}
         <div className="py-6 border-t border-gray-100">
           <blockquote className="text-gray-700 text-center max-w-sm mx-auto">
-            <p className="mb-2">"Used to waste 30 minutes driving between courts. Now I know exactly where to go."</p>
+            <p className="mb-2">&quot;Used to waste 30 minutes driving between courts. Now I know exactly where to go.&quot;</p>
             <cite className="text-sm text-gray-600 not-italic">— Mike R., Capitol Hill</cite>
           </blockquote>
         </div>

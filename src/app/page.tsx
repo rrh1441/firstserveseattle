@@ -16,7 +16,7 @@ import TennisCourtList     from './tennis-courts/components/TennisCourtList';
 import DaysCounter         from './tennis-courts/components/DaysCounter';
 import LandingPage         from './components/LandingPage';
 
-import { shouldShowPaywall, isFirstTimeVisitor, markLandingSeen } from '@/lib/shouldShowPaywall';
+import { shouldShowPaywall, isFirstTimeVisitor } from '@/lib/shouldShowPaywall';
 import { logEvent }          from '@/lib/logEvent';
 import { useRandomUserId }   from './randomUserSetup';
 import { ConversionTracker } from '@/lib/eventLogging';
