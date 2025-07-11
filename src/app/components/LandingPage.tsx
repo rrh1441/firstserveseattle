@@ -54,18 +54,17 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
       <main className="px-4 md:px-8">
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4 md:text-5xl md:mb-6">
-            Where can I<br />walk up and play?
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-4 md:text-6xl md:mb-6 leading-tight">
+            Find an open Seattle tennis or pickleball court—before you leave home.
           </h2>
-          <p className="text-gray-600 text-lg mb-6 md:text-xl md:mb-8 max-w-2xl mx-auto">
-            Daily updates on unreserved tennis and pickleball courts.<br />
-            No more driving around guessing.
+          <p className="text-gray-700 text-lg mb-6 md:text-xl md:mb-8 max-w-2xl mx-auto">
+            We check all 100+ city courts at 5 AM every day and show you which are free for walk-up play.
           </p>
 
           <button
             onClick={onGetFreeViews}
             disabled={isLoading}
-            className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors disabled:opacity-50"
+            className="w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 text-lg font-semibold rounded hover:bg-[#0a2e21] transition-colors disabled:opacity-50"
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
@@ -80,39 +79,33 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
                 Checking status...
               </div>
             ) : (
-              "Get Free Views"
+              "See today's free courts"
             )}
           </button>
-          <p className="text-sm text-gray-500 mt-2 text-center md:text-base">No credit card required for free views</p>
+          <p className="text-sm text-gray-500 mt-2 text-center md:text-base">No credit card needed • 2,500+ local players use us monthly</p>
         </div>
 
-        {/* Trust */}
-        <div className="py-4 border-t border-gray-100 text-center md:py-6">
-          <p className="text-sm text-gray-600 md:text-base">
-            <span className="font-semibold text-gray-900">Used by 2,500+ players</span> every month
-          </p>
-        </div>
 
         {/* How it works */}
         <div className="py-6 md:py-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center md:text-2xl md:mb-6">The problem we solve</h3>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">The pain</h3>
           
           <div className="space-y-4 mb-6 max-w-sm mx-auto md:max-w-2xl md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
             <div className="text-center">
-              <p className="font-medium text-gray-900">Seattle locks court reservations daily</p>
+              <p className="font-medium text-gray-900">Courts open for reservation at midnight and fill fast</p>
               <p className="text-sm text-gray-600">You can&apos;t see which courts are actually free for walk-up play</p>
             </div>
             
             <div className="text-center">
-              <p className="font-medium text-gray-900">We check every morning before 5 AM</p>
-              <p className="text-sm text-gray-600">Know exactly where you can play before you leave home</p>
+              <p className="font-medium text-gray-900">Seattle's public site never shows true walk-up availability</p>
+              <p className="text-sm text-gray-600">No more driving around guessing where you can play</p>
             </div>
           </div>
         </div>
 
         {/* Features */}
         <div className="py-6 border-t border-gray-100 md:py-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center md:text-2xl md:mb-6">What you get</h3>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">What you get</h3>
           
           <div className="space-y-3 max-w-xs mx-auto md:max-w-2xl md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
             <div className="flex gap-3">
@@ -120,7 +113,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <div>
-                <p className="font-medium text-gray-900">All 100+ Seattle courts</p>
+                <p className="font-medium text-gray-900">Real-time list of every unreserved slot across 100+ courts</p>
                 <p className="text-sm text-gray-600">Tennis and pickleball</p>
               </div>
             </div>
@@ -130,7 +123,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <div>
-                <p className="font-medium text-gray-900">Updated by 5 AM daily</p>
+                <p className="font-medium text-gray-900">Fresh results in your inbox by 5 AM—daily</p>
                 <p className="text-sm text-gray-600">Fresh info every morning</p>
               </div>
             </div>
@@ -140,8 +133,8 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <div>
-                <p className="font-medium text-gray-900">Feature view</p>
-                <p className="text-sm text-gray-600">Find courts with lights, pickleball lines, hitting walls, or nearby ball machine rentals</p>
+                <p className="font-medium text-gray-900">Filters for lights, pickleball lines, walls, ball-machine rentals</p>
+                <p className="text-sm text-gray-600">Find exactly what you need</p>
               </div>
             </div>
           </div>
@@ -159,13 +152,13 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         <div className="py-6 md:py-8 flex flex-col items-center">
           <button
             onClick={onGetFreeViews}
-            className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"
+            className="w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 text-lg font-semibold rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
-            Get Free Views
+            See today's free courts
           </button>
           
           <p className="text-sm text-gray-600 text-center md:text-base">
-            $4 first month, then $8/month • Cancel anytime
+            Free trial includes 3 daily court checks • $4 first month, then $8/month • Cancel anytime
           </p>
         </div>
 
