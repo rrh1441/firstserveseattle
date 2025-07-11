@@ -82,7 +82,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
               "See today's free courts"
             )}
           </button>
-          <p className="text-md text-gray-500 mt-2 text-center md:text-base">No credit card needed • 2,500+ local players use us monthly</p>
+          <p className="text-lg text-gray-500 mt-3 text-center md:text-base">No credit card needed • 2,500+ local players use us monthly</p>
         </div>
 
 
@@ -146,7 +146,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         <div className="py-6 md:py-8 flex flex-col items-center">
           <button
             onClick={onGetFreeViews}
-            className="w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 text-lg font-semibold rounded hover:bg-[#0a2e21] transition-colors mb-3"
+            className="w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 text-xl font-semibold rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
             See today&apos;s free courts
           </button>
