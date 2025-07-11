@@ -97,7 +97,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
             </div>
             
             <div className="text-center">
-              <p className="font-medium text-gray-900">Seattle's public site never shows true walk-up availability</p>
+              <p className="font-medium text-gray-900">Seattle&apos;s public site never shows true walk-up availability</p>
               <p className="text-sm text-gray-600">No more driving around guessing where you can play</p>
             </div>
           </div>
@@ -154,7 +154,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
             onClick={onGetFreeViews}
             className="w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 text-lg font-semibold rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
-            See today's free courts
+            See today&apos;s free courts
           </button>
           
           <p className="text-sm text-gray-600 text-center md:text-base">
