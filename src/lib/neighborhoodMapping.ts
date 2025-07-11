@@ -44,10 +44,29 @@ export const COURT_NEIGHBORHOODS: Record<string, string[]> = {
 };
 
 /**
- * Get neighborhoods for a court by title
+ * Get neighborhoods for a court by title using a more flexible prefix match.
+ * This handles cases where DB titles have suffixes like "#1" that aren't in the map.
  */
 export function getNeighborhoodsForCourt(courtTitle: string): string[] {
-  return COURT_NEIGHBORHOODS[courtTitle] || [];
+  const courtTitleLower = courtTitle.toLowerCase();
+  let bestMatchKey: string | null = null;
+
+  // Find the longest key in our mapping that is a prefix of the court title.
+  for (const key in COURT_NEIGHBORHOODS) {
+    if (courtTitleLower.startsWith(key.toLowerCase())) {
+      // If we find a match, check if it's better than our current best match.
+      if (!bestMatchKey || key.length > bestMatchKey.length) {
+        bestMatchKey = key;
+      }
+    }
+  }
+
+  // If we found a matching key, return its neighborhoods.
+  if (bestMatchKey) {
+    return COURT_NEIGHBORHOODS[bestMatchKey];
+  }
+  
+  return [];
 }
 
 /**

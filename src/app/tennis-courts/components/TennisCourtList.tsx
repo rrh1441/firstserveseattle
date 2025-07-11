@@ -260,7 +260,7 @@ export default function TennisCourtList() {
                 setQrCourtFilter(null);
               }
             }}
-            placeholder="Search courts…"
+            placeholder="Search courts or neighborhoods…"
             className="flex-1 p-2 border rounded"
           />
           <Button

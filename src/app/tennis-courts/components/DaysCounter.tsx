@@ -20,7 +20,7 @@ export default function DaysCounter({
       <CardContent className="flex items-center justify-between gap-3 py-4">
         <span className="text-sm font-medium text-blue-800">{message}</span>
         <a href="/signup" className="rounded bg-[#0c372b] px-3 py-1 text-white">
-          Get Unlimited
+          Get Unlimited Views
         </a>
       </CardContent>
     </Card>
