@@ -54,11 +54,11 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
       <main className="px-4 md:px-8">
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
-          <h2 className="text-4xl font-extrabold text-gray-900 mb-4 md:text-6xl md:mb-6 leading-tight">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 md:text-6xl md:mb-6 leading-tight">
             Find an open Seattle tennis or pickleball court—before you leave home.
-          </h2>
+          </h1>
           <p className="text-gray-700 text-lg mb-6 md:text-xl md:mb-8 max-w-2xl mx-auto">
-            We check all 100+ city courts at 5 AM every day and show you which are free for walk-up play.
+            We check all 100+ city courts before 5 AM every day and show you which are free for walk-up play.
           </p>
 
           <button
@@ -88,29 +88,29 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
 
         {/* How it works */}
         <div className="py-6 md:py-8">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">Stop wasting time</h3>
+          <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center md:text-4xl md:mb-8">Stop wasting time</h2>
           
-          <div className="space-y-4 mb-6 max-w-sm mx-auto md:max-w-2xl md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
-            <div className="text-center">
-              <p className="font-medium text-gray-900">Seattle&apos;s reservation site never shows same-day availability</p>
-              <p className="text-sm text-gray-600">Can&apos;t tell which courts are free for walk-up</p>
-            </div>
-            
-            <div className="text-center">
-              <p className="font-medium text-gray-900">You drive around guessing where to play</p>
-              <p className="text-sm text-gray-600">Wasting gas and time checking empty courts</p>
-            </div>
-            
-            <div className="text-center">
-              <p className="font-medium text-gray-900">Miss out on court time</p>
-              <p className="text-sm text-gray-600">By the time you find a court, prime hours are gone</p>
-            </div>
+          <div className="max-w-md mx-auto">
+            <ul className="space-y-3 text-left">
+              <li className="flex items-start gap-3">
+                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
+                <span className="text-gray-900">Seattle&apos;s reservation site never shows same-day availability</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
+                <span className="text-gray-900">You drive around guessing where to play</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
+                <span className="text-gray-900">Miss out on court time by the time you find a court</span>
+              </li>
+            </ul>
           </div>
         </div>
 
         {/* Features */}
         <div className="py-6 border-t border-gray-100 md:py-8">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">What you get</h3>
+          <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center md:text-4xl md:mb-8">What you get</h2>
           
           <div className="space-y-3 max-w-xs mx-auto md:max-w-2xl md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
             <div className="flex gap-3">
