@@ -104,7 +104,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
             </div>
             
             <div className="text-center">
-              <p className="font-medium text-gray-900">We check every morning at 5 AM</p>
+              <p className="font-medium text-gray-900">We check every morning before 5 AM</p>
               <p className="text-sm text-gray-600">Know exactly where you can play before you leave home</p>
             </div>
           </div>

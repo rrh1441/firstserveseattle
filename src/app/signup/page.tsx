@@ -37,6 +37,7 @@ export default function SignUpPage() {
   const headlineGroupParam  = searchParams.get("headline_group"); // analytics only
   const prefilledEmail      = searchParams.get("email") || "";
   const isAppleUser         = searchParams.get("apple_user") === "true";
+  const fromPaywall         = searchParams.get("from") === "paywall";
   void headlineGroupParam;
 
   /* -------------------------------------------------------------------- */
@@ -290,6 +291,17 @@ export default function SignUpPage() {
       <div className="mx-auto max-w-lg">
         <div className="overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100">
           <div className="px-6 py-8 sm:px-10">
+            {fromPaywall && (
+              <div className="text-center mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-lg font-medium text-blue-900 mb-1">
+                  Out of free views or looking to go unlimited?
+                </p>
+                <p className="text-sm text-blue-700">
+                  Choose a plan to continue accessing all courts and features.
+                </p>
+              </div>
+            )}
+            
             {/* ---------------- Plan selector ---------------- */}
             <h2 className="text-center text-2xl font-bold text-gray-900 mb-2">
               Choose Your Plan

@@ -63,9 +63,10 @@ export default function CourtsPage(): ReactElement | null {
     return <LoadingIndicator />;
   }
 
-  // If paywall is active, render the paywall component directly.
+  // If paywall is active, redirect to signup page.
   if (viewData?.showPaywall) {
-    return <Paywall />;
+    router.replace('/signup?from=paywall');
+    return <LoadingIndicator />;
   }
 
   // Otherwise, show the main courts list view.

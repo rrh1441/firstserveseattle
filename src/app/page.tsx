@@ -22,7 +22,7 @@ function PageContent() {
 
   const handleGetFreeViews = () => {
     // On click, send the user to the correct page based on the pre-loaded check.
-    router.push(isPaywalled ? '/paywall' : '/courts');
+    router.push(isPaywalled ? '/signup?from=paywall' : '/courts');
   };
 
   return (
