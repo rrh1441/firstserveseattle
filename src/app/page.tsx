@@ -113,7 +113,7 @@ export default function HomePage(): ReactElement | null {
   if (viewData?.isFirstTime)  return <LandingPage />;
 
   /* ---------- main public UI ------------------------------------------ */
-  if (viewData && pathname === '/') {
+  if (viewData && pathname === '/' && !viewData.showPaywall && !viewData.isFirstTime) {
     return (
       <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 text-black md:pt-10 md:pb-8">
         <header className="mb-8 flex flex-col items-center gap-6 md:flex-row md:justify-between">
@@ -160,6 +160,12 @@ export default function HomePage(): ReactElement | null {
     );
   }
 
-  /* ---------- unreachab le --------------------------------------------- */
+  /* ---------- fallback: redirect to landing page -------------------- */
+  // If we somehow get here, user should see the landing page
+  if (viewData && !viewData.showPaywall) {
+    return <LandingPage />;
+  }
+  
+  /* ---------- unreachable ---------------------------------------------- */
   return null;
 }
