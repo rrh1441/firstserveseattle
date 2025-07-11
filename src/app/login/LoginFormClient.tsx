@@ -99,7 +99,7 @@ export default function LoginFormClient({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <p className="text-sm font-medium text-green-800">
-                  Great! Your 14-day free trial is active. Sign in to access your account.
+                  Success! Sign in to access your account.
                 </p>
               </div>
             </div>

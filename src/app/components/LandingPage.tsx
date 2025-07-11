@@ -161,7 +161,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
             onClick={onGetFreeViews}
             className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
-            Start Free Trial
+            Get Free Views
           </button>
           
           <p className="text-sm text-gray-600 text-center md:text-base">
