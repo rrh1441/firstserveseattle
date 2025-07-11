@@ -88,17 +88,22 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
 
         {/* How it works */}
         <div className="py-6 md:py-8">
-          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">The pain</h3>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-4 text-center md:text-3xl md:mb-6">Stop wasting time</h3>
           
-          <div className="space-y-4 mb-6 max-w-sm mx-auto md:max-w-2xl md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
+          <div className="space-y-4 mb-6 max-w-sm mx-auto md:max-w-2xl md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
             <div className="text-center">
-              <p className="font-medium text-gray-900">Courts open for reservation at midnight and fill fast</p>
-              <p className="text-sm text-gray-600">You can&apos;t see which courts are actually free for walk-up play</p>
+              <p className="font-medium text-gray-900">Seattle&apos;s reservation site never shows same-day availability</p>
+              <p className="text-sm text-gray-600">Can&apos;t tell which courts are free for walk-up</p>
             </div>
             
             <div className="text-center">
-              <p className="font-medium text-gray-900">Seattle&apos;s public site never shows true walk-up availability</p>
-              <p className="text-sm text-gray-600">No more driving around guessing where you can play</p>
+              <p className="font-medium text-gray-900">You drive around guessing where to play</p>
+              <p className="text-sm text-gray-600">Wasting gas and time checking empty courts</p>
+            </div>
+            
+            <div className="text-center">
+              <p className="font-medium text-gray-900">Miss out on court time</p>
+              <p className="text-sm text-gray-600">By the time you find a court, prime hours are gone</p>
             </div>
           </div>
         </div>
@@ -123,8 +128,8 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <div>
-                <p className="font-medium text-gray-900">Fresh results in your inbox by 5 AM—daily</p>
-                <p className="text-sm text-gray-600">Fresh info every morning</p>
+                <p className="font-medium text-gray-900">Updated daily by 5 AM</p>
+                <p className="text-sm text-gray-600">Fresh court availability every morning</p>
               </div>
             </div>
             
