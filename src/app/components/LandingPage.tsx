@@ -2,20 +2,20 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { usePostHog } from "posthog-js/react"
+// import { usePostHog } from "posthog-js/react"
 import Image from "next/image"
 
 export default function LandingPage() {
   const [isStarting, setIsStarting] = useState(false)
   const router = useRouter()
-  const posthog = usePostHog()
+  // const posthog = usePostHog()
 
   const handleGetStarted = async () => {
     // Track the click event
-    posthog.capture('landing_cta_clicked', {
-      button_text: 'Try Free for 3 Days',
-      location: 'hero_section'
-    })
+    // posthog.capture('landing_cta_clicked', {
+    //   button_text: 'Try Free for 3 Days',
+    //   location: 'hero_section'
+    // })
     
     setIsStarting(true)
     // Mark that they've seen landing
@@ -26,17 +26,17 @@ export default function LandingPage() {
     await new Promise((resolve) => setTimeout(resolve, 800))
     
     // Track navigation
-    posthog.capture('landing_to_courts_navigation')
+    // posthog.capture('landing_to_courts_navigation')
     router.push("/")
   }
 
   const handleSignIn = () => {
-    posthog.capture('landing_signin_clicked')
+    // posthog.capture('landing_signin_clicked')
     router.push("/login")
   }
 
   const handleSignUp = () => {
-    posthog.capture('landing_signup_clicked')
+    // posthog.capture('landing_signup_clicked')
     router.push("/signup")
   }
 
@@ -180,10 +180,10 @@ export default function LandingPage() {
         <div className="py-6 md:py-8 flex flex-col items-center">
           <button
             onClick={() => {
-              posthog.capture('landing_cta_clicked', {
-                button_text: 'Start Free Trial',
-                location: 'bottom_section'
-              })
+              // posthog.capture('landing_cta_clicked', {
+              //   button_text: 'Start Free Trial',
+              //   location: 'bottom_section'
+              // })
               handleGetStarted()
             }}
             className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"

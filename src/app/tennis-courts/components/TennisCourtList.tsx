@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePostHog } from "posthog-js/react";
+// import { usePostHog } from "posthog-js/react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -75,7 +75,7 @@ const CardSkeleton = () => (
 
 export default function TennisCourtList() {
   const searchParams = useSearchParams();
-  const posthog = usePostHog();
+  // const posthog = usePostHog();
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [fav, setFav] = useState<number[]>([]);
   const [search, setSearch] = useState("");
@@ -246,14 +246,14 @@ export default function TennisCourtList() {
               setSearch(searchValue);
               
               // Track search events
-              if (searchValue.length > 2) {
-                posthog.capture('court_search', {
-                  search_term: searchValue,
-                  results_count: courts.filter(c => 
-                    courtMatchesSearch(c.title, searchValue)
-                  ).length
-                });
-              }
+              // if (searchValue.length > 2) {
+              //   posthog.capture('court_search', {
+              //     search_term: searchValue,
+              //     results_count: courts.filter(c => 
+              //       courtMatchesSearch(c.title, searchValue)
+              //     ).length
+              //   });
+              // }
               
               // Clear QR filter state when user manually types
               if (qrCourtFilter && searchValue !== qrCourtFilter) {
@@ -294,13 +294,13 @@ export default function TennisCourtList() {
                   setAmenities((f) => ({ ...f, [k]: newValue }));
                   
                   // Track filter usage
-                  posthog.capture('court_filter_clicked', {
-                    filter_type: k,
-                    filter_value: newValue,
-                    active_filters: Object.entries({...amenities, [k]: newValue})
-                      .filter(([, v]) => v)
-                      .map(([key]) => key)
-                  });
+                  // posthog.capture('court_filter_clicked', {
+                  //   filter_type: k,
+                  //   filter_value: newValue,
+                  //   active_filters: Object.entries({...amenities, [k]: newValue})
+                  //     .filter(([, v]) => v)
+                  //     .map(([key]) => key)
+                  // });
                 }}
                 aria-pressed={active}
               >
@@ -397,12 +397,12 @@ export default function TennisCourtList() {
                       EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
                       
                       // PostHog tracking
-                      posthog.capture('court_maps_opened', {
-                        court_id: court.id,
-                        court_name: court.title,
-                        has_address: !!court.address,
-                        has_maps_url: !!court.Maps_url
-                      });
+                      // posthog.capture('court_maps_opened', {
+                      //   court_id: court.id,
+                      //   court_name: court.title,
+                      //   has_address: !!court.address,
+                      //   has_maps_url: !!court.Maps_url
+                      // });
                       
                       window.open(mapsUrl(court), "_blank");
                     }}

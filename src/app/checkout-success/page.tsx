@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePostHog } from 'posthog-js/react';
+// import { usePostHog } from 'posthog-js/react';
 import Image from 'next/image';
 import { logEvent } from '@/lib/logEvent';
 import { ConversionTracker } from '@/lib/eventLogging';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
-  const posthog = usePostHog();
+  // const posthog = usePostHog();
   const [countdown, setCountdown] = useState(5); // Increased to 5 seconds
   
   useEffect(() => {
@@ -23,11 +23,11 @@ export default function CheckoutSuccessPage() {
     });
     
     // PostHog conversion tracking
-    posthog.capture('checkout_completed', {
-      timestamp: new Date().toISOString(),
-      conversion_type: 'subscription',
-      page: 'checkout_success'
-    });
+    // posthog.capture('checkout_completed', {
+    //   timestamp: new Date().toISOString(),
+    //   conversion_type: 'subscription',
+    //   page: 'checkout_success'
+    // });
     
     // Enhanced conversion tracking
     ConversionTracker.trackOfferImpression('checkout_success');
@@ -50,7 +50,7 @@ export default function CheckoutSuccessPage() {
       console.log('🧹 Cleanup timer');
       clearInterval(timer);
     };
-  }, [router, posthog]);
+  }, [router]); // , posthog]);
   
   const handleSignInNow = () => {
     console.log('👆 Manual sign in button clicked');
