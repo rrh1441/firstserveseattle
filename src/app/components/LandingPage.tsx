@@ -54,10 +54,10 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
       <main className="px-4 md:px-8">
         {/* Hero */}
         <div className="pt-8 pb-6 text-center md:pt-12 md:pb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 md:text-6xl md:mb-6 leading-tight">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6 md:text-7xl md:mb-8 leading-tight">
             Find an open Seattle tennis or pickleball court—before you leave home.
           </h1>
-          <p className="text-gray-700 text-lg mb-6 md:text-xl md:mb-8 max-w-2xl mx-auto">
+          <p className="text-xl mb-8 md:text-2xl md:mb-10 max-w-2xl mx-auto text-gray-700">
             We check all 100+ city courts before 5 AM every day and show you which are free for walk-up play.
           </p>
 
@@ -90,21 +90,19 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         <div className="py-6 md:py-8">
           <h2 className="text-3xl font-semibold text-gray-900 mb-6 text-center md:text-4xl md:mb-8">Stop wasting time</h2>
           
-          <div className="max-w-md mx-auto">
-            <ul className="space-y-3 text-left">
-              <li className="flex items-start gap-3">
-                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
-                <span className="text-gray-900">Seattle&apos;s reservation site never shows same-day availability</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
-                <span className="text-gray-900">You drive around guessing where to play</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-red-500 font-bold text-lg mt-0.5">•</span>
-                <span className="text-gray-900">Miss out on court time by the time you find a court</span>
-              </li>
-            </ul>
+          <div className="space-y-3 max-w-xs mx-auto md:max-w-2xl md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+            <div className="flex gap-3">
+              <span className="text-red-500 font-bold text-lg mt-0.5 flex-shrink-0">•</span>
+              <span className="text-gray-900">Seattle&apos;s reservation site never shows same-day availability</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-red-500 font-bold text-lg mt-0.5 flex-shrink-0">•</span>
+              <span className="text-gray-900">You drive around guessing where to play</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-red-500 font-bold text-lg mt-0.5 flex-shrink-0">•</span>
+              <span className="text-gray-900">Miss out on court time by the time you find a court</span>
+            </div>
           </div>
         </div>
 
@@ -117,30 +115,21 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
               <svg className="w-5 h-5 text-[#0c372b] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <div>
-                <p className="font-medium text-gray-900">Real-time list of every unreserved slot across 100+ courts</p>
-                <p className="text-sm text-gray-600">Tennis and pickleball</p>
-              </div>
+              <span className="text-gray-900">Real-time list of every unreserved slot across 100+ courts</span>
             </div>
             
             <div className="flex gap-3">
               <svg className="w-5 h-5 text-[#0c372b] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <div>
-                <p className="font-medium text-gray-900">Updated daily by 5 AM</p>
-                <p className="text-sm text-gray-600">Fresh court availability every morning</p>
-              </div>
+              <span className="text-gray-900">Updated daily by 5 AM</span>
             </div>
             
             <div className="flex gap-3">
               <svg className="w-5 h-5 text-[#0c372b] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <div>
-                <p className="font-medium text-gray-900">Filters for lights, pickleball lines, walls, ball-machine rentals</p>
-                <p className="text-sm text-gray-600">Find exactly what you need</p>
-              </div>
+              <span className="text-gray-900">Filters for lights, pickleball lines, walls, ball-machine rentals</span>
             </div>
           </div>
         </div>
