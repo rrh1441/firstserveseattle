@@ -12,9 +12,7 @@ export default function LandingPage() {
   const handleGetStarted = () => {
     setIsStarting(true)
     // Mark that they've seen landing
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('fss_seen_landing', 'true')
-    }
+    localStorage.setItem('fss_seen_landing', 'true')
     // Simple redirect to main page - let it handle paywall logic
     router.push("/")
   }

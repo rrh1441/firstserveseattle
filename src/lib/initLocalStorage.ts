@@ -25,8 +25,8 @@ export function initLocalStorage(): void {
   if (currentSchemaVersion < SCHEMA_VERSION || isNaN(currentSchemaVersion)) {
     console.warn(`[storage-repair] Schema mismatch: current ${currentSchemaVersion}, expected ${SCHEMA_VERSION}. Performing full reset of FSS keys.`);
     
-    // List all FSS-related keys to clear
-    const keysToClear = ['fss_days', 'fss_gate', 'abGroup', 'userId', 'visitorId', 'visitNumber', 'stripeCustomerId'];
+    // List all FSS-related keys to clear (PRESERVE paywall data)
+    const keysToClear = ['abGroup', 'userId', 'visitorId', 'visitNumber', 'stripeCustomerId'];
     
     keysToClear.forEach(key => {
         const oldValue = localStorage.getItem(key);
