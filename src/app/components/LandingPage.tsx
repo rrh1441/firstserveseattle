@@ -58,7 +58,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
             Find an open Seattle public court before you leave home.
           </h1>
           <p className="text-xl mb-8 md:text-2xl md:mb-10 max-w-2xl mx-auto text-gray-700">
-            We check all 100+ city courts before 5 AM every day and show you which are free for walk-up play.
+            We check all 100+ city tennis and pickleball courts every day and show you which are free for walk-up play.
           </p>
 
           <button
