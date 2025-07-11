@@ -1,33 +1,38 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 // import { usePostHog } from "posthog-js/react"
 import Image from "next/image"
 
 export default function LandingPage() {
   const [isStarting, setIsStarting] = useState(false)
+  const [shouldShowPaywall, setShouldShowPaywall] = useState(false)
   const router = useRouter()
   // const posthog = usePostHog()
 
-  const handleGetStarted = async () => {
-    // Track the click event
-    // posthog.capture('landing_cta_clicked', {
-    //   button_text: 'Try Free for 3 Days',
-    //   location: 'hero_section'
-    // })
-    
+  // Check paywall status when landing page loads
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const days = JSON.parse(localStorage.getItem('fss_days') ?? '[]')
+      const gateDays = Number(localStorage.getItem('fss_gate') ?? 3)
+      setShouldShowPaywall(days.length > gateDays)
+    }
+  }, [])
+
+  const handleGetStarted = () => {
     setIsStarting(true)
     // Mark that they've seen landing
     if (typeof window !== 'undefined') {
       localStorage.setItem('fss_seen_landing', 'true')
     }
-    // Simulate navigation to main app
-    await new Promise((resolve) => setTimeout(resolve, 800))
     
-    // Track navigation
-    // posthog.capture('landing_to_courts_navigation')
-    router.push("/")
+    // Immediate redirect based on pre-checked paywall status
+    if (shouldShowPaywall) {
+      router.push("/paywall")
+    } else {
+      router.push("/")
+    }
   }
 
   const handleSignIn = () => {
@@ -179,13 +184,7 @@ export default function LandingPage() {
         {/* CTA */}
         <div className="py-6 md:py-8 flex flex-col items-center">
           <button
-            onClick={() => {
-              // posthog.capture('landing_cta_clicked', {
-              //   button_text: 'Start Free Trial',
-              //   location: 'bottom_section'
-              // })
-              handleGetStarted()
-            }}
+            onClick={handleGetStarted}
             className="w-full md:w-auto md:px-12 bg-[#0c372b] text-white py-3.5 px-6 text-base font-medium rounded hover:bg-[#0a2e21] transition-colors mb-3"
           >
             Start Free Trial
