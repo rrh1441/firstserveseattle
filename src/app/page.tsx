@@ -15,12 +15,18 @@ function PageContent() {
   const [isPaywalled, setIsPaywalled] = useState(false);
 
   useEffect(() => {
+    // Track landing page view
+    posthog.capture('page_view', {
+      page: 'landing',
+      url: window.location.href
+    });
+
     // Pre-load the paywall check for the CTA, making the redirect instant.
     shouldShowPaywall().then(show => {
       setIsPaywalled(show);
       setIsLoading(false);
     });
-  }, []);
+  }, [posthog]);
 
   const handleGetFreeViews = () => {
     // Track landing page CTA click

@@ -7,10 +7,11 @@ import { useEffect } from "react"
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: "/ingest",
-      ui_host: "https://us.posthog.com",
-      defaults: '2025-05-24',
-      capture_exceptions: true,
+      api_host: "https://us.i.posthog.com",
+      ui_host: "https://us.posthog.com", 
+      person_profiles: 'always',
+      capture_pageview: true,
+      capture_pageleave: true,
       debug: process.env.NODE_ENV === "development",
     })
   }, [])
