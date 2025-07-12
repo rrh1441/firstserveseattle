@@ -77,7 +77,6 @@ export default function CheckoutSuccessPage() {
         </div>
         
         <h1 className="text-4xl font-bold text-gray-900 mb-4">🎉 Success!</h1>
-        <p className="text-xl text-gray-600 mb-2">Your trial is active!</p>
         <p className="text-lg text-gray-600 mb-8">Welcome to First Serve Seattle</p>
         
         <div className="bg-white rounded-lg border-2 border-green-200 p-6 mb-6">
