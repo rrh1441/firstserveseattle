@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePostHog } from 'posthog-js/react';
 import LandingPage from './components/LandingPage';
 import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
 import { useRandomUserId } from './randomUserSetup';
@@ -9,6 +10,7 @@ import { useRandomUserId } from './randomUserSetup';
 function PageContent() {
   useRandomUserId();
   const router = useRouter();
+  const posthog = usePostHog();
   const [isLoading, setIsLoading] = useState(true);
   const [isPaywalled, setIsPaywalled] = useState(false);
 
@@ -21,6 +23,13 @@ function PageContent() {
   }, []);
 
   const handleGetFreeViews = () => {
+    // Track landing page CTA click
+    posthog.capture('landing_page_cta_clicked', {
+      cta_text: "See today's free courts",
+      will_hit_paywall: isPaywalled,
+      destination: isPaywalled ? 'signup' : 'courts'
+    });
+
     // On click, send the user to the correct page based on the pre-loaded check.
     router.push(isPaywalled ? '/signup?from=paywall' : '/courts');
   };

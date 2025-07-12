@@ -12,7 +12,7 @@ import Script from 'next/script';
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
-// import { PostHogProvider } from '../components/PostHogProvider';
+import { PostHogProvider } from '../components/PostHogProvider';
 
 import './globals.css';
 
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
 
       <body className="flex min-h-screen flex-col">
-        {/* <PostHogProvider> */}
+        <PostHogProvider>
           {/* ---------- client boot-straps ---------------------------------- */}
           <ClientIdsInit />
           <ClientStorageInit />
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SiteFooter />
           <Analytics />
           <SpeedInsights />
-        {/* </PostHogProvider> */}
+        </PostHogProvider>
       </body>
     </html>
   );

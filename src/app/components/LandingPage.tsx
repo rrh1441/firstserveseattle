@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { usePostHog } from "posthog-js/react"
 import Image from "next/image"
 
 interface LandingPageProps {
@@ -10,12 +11,21 @@ interface LandingPageProps {
 
 export default function LandingPage({ isLoading, onGetFreeViews }: LandingPageProps) {
   const router = useRouter()
+  const posthog = usePostHog()
 
   const handleSignIn = () => {
+    posthog.capture('landing_page_signin_clicked', {
+      button_location: 'header',
+      destination: 'login'
+    });
     router.push("/login")
   }
 
   const handleSignUp = () => {
+    posthog.capture('landing_page_signup_clicked', {
+      button_location: 'header', 
+      destination: 'signup'
+    });
     router.push("/signup")
   }
 
@@ -159,7 +169,13 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         {/* Footer */}
         <div className="py-6 border-t border-gray-100 text-center md:py-8">
           <p className="text-sm text-gray-600 md:text-base">
-            Have an account? <button onClick={handleSignIn} className="text-[#0c372b] font-medium">Sign in</button>
+            Have an account? <button onClick={() => {
+              posthog.capture('landing_page_signin_clicked', {
+                button_location: 'footer',
+                destination: 'login'
+              });
+              router.push("/login");
+            }} className="text-[#0c372b] font-medium">Sign in</button>
           </p>
         </div>
       </main>

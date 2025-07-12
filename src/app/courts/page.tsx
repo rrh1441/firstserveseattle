@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePostHog } from 'posthog-js/react';
 import Image from 'next/image';
 
 import type { ReactElement } from 'react';
@@ -25,6 +26,7 @@ interface ViewState {
 
 export default function CourtsPage(): ReactElement | null {
   const router = useRouter();
+  const posthog = usePostHog();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [viewData, setViewData] = useState<ViewState | null>(null);
 
@@ -64,6 +66,14 @@ export default function CourtsPage(): ReactElement | null {
 
   // If paywall is active, redirect to signup page.
   if (viewData?.showPaywall) {
+    // Track when user hits paywall
+    posthog.capture('paywall_hit', {
+      page: 'courts',
+      unique_days: viewData.uniqueDays,
+      gate_days: viewData.gateDays,
+      redirect_destination: 'signup'
+    });
+    
     router.replace('/signup?from=paywall');
     return <LoadingIndicator />;
   }
