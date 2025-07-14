@@ -23,50 +23,56 @@ export async function GET(request: NextRequest) {
     if (data.user) {
       console.log('✅ OAuth user authenticated:', data.user.email)
       
-      // If this is signup mode, we need to check if user has completed payment
+      // Always check if user is an existing subscriber, regardless of mode
+      console.log('🔄 Checking if user is an existing subscriber')
+      
+      // Check if user exists in subscribers table (has completed payment)
+      const { data: subscriber } = await supabase
+        .from('subscribers')
+        .select('id, status')
+        .eq('email', data.user.email)
+        .maybeSingle()
+
+      if (subscriber) {
+        console.log('✅ Existing subscriber detected, redirecting to members page')
+        // Track successful login for existing customer
+        // Note: Server-side tracking would go here if needed
+        return NextResponse.redirect(new URL('/members', requestUrl.origin))
+      }
+
+      // New user - only proceed with signup flow if this was a signup attempt
       if (mode === 'signup' || redirectTo === '/signup') {
-        console.log('🔄 Checking if Apple user needs to complete payment setup')
+        console.log('💳 New user needs payment setup, creating Stripe checkout with prefilled email')
         
-        // Check if user exists in subscribers table (has completed payment)
-        const { data: subscriber } = await supabase
-          .from('subscribers')
-          .select('id, status')
-          .eq('email', data.user.email)
-          .maybeSingle()
-
-        if (!subscriber) {
-          console.log('💳 Apple user needs payment setup, creating Stripe checkout with prefilled email')
-          
-          // Create Stripe checkout session with prefilled email
-          try {
-            const checkoutResponse = await fetch(`${requestUrl.origin}/api/create-checkout-session`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: data.user.email,
-                plan: 'monthly' // default to monthly
-              })
+        // Create Stripe checkout session with prefilled email
+        try {
+          const checkoutResponse = await fetch(`${requestUrl.origin}/api/create-checkout-session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: data.user.email,
+              plan: 'monthly' // default to monthly
             })
+          })
 
-            if (checkoutResponse.ok) {
-              const { url } = await checkoutResponse.json()
-              console.log('✅ Redirecting Apple user to Stripe checkout with prefilled email')
-              return NextResponse.redirect(url)
-            } else {
-              console.error('❌ Failed to create checkout session for Apple user')
-              return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
-            }
-          } catch (checkoutError) {
-            console.error('❌ Error creating checkout session:', checkoutError)
+          if (checkoutResponse.ok) {
+            const { url } = await checkoutResponse.json()
+            console.log('✅ Redirecting new user to Stripe checkout with prefilled email')
+            return NextResponse.redirect(url)
+          } else {
+            console.error('❌ Failed to create checkout session for new user')
             return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
           }
-        } else {
-          console.log('✅ Apple user has payment setup, redirecting to members')
-          // Existing user with payment - redirect to members
-          return NextResponse.redirect(new URL('/members', requestUrl.origin))
+        } catch (checkoutError) {
+          console.error('❌ Error creating checkout session:', checkoutError)
+          return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
         }
+      } else {
+        // This was a login attempt for a user without subscription
+        console.log('🚫 User tried to login but has no subscription - redirecting to signup')
+        return NextResponse.redirect(new URL('/signup?apple_user=true&email=' + encodeURIComponent(data.user.email), requestUrl.origin))
       }
     }
 
