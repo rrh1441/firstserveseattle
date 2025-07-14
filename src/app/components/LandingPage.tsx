@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { usePostHog } from "posthog-js/react"
+import { track } from "@vercel/analytics"
 import Image from "next/image"
 
 interface LandingPageProps {
@@ -11,10 +11,9 @@ interface LandingPageProps {
 
 export default function LandingPage({ isLoading, onGetFreeViews }: LandingPageProps) {
   const router = useRouter()
-  const posthog = usePostHog()
 
   const handleSignIn = () => {
-    posthog.capture('landing_page_signin_clicked', {
+    track('landing_page_signin_clicked', {
       button_location: 'header',
       destination: 'login'
     });
@@ -22,7 +21,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
   }
 
   const handleSignUp = () => {
-    posthog.capture('landing_page_signup_clicked', {
+    track('landing_page_signup_clicked', {
       button_location: 'header', 
       destination: 'signup'
     });
@@ -170,7 +169,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
         <div className="py-6 border-t border-gray-100 text-center md:py-8">
           <p className="text-sm text-gray-600 md:text-base">
             Have an account? <button onClick={() => {
-              posthog.capture('landing_page_signin_clicked', {
+              track('landing_page_signin_clicked', {
                 button_location: 'footer',
                 destination: 'login'
               });

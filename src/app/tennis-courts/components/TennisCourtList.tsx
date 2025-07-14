@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePostHog } from "posthog-js/react";
+import { track } from "@vercel/analytics";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
@@ -75,7 +75,6 @@ const CardSkeleton = () => (
 
 export default function TennisCourtList() {
   const searchParams = useSearchParams();
-  const posthog = usePostHog();
   const [courts, setCourts] = useState<TennisCourt[]>([]);
   const [fav, setFav] = useState<number[]>([]);
   const [search, setSearch] = useState("");
@@ -132,8 +131,8 @@ export default function TennisCourtList() {
       const next = isCurrentlyFavorited ? prev.filter((x) => x !== id) : [...prev, id];
       const court = courts.find(c => c.id === id);
       
-      // Track favorite/unfavorite action
-      posthog.capture('court_favorite_toggled', {
+      // Track favorite/unfavorite action with Vercel Analytics
+      track('court_favorite_toggled', {
         court_id: id,
         court_name: court?.title || 'Unknown',
         action: isCurrentlyFavorited ? 'unfavorite' : 'favorite',
@@ -211,8 +210,8 @@ export default function TennisCourtList() {
       e.includes(courtId) ? e.filter((x) => x !== courtId) : [...e, courtId]
     );
     
-    // Track court detail expand/collapse
-    posthog.capture('court_detail_toggled', {
+    // Track court detail expand/collapse with Vercel Analytics
+    track('court_detail_toggled', {
       court_id: courtId,
       court_name: title,
       action: isCurrentlyExpanded ? 'collapse' : 'expand'
@@ -264,9 +263,9 @@ export default function TennisCourtList() {
               const searchValue = e.target.value;
               setSearch(searchValue);
               
-              // Track search events
+              // Track search events with Vercel Analytics
               if (searchValue.length > 2) {
-                posthog.capture('court_search', {
+                track('court_search', {
                   search_term: searchValue,
                   results_count: courts.filter(c => 
                     courtMatchesSearch(c.title, searchValue)
@@ -312,8 +311,8 @@ export default function TennisCourtList() {
                   const newValue = !amenities[k];
                   setAmenities((f) => ({ ...f, [k]: newValue }));
                   
-                  // Track filter usage
-                  posthog.capture('court_filter_clicked', {
+                  // Track filter usage with Vercel Analytics
+                  track('court_filter_clicked', {
                     filter_type: k,
                     filter_value: newValue,
                     active_filters: Object.entries({...amenities, [k]: newValue})
@@ -415,8 +414,8 @@ export default function TennisCourtList() {
                       // Enhanced maps tracking with engagement context
                       EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
                       
-                      // PostHog tracking
-                      posthog.capture('court_maps_opened', {
+                      // Track with Vercel Analytics
+                      track('court_maps_opened', {
                         court_id: court.id,
                         court_name: court.title,
                         has_address: !!court.address,
@@ -436,8 +435,8 @@ export default function TennisCourtList() {
                   size="sm"
                   className="w-full bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-1.5"
                   onClick={() => {
-                    // Track ball machine rental click
-                    posthog.capture('ball_machine_clicked', {
+                    // Track ball machine rental click with Vercel Analytics
+                    track('ball_machine_clicked', {
                       court_id: court.id,
                       court_name: court.title,
                       referral_url: 'https://seattleballmachine.com'

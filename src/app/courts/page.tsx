@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePostHog } from 'posthog-js/react';
+import { track } from '@vercel/analytics';
 import Image from 'next/image';
 
 import type { ReactElement } from 'react';
@@ -26,7 +26,6 @@ interface ViewState {
 
 export default function CourtsPage(): ReactElement | null {
   const router = useRouter();
-  const posthog = usePostHog();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [viewData, setViewData] = useState<ViewState | null>(null);
 
@@ -66,11 +65,11 @@ export default function CourtsPage(): ReactElement | null {
 
   // If paywall is active, redirect to signup page.
   if (viewData?.showPaywall) {
-    // Track when user hits paywall
-    posthog.capture('paywall_hit', {
-      page: 'courts',
-      unique_days: viewData.uniqueDays,
-      gate_days: viewData.gateDays,
+    // Track when user hits paywall with Vercel Analytics
+    track('paywall_hit', {
+      source_page: 'courts',
+      days_used: viewData.uniqueDays,
+      days_allowed: viewData.gateDays,
       redirect_destination: 'signup'
     });
     

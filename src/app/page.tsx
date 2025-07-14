@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePostHog } from 'posthog-js/react';
+import { track } from '@vercel/analytics';
 import LandingPage from './components/LandingPage';
 import { shouldShowPaywall } from '@/lib/shouldShowPaywall';
 import { useRandomUserId } from './randomUserSetup';
@@ -10,28 +10,21 @@ import { useRandomUserId } from './randomUserSetup';
 function PageContent() {
   useRandomUserId();
   const router = useRouter();
-  const posthog = usePostHog();
   const [isLoading, setIsLoading] = useState(true);
   const [isPaywalled, setIsPaywalled] = useState(false);
 
   useEffect(() => {
-    // Track landing page view
-    posthog.capture('page_view', {
-      page: 'landing',
-      url: window.location.href
-    });
-
     // Pre-load the paywall check for the CTA, making the redirect instant.
     shouldShowPaywall().then(show => {
       setIsPaywalled(show);
       setIsLoading(false);
     });
-  }, [posthog]);
+  }, []);
 
   const handleGetFreeViews = () => {
-    // Track landing page CTA click
-    posthog.capture('landing_page_cta_clicked', {
-      cta_text: "See today's free courts",
+    // Track landing page CTA click with Vercel Analytics
+    track('landing_cta_click', {
+      button_text: "See today's free courts",
       will_hit_paywall: isPaywalled,
       destination: isPaywalled ? 'signup' : 'courts'
     });

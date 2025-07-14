@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePostHog } from "posthog-js/react";
+import { track } from "@vercel/analytics";
 import Link from "next/link";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -56,7 +56,6 @@ export default function SignUpPage() {
   const [currentUser, setCurrentUser] = useState<{ id: string; email?: string; user_metadata?: { full_name?: string } } | null>(null);
 
   const supabase = createClientComponentClient();
-  const posthog = usePostHog();
 
   /* -------------------------------------------------------------------- */
   /*  Check if user is already signed in (from Apple OAuth)              */
@@ -150,8 +149,8 @@ export default function SignUpPage() {
   async function handlePlanChange(newPlan: PlanType) {
     console.log(`📊 Plan changed to: ${newPlan}`);
     
-    // Track plan selection change
-    posthog.capture('plan_selection_changed', {
+    // Track plan selection change with Vercel Analytics
+    track('plan_selection_changed', {
       previous_plan: plan,
       new_plan: newPlan,
       from_paywall: fromPaywall,
@@ -221,8 +220,8 @@ export default function SignUpPage() {
       if (data.user) {
         console.log("✅ Account created, proceeding to checkout");
         
-        // Track successful signup
-        posthog.capture('user_signup_completed', {
+        // Track successful signup with Vercel Analytics
+        track('user_signup_completed', {
           plan_type: plan,
           signup_method: 'email',
           has_existing_subscription: false,
@@ -242,8 +241,8 @@ export default function SignUpPage() {
 
   async function proceedToCheckout() {
     try {
-      // Track checkout start
-      posthog.capture('checkout_initiated', {
+      // Track checkout start with Vercel Analytics
+      track('checkout_initiated', {
         plan_type: plan,
         user_email: email,
         offer_id: 'fifty_percent_off_first_month',
