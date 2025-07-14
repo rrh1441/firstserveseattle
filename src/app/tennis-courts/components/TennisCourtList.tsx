@@ -318,6 +318,7 @@ export default function TennisCourtList() {
                     active_filters: Object.entries({...amenities, [k]: newValue})
                       .filter(([, v]) => v)
                       .map(([key]) => key)
+                      .join(',')
                   });
                 }}
                 aria-pressed={active}
