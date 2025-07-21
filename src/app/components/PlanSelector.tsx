@@ -82,7 +82,7 @@ export function PlanSelector({
               </span>
             </div>
             <p className="text-sm font-semibold text-[#0c372b]">
-              $${(prices.annual / 12).toFixed(2)} / month billed annually
+              ${(prices.annual / 12).toFixed(2)} / month billed annually
             </p>
           </>
         ) : (

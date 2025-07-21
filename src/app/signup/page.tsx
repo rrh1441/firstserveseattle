@@ -482,7 +482,7 @@ export default function SignUpPage() {
               {loading 
                 ? "Processing..." 
                 : currentUser 
-                  ? `Start ${plan} Plan - ${plan === "monthly" ? "$9.99/month" : "$99.99/year"}`
+                  ? `Start ${plan} Plan - ${plan === "monthly" ? "$8/month" : "$64/year"}`
                   : "Create Account"
               }
             </button>
