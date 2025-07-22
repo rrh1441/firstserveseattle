@@ -40,12 +40,12 @@ export default async function QRRedirect({ params }: QRProps) {
   /* 1️⃣ Try tennis_facilities table first */
   const { data: facility } = await supabase
     .from('tennis_facilities')
-    .select('id, title')
+    .select('id, facility_name')
     .eq('slug', slug)
     .maybeSingle()
 
   if (facility) {
-    facilityTitle = facility.title
+    facilityTitle = facility.facility_name
     facilityId = facility.id
     console.log(`🎾 Found facility in tennis_facilities: ${facilityTitle}`)
   } else {
