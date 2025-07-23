@@ -1,7 +1,13 @@
-import { getAllFacilities } from '@/lib/markdown';
+import { listFacilitySlugs, loadFacility } from '@/lib/markdown';
 
 export async function GET() {
-  const facilities = getAllFacilities();
+  const slugs = await listFacilitySlugs();
+  const facilities = await Promise.all(
+    slugs.map(async (slug) => {
+      const facility = await loadFacility(slug);
+      return { ...facility, slug };
+    })
+  );
   const baseUrl = 'https://firstserveseattle.com';
   
   // Get current date for lastmod

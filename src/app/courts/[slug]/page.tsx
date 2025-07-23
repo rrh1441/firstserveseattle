@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getFacilityBySlug, getAllFacilitySlugs } from '@/lib/markdown';
+import { loadFacility, listFacilitySlugs } from '@/lib/markdown';
 import FacilityPage from '@/components/FacilityPage';
 
 type Params = Promise<{ slug: string }>;
@@ -12,7 +12,7 @@ export default async function CourtDetailPage({
 }) {
   const { slug } = await params;
   
-  const facility = await getFacilityBySlug(slug);
+  const facility = await loadFacility(slug);
   
   if (!facility) {
     notFound();
@@ -27,7 +27,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const facility = await getFacilityBySlug(slug);
+  const facility = await loadFacility(slug);
   
   if (!facility) {
     return {
@@ -78,6 +78,6 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = getAllFacilitySlugs();
+  const slugs = await listFacilitySlugs();
   return slugs.map((slug) => ({ slug }));
 }

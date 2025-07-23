@@ -1,9 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+/* src/lib/markdown.ts */
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import matter from 'gray-matter';
 import { remark } from 'remark';
 import remarkHtml from 'remark-html';
-import remarkGfm from 'remark-gfm';
 
 export interface FacilityData {
   title: string;
@@ -31,114 +31,30 @@ export interface FacilityData {
 
 export interface FacilityPage {
   data: FacilityData;
-  content: string;
   htmlContent: string;
 }
 
-const facilityPagesDir = path.join(process.cwd(), 'facility_pages');
+/** Directory holding the 39 facility Markdown files */
+const FACILITY_DIR = path.join(process.cwd(), 'facility_pages');
 
-export async function getFacilityBySlug(slug: string): Promise<FacilityPage | null> {
-  try {
-    // Look for markdown file by slug
-    const files = fs.readdirSync(facilityPagesDir);
-    let targetFile = null;
-    
-    // First try direct filename match
-    const directMatch = files.find(file => {
-      const fileSlug = file.replace('.md', '').replace(/_/g, '-');
-      return fileSlug === slug;
-    });
-    
-    if (directMatch) {
-      targetFile = directMatch;
-    } else {
-      // Try to find by slug in frontmatter
-      for (const file of files) {
-        if (!file.endsWith('.md')) continue;
-        
-        const filePath = path.join(facilityPagesDir, file);
-        const fileContents = fs.readFileSync(filePath, 'utf8');
-        const { data } = matter(fileContents);
-        
-        if (data.slug === slug) {
-          targetFile = file;
-          break;
-        }
-      }
-    }
-    
-    if (!targetFile) {
-      return null;
-    }
-    
-    const filePath = path.join(facilityPagesDir, targetFile);
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    const { data, content } = matter(fileContents);
-    
-    // Process markdown to HTML
-    const processedContent = await remark()
-      .use(remarkGfm)
-      .use(remarkHtml, { sanitize: false })
-      .process(content);
-    
-    return {
-      data: data as FacilityData,
-      content,
-      htmlContent: processedContent.toString(),
-    };
-  } catch (error) {
-    console.error(`Error loading facility ${slug}:`, error);
-    return null;
-  }
+/** Load one facility by slug (e.g. "beacon_hill_playfield_tennis") */
+export async function loadFacility(slug: string): Promise<FacilityPage> {
+  const filePath = path.join(FACILITY_DIR, `${slug}.md`);
+  const rawSrc = await fs.readFile(filePath, 'utf8');
+
+  const { content, data } = matter(rawSrc);
+
+  const file = await remark()
+    .use(remarkHtml)
+    .process(content);
+
+  return { data: data as FacilityData, htmlContent: String(file) };
 }
 
-export function getAllFacilitySlugs(): string[] {
-  try {
-    const files = fs.readdirSync(facilityPagesDir);
-    const slugs: string[] = [];
-    
-    files.forEach(file => {
-      if (!file.endsWith('.md')) return;
-      
-      const filePath = path.join(facilityPagesDir, file);
-      const fileContents = fs.readFileSync(filePath, 'utf8');
-      const { data } = matter(fileContents);
-      
-      if (data.slug) {
-        slugs.push(data.slug);
-      }
-    });
-    
-    return slugs;
-  } catch (error) {
-    console.error('Error getting facility slugs:', error);
-    return [];
-  }
-}
-
-export function getAllFacilities(): { slug: string; data: FacilityData }[] {
-  try {
-    const files = fs.readdirSync(facilityPagesDir);
-    const facilities: { slug: string; data: FacilityData }[] = [];
-    
-    files.forEach(file => {
-      if (!file.endsWith('.md')) return;
-      
-      const filePath = path.join(facilityPagesDir, file);
-      const fileContents = fs.readFileSync(filePath, 'utf8');
-      const { data } = matter(fileContents);
-      
-      if (data.slug) {
-        facilities.push({
-          slug: data.slug,
-          data: data as FacilityData,
-        });
-      }
-    });
-    
-    return facilities.sort((a, b) => a.data.facility_name.localeCompare(b.data.facility_name));
-  } catch (error) {
-    console.error('Error getting all facilities:', error);
-    return [];
-  }
+/** Return all facility slugs (for getStaticPaths or build‑time loops) */
+export async function listFacilitySlugs(): Promise<string[]> {
+  const entries = await fs.readdir(FACILITY_DIR);
+  return entries
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.replace(/\.md$/, ''));
 }
