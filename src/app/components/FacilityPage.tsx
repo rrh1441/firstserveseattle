@@ -1,7 +1,6 @@
 'use client';
 
 import { FacilityPage as FacilityPageType } from '@/lib/markdown';
-import { Button } from '@/components/ui/button';
 import { MapPin, ExternalLink, ArrowLeft, Users, MapIcon } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
