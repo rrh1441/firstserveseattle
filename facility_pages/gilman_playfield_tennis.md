@@ -1,3 +1,27 @@
+---
+title: "Gilman Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Gilman Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Gilman Playfield Tennis in Ballard, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "gilman playfield tennis, seattle tennis courts, ballard tennis, tennis courts near me, seattle tennis, 98107 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Gilman Playfield Tennis"
+address: "923 NW 54th St, Seattle, WA 98107"
+neighborhood: "Ballard"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=923+NW+54th+St%2C+Seattle%2C+WA+98107"
+slug: "gilman-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/gilman-playfield-tennis"
+og_title: "Gilman Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Gilman Playfield Tennis in Ballard. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/gilman-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Gilman Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Gilman Playfield Tennis in Ballard, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Gilman Playfield Tennis
 
 Your First Serve of Information

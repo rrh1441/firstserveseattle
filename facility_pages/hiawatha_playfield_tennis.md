@@ -1,3 +1,27 @@
+---
+title: "Hiawatha Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Hiawatha Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Hiawatha Playfield Tennis in Highland Park / West Seattle, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "hiawatha playfield tennis, seattle tennis courts, highland park / west seattle tennis, tennis courts near me, seattle tennis, 98116 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Hiawatha Playfield Tennis"
+address: "2700 California Ave SW, Seattle, WA 98116"
+neighborhood: "Highland Park / West Seattle"
+court_count: 3
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2700+California+Ave+SW%2C+Seattle%2C+WA+98116"
+slug: "hiawatha-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/hiawatha-playfield-tennis"
+og_title: "Hiawatha Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Hiawatha Playfield Tennis in Highland Park / West Seattle. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/hiawatha-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Hiawatha Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Hiawatha Playfield Tennis in Highland Park / West Seattle, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Hiawatha Playfield Tennis
 
 Your First Serve of Information

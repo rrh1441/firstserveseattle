@@ -1,3 +1,27 @@
+---
+title: "Bryant Playground Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Bryant Playground Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Bryant Playground Tennis in Bryant / Ravenna, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "bryant playground tennis, seattle tennis courts, bryant / ravenna tennis, tennis courts near me, seattle tennis, 98115 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Bryant Playground Tennis"
+address: "4103 NE 65th St, Seattle, WA 98115"
+neighborhood: "Bryant / Ravenna"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=4103+NE+65th+St%2C+Seattle%2C+WA+98115"
+slug: "bryant-playground-tennis"
+canonical_url: "https://firstserveseattle.com/courts/bryant-playground-tennis"
+og_title: "Bryant Playground Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Bryant Playground Tennis in Bryant / Ravenna. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/bryant-playground-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Bryant Playground Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Bryant Playground Tennis in Bryant / Ravenna, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Bryant Playground Tennis
 
 Your First Serve of Information

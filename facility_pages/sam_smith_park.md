@@ -1,3 +1,27 @@
+---
+title: "Sam Smith (I90 Lid) Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Sam Smith (I90 Lid) Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Sam Smith (I90 Lid) Park Tennis in International District, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "sam smith (i90 lid) park tennis, seattle tennis courts, international district tennis, tennis courts near me, seattle tennis, 98144 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Sam Smith (I90 Lid) Park Tennis"
+address: "1400 Martin Luther King Jr Way S, Seattle, WA 98144"
+neighborhood: "International District"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1400+Martin+Luther+King+Jr+Way+S%2C+Seattle%2C+WA+98144"
+slug: "sam-smith-i90-lid-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/sam-smith-i90-lid-park-tennis"
+og_title: "Sam Smith (I90 Lid) Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Sam Smith (I90 Lid) Park Tennis in International District. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/sam-smith-i90-lid-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Sam Smith (I90 Lid) Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Sam Smith (I90 Lid) Park Tennis in International District, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## The Civic Heart: Sam Smith Park
 
 Your First Serve of Information

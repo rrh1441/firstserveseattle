@@ -1,3 +1,27 @@
+---
+title: "Lower Woodland Playfield Upper Courts | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Lower Woodland Playfield Upper Courts Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Lower Woodland Playfield Upper Courts in Woodland / Green Lake, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "lower woodland playfield upper courts, seattle tennis courts, woodland / green lake tennis, tennis courts near me, seattle tennis, 98103 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Lower Woodland Playfield Upper Courts"
+address: "1000 N 50th St, Seattle, WA 98103"
+neighborhood: "Woodland / Green Lake"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1000+N+50th+St%2C+Seattle%2C+WA+98103"
+slug: "lower-woodland-playfield-upper-courts"
+canonical_url: "https://firstserveseattle.com/courts/lower-woodland-playfield-upper-courts"
+og_title: "Lower Woodland Playfield Upper Courts | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Lower Woodland Playfield Upper Courts in Woodland / Green Lake. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/lower-woodland-playfield-upper-courts-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Lower Woodland Playfield Upper Courts Tennis Courts"
+twitter_description: "Tennis court guide for Lower Woodland Playfield Upper Courts in Woodland / Green Lake, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Lower Woodland Playfield Upper Courts
 
 Your First Serve of Information

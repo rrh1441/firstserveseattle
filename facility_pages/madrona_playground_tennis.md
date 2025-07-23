@@ -1,3 +1,27 @@
+---
+title: "Madrona Playground Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Madrona Playground Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Madrona Playground Tennis in Madrona, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "madrona playground tennis, seattle tennis courts, madrona tennis, tennis courts near me, seattle tennis, 98122 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Madrona Playground Tennis"
+address: "3211 E Spring St, Seattle, WA 98122"
+neighborhood: "Madrona"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=3211+E+Spring+St%2C+Seattle%2C+WA+98122"
+slug: "madrona-playground-tennis"
+canonical_url: "https://firstserveseattle.com/courts/madrona-playground-tennis"
+og_title: "Madrona Playground Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Madrona Playground Tennis in Madrona. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/madrona-playground-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Madrona Playground Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Madrona Playground Tennis in Madrona, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Madrona Playground Tennis
 
 Your First Serve of Information

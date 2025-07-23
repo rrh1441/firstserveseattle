@@ -1,3 +1,27 @@
+---
+title: "Jefferson Park Lid Tennis Court | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Jefferson Park Lid Tennis Court Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Jefferson Park Lid Tennis Court in Beacon Hill / International District, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "jefferson park lid tennis court, seattle tennis courts, beacon hill / international district tennis, tennis courts near me, seattle tennis, 98108 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Jefferson Park Lid Tennis Court"
+address: "3901 Beacon Ave S, Seattle, WA 98108"
+neighborhood: "Beacon Hill / International District"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=3901+Beacon+Ave+S%2C+Seattle%2C+WA+98108"
+slug: "jefferson-park-lid-tennis-court"
+canonical_url: "https://firstserveseattle.com/courts/jefferson-park-lid-tennis-court"
+og_title: "Jefferson Park Lid Tennis Court | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Jefferson Park Lid Tennis Court in Beacon Hill / International District. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/jefferson-park-lid-tennis-court-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Jefferson Park Lid Tennis Court Tennis Courts"
+twitter_description: "Tennis court guide for Jefferson Park Lid Tennis Court in Beacon Hill / International District, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Jefferson Park Lid Tennis Court
 
 Your First Serve of Information

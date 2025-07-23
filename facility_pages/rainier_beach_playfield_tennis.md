@@ -1,3 +1,27 @@
+---
+title: "Rainier Beach Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Rainier Beach Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Rainier Beach Playfield Tennis in Rainier Beach, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "rainier beach playfield tennis, seattle tennis courts, rainier beach tennis, tennis courts near me, seattle tennis, 98118 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Rainier Beach Playfield Tennis"
+address: "8802 Rainier Ave S, Seattle, WA 98118"
+neighborhood: "Rainier Beach"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=8802+Rainier+Ave+S%2C+Seattle%2C+WA+98118"
+slug: "rainier-beach-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/rainier-beach-playfield-tennis"
+og_title: "Rainier Beach Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Rainier Beach Playfield Tennis in Rainier Beach. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/rainier-beach-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Rainier Beach Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Rainier Beach Playfield Tennis in Rainier Beach, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Rainier Beach Playfield Tennis
 
 Your First Serve of Information

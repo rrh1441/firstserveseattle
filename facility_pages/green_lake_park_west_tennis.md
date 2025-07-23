@@ -1,3 +1,27 @@
+---
+title: "Green Lake Park West Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Green Lake Park West Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Green Lake Park West Tennis in Green Lake, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "green lake park west tennis, seattle tennis courts, green lake tennis, tennis courts near me, seattle tennis, 98115 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Green Lake Park West Tennis"
+address: "7201 E Green Lake Dr N, Seattle, WA 98115"
+neighborhood: "Green Lake"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=7201+E+Green+Lake+Dr+N%2C+Seattle%2C+WA+98115"
+slug: "green-lake-park-west-tennis"
+canonical_url: "https://firstserveseattle.com/courts/green-lake-park-west-tennis"
+og_title: "Green Lake Park West Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Green Lake Park West Tennis in Green Lake. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/green-lake-park-west-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Green Lake Park West Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Green Lake Park West Tennis in Green Lake, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Green Lake Park West Tennis
 
 Your First Serve of Information

@@ -1,3 +1,27 @@
+---
+title: "Mount Baker Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Mount Baker Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Mount Baker Park Tennis in Mount Baker, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "mount baker park tennis, seattle tennis courts, mount baker tennis, tennis courts near me, seattle tennis, 98144 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Mount Baker Park Tennis"
+address: "2521 Lake Park Dr S, Seattle, WA 98144"
+neighborhood: "Mount Baker"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2521+Lake+Park+Dr+S%2C+Seattle%2C+WA+98144"
+slug: "mount-baker-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/mount-baker-park-tennis"
+og_title: "Mount Baker Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Mount Baker Park Tennis in Mount Baker. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/mount-baker-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Mount Baker Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Mount Baker Park Tennis in Mount Baker, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Mount Baker Park Tennis
 
 Your First Serve of Information

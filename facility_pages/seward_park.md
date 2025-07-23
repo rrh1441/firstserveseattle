@@ -1,3 +1,27 @@
+---
+title: "Seward Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Seward Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Seward Park Tennis in Seward Park, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "seward park tennis, seattle tennis courts, seward park tennis, tennis courts near me, seattle tennis, 98118 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Seward Park Tennis"
+address: "5898 Lake Washington Blvd S, Seattle, WA 98118"
+neighborhood: "Seward Park"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=5898+Lake+Washington+Blvd+S%2C+Seattle%2C+WA+98118"
+slug: "seward-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/seward-park-tennis"
+og_title: "Seward Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Seward Park Tennis in Seward Park. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/seward-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Seward Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Seward Park Tennis in Seward Park, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## The Lakeside Sanctuary: Seward Park
 
 Your First Serve of Information

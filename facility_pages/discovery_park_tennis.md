@@ -1,3 +1,27 @@
+---
+title: "Discovery Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Discovery Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Discovery Park Tennis in Discovery Park / Magnolia, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "discovery park tennis, seattle tennis courts, discovery park / magnolia tennis, tennis courts near me, seattle tennis, 98199 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Discovery Park Tennis"
+address: "3801 Discovery Park Blvd, Seattle, WA 98199"
+neighborhood: "Discovery Park / Magnolia"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=3801+Discovery+Park+Blvd%2C+Seattle%2C+WA+98199"
+slug: "discovery-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/discovery-park-tennis"
+og_title: "Discovery Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Discovery Park Tennis in Discovery Park / Magnolia. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/discovery-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Discovery Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Discovery Park Tennis in Discovery Park / Magnolia, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Discovery Park Tennis
 
 Your First Serve of Information

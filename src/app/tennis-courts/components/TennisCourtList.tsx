@@ -15,10 +15,15 @@ import {
   Footprints,
   ThumbsUp,
   X,
+  Copy,
+  ExternalLink,
+  FileText,
 } from "lucide-react";
 import { logEvent } from "@/lib/logEvent";
 import { FilterEventTracker, EngagementTracker } from "@/lib/eventLogging";
 import { courtMatchesSearch } from "@/lib/neighborhoodMapping";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const AboutUs = dynamic(() => import("./AboutUs"), { ssr: false });
 
@@ -36,6 +41,55 @@ const mapsUrl = (c: TennisCourt) =>
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         c.address ?? c.title
       )}`;
+
+// Map court titles to facility slugs for facility page links
+const getFacilitySlug = (courtTitle: string): string | null => {
+  const titleLower = courtTitle.toLowerCase();
+  
+  if (titleLower.includes('alki playfield')) return 'alki-playfield-tennis';
+  if (titleLower.includes('amy yee') || titleLower.includes('aytc')) return 'aytc-outdoor-tennis';
+  if (titleLower.includes('beacon hill playfield')) return 'beacon-hill-playfield-tennis';
+  if (titleLower.includes('bitter lake playfield')) return 'bitter-lake-playfield-tennis';
+  if (titleLower.includes('brighton playfield')) return 'brighton-playfield-tennis';
+  if (titleLower.includes('bryant playground')) return 'bryant-playground-tennis';
+  if (titleLower.includes('david rodgers park')) return 'david-rodgers-park-tennis';
+  if (titleLower.includes('dearborn park')) return 'dearborn-park-tennis';
+  if (titleLower.includes('delridge playfield')) return 'delridge-playfield-tennis';
+  if (titleLower.includes('discovery park')) return 'discovery-park-tennis';
+  if (titleLower.includes('froula playground')) return 'froula-playground-tennis';
+  if (titleLower.includes('garfield playfield')) return 'garfield-playfield-tennis';
+  if (titleLower.includes('gilman playfield')) return 'gilman-playfield-tennis';
+  if (titleLower.includes('green lake park west')) return 'green-lake-park-west-tennis';
+  if (titleLower.includes('hiawatha playfield')) return 'hiawatha-playfield-tennis';
+  if (titleLower.includes('jefferson park')) return 'jefferson-park-lid-tennis-court';
+  if (titleLower.includes('laurelhurst playfield')) return 'laurelhurst-playfield-tennis';
+  if (titleLower.includes('lower woodland playfield')) {
+    if (titleLower.includes('upper')) return 'lower-woodland-playfield-upper-courts';
+    return 'lower-woodland-playfield';
+  }
+  if (titleLower.includes('madison park')) return 'madison-park-tennis';
+  if (titleLower.includes('madrona playground')) return 'madrona-playground-tennis';
+  if (titleLower.includes('magnolia park') && !titleLower.includes('playfield')) return 'magnolia-park-tennis';
+  if (titleLower.includes('magnolia playfield')) return 'magnolia-playfield-tennis';
+  if (titleLower.includes('meadowbrook playfield')) return 'meadowbrook-playfield-tennis';
+  if (titleLower.includes('miller playfield')) return 'miller-playfield-tennis';
+  if (titleLower.includes('montlake playfield')) return 'montlake-playfield-tennis';
+  if (titleLower.includes('mount baker park')) return 'mount-baker-park-tennis';
+  if (titleLower.includes('observatory')) return 'observatory-tennis';
+  if (titleLower.includes('rainier beach playfield')) return 'rainier-beach-playfield-tennis';
+  if (titleLower.includes('rainier playfield')) return 'rainier-playfield-tennis';
+  if (titleLower.includes('riverview playfield')) return 'riverview-playfield-tennis';
+  if (titleLower.includes('rogers') || titleLower.includes('eastlake')) return 'rogers-playfield-tennis';
+  if (titleLower.includes('sam smith')) return 'sam-smith-i90-lid-park-tennis';
+  if (titleLower.includes('seward park')) return 'seward-park-tennis';
+  if (titleLower.includes('solstice park')) return 'solstice-park-tennis';
+  if (titleLower.includes('soundview playfield')) return 'soundview-playfield-tennis';
+  if (titleLower.includes('volunteer park')) return 'volunteer-park-court-01-';
+  if (titleLower.includes('wallingford playfield')) return 'wallingford-playfield-tennis';
+  if (titleLower.includes('walt hundley playfield')) return 'walt-hundley-playfield-tennis';
+  
+  return null;
+};
 
 const TIME = [
   "6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM",
@@ -221,6 +275,19 @@ export default function TennisCourtList() {
     EngagementTracker.trackHighValueAction("court_detail_expand", courtId, title);
   };
 
+  const copyAddress = async (address: string, courtName: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      toast.success('Address copied to clipboard!');
+      track('court_address_copied', {
+        court_name: courtName,
+        address: address
+      });
+    } catch {
+      toast.error('Failed to copy address');
+    }
+  };
+
   if (loading) return <div className="p-4"><CardSkeleton /></div>;
   if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
 
@@ -403,31 +470,67 @@ export default function TennisCourtList() {
               )}
 
               {expanded.includes(court.id) && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-700 mb-2">
+                <div className="mt-2 space-y-3">
+                  <p className="text-sm text-gray-700">
                     {court.address ?? "Address unavailable"}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      // Enhanced maps tracking with engagement context
-                      EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
-                      
-                      // Track with Vercel Analytics
-                      track('court_maps_opened', {
-                        court_id: court.id,
-                        court_name: court.title,
-                        has_address: !!court.address,
-                        has_maps_url: !!court.Maps_url
-                      });
-                      
-                      window.open(mapsUrl(court), "_blank");
-                    }}
-                  >
-                    Open in Google Maps
-                  </Button>
+                  
+                  {/* Action Buttons Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-center gap-1.5"
+                      onClick={() => copyAddress(court.address || court.title, court.title)}
+                    >
+                      <Copy size={14} />
+                      Copy Address
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-center gap-1.5"
+                      onClick={() => {
+                        // Enhanced maps tracking with engagement context
+                        EngagementTracker.trackHighValueAction("open_maps", court.id, court.title);
+                        
+                        // Track with Vercel Analytics
+                        track('court_maps_opened', {
+                          court_id: court.id,
+                          court_name: court.title,
+                          has_address: !!court.address,
+                          has_maps_url: !!court.Maps_url
+                        });
+                        
+                        window.open(mapsUrl(court), "_blank");
+                      }}
+                    >
+                      <ExternalLink size={14} />
+                      View in Maps
+                    </Button>
+
+                    {getFacilitySlug(court.title) && (
+                      <Link href={`/courts/${getFacilitySlug(court.title)}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full flex items-center justify-center gap-1.5"
+                          onClick={() => {
+                            track('facility_page_clicked', {
+                              court_id: court.id,
+                              court_name: court.title,
+                              facility_slug: getFacilitySlug(court.title)
+                            });
+                            EngagementTracker.trackHighValueAction("view_facility_page", court.id, court.title);
+                          }}
+                        >
+                          <FileText size={14} />
+                          See Reviews
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               )}
 

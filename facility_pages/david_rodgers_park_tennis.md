@@ -1,3 +1,27 @@
+---
+title: "David Rodgers Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "David Rodgers Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to David Rodgers Park Tennis in Queen Anne, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "david rodgers park tennis, seattle tennis courts, queen anne tennis, tennis courts near me, seattle tennis, 98119 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "David Rodgers Park Tennis"
+address: "2800 1st Ave W, Seattle, WA 98119"
+neighborhood: "Queen Anne"
+court_count: 3
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2800+1st+Ave+W%2C+Seattle%2C+WA+98119"
+slug: "david-rodgers-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/david-rodgers-park-tennis"
+og_title: "David Rodgers Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to David Rodgers Park Tennis in Queen Anne. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/david-rodgers-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "David Rodgers Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for David Rodgers Park Tennis in Queen Anne, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## David Rodgers Park Tennis
 
 Your First Serve of Information

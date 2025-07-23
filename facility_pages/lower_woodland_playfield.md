@@ -1,3 +1,27 @@
+---
+title: "Lower Woodland Playfield | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Lower Woodland Playfield Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Lower Woodland Playfield in Woodland / Green Lake, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "lower woodland playfield, seattle tennis courts, woodland / green lake tennis, tennis courts near me, seattle tennis, 98103 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Lower Woodland Playfield"
+address: "5773 West Green Lake Way N, Seattle, WA 98103"
+neighborhood: "Woodland / Green Lake"
+court_count: 10
+google_map_url: "https://www.google.com/maps/search/?api=1&query=5773+West+Green+Lake+Way+N%2C+Seattle%2C+WA+98103"
+slug: "lower-woodland-playfield"
+canonical_url: "https://firstserveseattle.com/courts/lower-woodland-playfield"
+og_title: "Lower Woodland Playfield | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Lower Woodland Playfield in Woodland / Green Lake. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/lower-woodland-playfield-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Lower Woodland Playfield Tennis Courts"
+twitter_description: "Tennis court guide for Lower Woodland Playfield in Woodland / Green Lake, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Lower Woodland Playfield
 
 Your First Serve of Information

@@ -1,3 +1,27 @@
+---
+title: "Bitter Lake Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Bitter Lake Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Bitter Lake Playfield Tennis in Bitter Lake, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "bitter lake playfield tennis, seattle tennis courts, bitter lake tennis, tennis courts near me, seattle tennis, 98133 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Bitter Lake Playfield Tennis"
+address: "13035 Linden Ave N, Seattle, WA 98133"
+neighborhood: "Bitter Lake"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=13035+Linden+Ave+N%2C+Seattle%2C+WA+98133"
+slug: "bitter-lake-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/bitter-lake-playfield-tennis"
+og_title: "Bitter Lake Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Bitter Lake Playfield Tennis in Bitter Lake. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/bitter-lake-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Bitter Lake Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Bitter Lake Playfield Tennis in Bitter Lake, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Bitter Lake Playfield Tennis
 
 Your First Serve of Information

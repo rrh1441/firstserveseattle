@@ -1,3 +1,27 @@
+---
+title: "Soundview Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Soundview Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Soundview Playfield Tennis in Crown Hill / Ballard, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "soundview playfield tennis, seattle tennis courts, crown hill / ballard tennis, tennis courts near me, seattle tennis, 98117 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Soundview Playfield Tennis"
+address: "1590 NW 90th St, Seattle, WA 98117"
+neighborhood: "Crown Hill / Ballard"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1590+NW+90th+St%2C+Seattle%2C+WA+98117"
+slug: "soundview-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/soundview-playfield-tennis"
+og_title: "Soundview Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Soundview Playfield Tennis in Crown Hill / Ballard. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/soundview-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Soundview Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Soundview Playfield Tennis in Crown Hill / Ballard, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 
 ## The Evolving Playfield: Soundview Playfield
 

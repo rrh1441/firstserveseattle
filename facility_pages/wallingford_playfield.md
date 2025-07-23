@@ -1,3 +1,27 @@
+---
+title: "Wallingford Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Wallingford Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Wallingford Playfield Tennis in Wallingford, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "wallingford playfield tennis, seattle tennis courts, wallingford tennis, tennis courts near me, seattle tennis, 98103 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Wallingford Playfield Tennis"
+address: "4219 Wallingford Ave N, Seattle, WA 98103"
+neighborhood: "Wallingford"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=4219+Wallingford+Ave+N%2C+Seattle%2C+WA+98103"
+slug: "wallingford-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/wallingford-playfield-tennis"
+og_title: "Wallingford Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Wallingford Playfield Tennis in Wallingford. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/wallingford-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Wallingford Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Wallingford Playfield Tennis in Wallingford, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## The Community Hub: Wallingford Playfield
 
 Your First Serve of Information

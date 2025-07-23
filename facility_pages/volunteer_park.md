@@ -1,3 +1,27 @@
+---
+title: "Volunteer Park Court 01 - | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Volunteer Park Court 01 - Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Volunteer Park Court 01 - in Capitol Hill, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "volunteer park court 01 -, seattle tennis courts, capitol hill tennis, tennis courts near me, seattle tennis, 98112 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Volunteer Park Court 01 -"
+address: "1247 15th Ave E, Seattle, WA 98112"
+neighborhood: "Capitol Hill"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1247+15th+Ave+E%2C+Seattle%2C+WA+98112"
+slug: "volunteer-park-court-01-"
+canonical_url: "https://firstserveseattle.com/courts/volunteer-park-court-01-"
+og_title: "Volunteer Park Court 01 - | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Volunteer Park Court 01 - in Capitol Hill. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/volunteer-park-court-01--social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Volunteer Park Court 01 - Tennis Courts"
+twitter_description: "Tennis court guide for Volunteer Park Court 01 - in Capitol Hill, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## The Capitol Hill Crown Jewel: Volunteer Park
 
 Your First Serve of Information

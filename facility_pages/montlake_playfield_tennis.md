@@ -1,3 +1,27 @@
+---
+title: "Montlake Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Montlake Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Montlake Playfield Tennis in Montlake, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "montlake playfield tennis, seattle tennis courts, montlake tennis, tennis courts near me, seattle tennis, 98112 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Montlake Playfield Tennis"
+address: "1618 E Calhoun St, Seattle, WA 98112"
+neighborhood: "Montlake"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1618+E+Calhoun+St%2C+Seattle%2C+WA+98112"
+slug: "montlake-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/montlake-playfield-tennis"
+og_title: "Montlake Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Montlake Playfield Tennis in Montlake. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/montlake-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Montlake Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Montlake Playfield Tennis in Montlake, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Montlake Playfield Tennis
 
 Your First Serve of Information

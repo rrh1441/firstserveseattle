@@ -1,3 +1,27 @@
+---
+title: "Madison Park Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Madison Park Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Madison Park Tennis in Madison Park, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "madison park tennis, seattle tennis courts, madison park tennis, tennis courts near me, seattle tennis, 98112 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Madison Park Tennis"
+address: "1800 42nd Ave E, Seattle, WA 98112"
+neighborhood: "Madison Park"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=1800+42nd+Ave+E%2C+Seattle%2C+WA+98112"
+slug: "madison-park-tennis"
+canonical_url: "https://firstserveseattle.com/courts/madison-park-tennis"
+og_title: "Madison Park Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Madison Park Tennis in Madison Park. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/madison-park-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Madison Park Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Madison Park Tennis in Madison Park, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Madison Park Tennis
 
 Your First Serve of Information

@@ -1,3 +1,27 @@
+---
+title: "Garfield Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Garfield Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Garfield Playfield Tennis in Central District, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "garfield playfield tennis, seattle tennis courts, central district tennis, tennis courts near me, seattle tennis, 98122 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Garfield Playfield Tennis"
+address: "2323 E Cherry St, Seattle, WA 98122"
+neighborhood: "Central District"
+court_count: 2
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2323+E+Cherry+St%2C+Seattle%2C+WA+98122"
+slug: "garfield-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/garfield-playfield-tennis"
+og_title: "Garfield Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Garfield Playfield Tennis in Central District. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/garfield-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Garfield Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Garfield Playfield Tennis in Central District, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Garfield Playfield Tennis
 
 Your First Serve of Information

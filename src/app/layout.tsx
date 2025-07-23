@@ -12,6 +12,7 @@ import Script from 'next/script';
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
+import { Toaster } from 'sonner';
 
 import './globals.css';
 
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteFooter />
         <Analytics />
         <SpeedInsights />
+        <Toaster position="top-center" />
       </body>
     </html>
   );

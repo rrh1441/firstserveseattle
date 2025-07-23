@@ -1,3 +1,27 @@
+---
+title: "Magnolia Playfield Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Magnolia Playfield Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Magnolia Playfield Tennis in Magnolia, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "magnolia playfield tennis, seattle tennis courts, magnolia tennis, tennis courts near me, seattle tennis, 98199 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Magnolia Playfield Tennis"
+address: "2518 W 34th St, Seattle, WA 98199"
+neighborhood: "Magnolia"
+court_count: 4
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2518+W+34th+St%2C+Seattle%2C+WA+98199"
+slug: "magnolia-playfield-tennis"
+canonical_url: "https://firstserveseattle.com/courts/magnolia-playfield-tennis"
+og_title: "Magnolia Playfield Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Magnolia Playfield Tennis in Magnolia. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/magnolia-playfield-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Magnolia Playfield Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Magnolia Playfield Tennis in Magnolia, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Magnolia Playfield Tennis
 
 Your First Serve of Information

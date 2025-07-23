@@ -1,5 +1,7 @@
-// src/app/courts/[slug]/page.tsx
-// Server Component (default) – no `use client` needed
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { getFacilityBySlug, getAllFacilitySlugs } from '@/lib/markdown';
+import FacilityPage from '@/components/FacilityPage';
 
 type Params = Promise<{ slug: string }>;
 
@@ -8,23 +10,16 @@ export default async function CourtDetailPage({
 }: {
   params: Params;
 }) {
-  // Resolve the promise that Next.js passes in v15+
-  const { slug: courtSlug } = await params;
+  const { slug } = await params;
+  
+  const facility = await getFacilityBySlug(slug);
+  
+  if (!facility) {
+    notFound();
+  }
 
-  // ▸ Fetch data with `courtSlug` here if required
-
-  return (
-    <div>
-      <h1>Court Detail Page</h1>
-      <p>Details for court with slug: {courtSlug}</p>
-    </div>
-  );
+  return <FacilityPage facility={facility} />;
 }
-
-/* --- OPTIONAL EXTRAS ------------------------------------------------------ */
-
-// Dynamic metadata (same async-params rule)
-import type { Metadata } from 'next';
 
 export async function generateMetadata({
   params,
@@ -32,10 +27,57 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `Court Details: ${slug}` };
+  const facility = await getFacilityBySlug(slug);
+  
+  if (!facility) {
+    return {
+      title: 'Court Not Found | First Serve Seattle',
+      description: 'The tennis court you are looking for could not be found.',
+    };
+  }
+
+  const { data } = facility;
+
+  return {
+    title: data.title,
+    description: data.description,
+    keywords: data.keywords,
+    authors: [{ name: data.author }],
+    openGraph: {
+      title: data.og_title,
+      description: data.og_description,
+      url: data.canonical_url,
+      siteName: 'First Serve Seattle',
+      locale: 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: data.og_image,
+          width: 1200,
+          height: 630,
+          alt: `${data.facility_name} Tennis Courts`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: data.twitter_title,
+      description: data.twitter_description,
+      images: [data.og_image],
+    },
+    alternates: {
+      canonical: data.canonical_url,
+    },
+    other: {
+      'facility-name': data.facility_name,
+      'address': data.address,
+      'neighborhood': data.neighborhood,
+      'court-count': data.court_count.toString(),
+    },
+  };
 }
 
-// ISR / SSG helper (signature unchanged)
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  return [{ slug: 'example-court-1' }, { slug: 'example-court-2' }];
+  const slugs = getAllFacilitySlugs();
+  return slugs.map((slug) => ({ slug }));
 }

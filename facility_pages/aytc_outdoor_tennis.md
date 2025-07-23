@@ -1,3 +1,27 @@
+---
+title: "Aytc Outdoor Tennis | Seattle Tennis Courts | First Serve Seattle"
+meta_title: "Aytc Outdoor Tennis Courts - Seattle Tennis Information & Reviews"
+description: "Complete guide to Aytc Outdoor Tennis in Beacon Hill / Central District, Seattle. Court details, amenities, local tips, and reviews for tennis players in Seattle, WA."
+keywords: "aytc outdoor tennis, seattle tennis courts, beacon hill / central district tennis, tennis courts near me, seattle tennis, 98144 tennis courts, public tennis courts seattle, outdoor tennis courts"
+author: "First Serve Seattle"
+date: "2025-07-23"
+facility_name: "Aytc Outdoor Tennis"
+address: "2000 Martin Luther King Jr Way S, Seattle, WA 98144"
+neighborhood: "Beacon Hill / Central District"
+court_count: 6
+google_map_url: "https://www.google.com/maps/search/?api=1&query=2000+Martin+Luther+King+Jr+Way+S%2C+Seattle%2C+WA+98144"
+slug: "aytc-outdoor-tennis"
+canonical_url: "https://firstserveseattle.com/courts/aytc-outdoor-tennis"
+og_title: "Aytc Outdoor Tennis | Seattle Tennis Court Guide"
+og_description: "Your complete guide to Aytc Outdoor Tennis in Beacon Hill / Central District. Court conditions, amenities, and local tennis insights."
+og_image: "/images/facilities/aytc-outdoor-tennis-social.jpg"
+twitter_card: "summary_large_image"
+twitter_title: "Aytc Outdoor Tennis Tennis Courts"
+twitter_description: "Tennis court guide for Aytc Outdoor Tennis in Beacon Hill / Central District, Seattle"
+local_business: true
+schema_type: "SportsActivityLocation"
+---
+
 ## Aytc Outdoor Tennis
 
 Your First Serve of Information
