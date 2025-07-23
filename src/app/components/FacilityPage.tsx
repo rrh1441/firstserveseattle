@@ -2,9 +2,10 @@
 
 import { FacilityPage as FacilityPageType } from '@/lib/markdown';
 import { Button } from '@/components/ui/button';
-import { MapPin, ExternalLink, ArrowLeft, Clock, Users, MapIcon } from 'lucide-react';
+import { MapPin, ExternalLink, ArrowLeft, Users, MapIcon } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import InteractiveCTA from './InteractiveCTA';
 
 interface FacilityPageProps {
   facility: FacilityPageType;
@@ -129,15 +130,7 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
                 View in Maps
               </Button>
 
-              <Link href="/courts">
-                <Button 
-                  variant="default"
-                  className="flex items-center bg-green-600 hover:bg-green-700"
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  See Today's Availability
-                </Button>
-              </Link>
+              <InteractiveCTA />
             </div>
           </div>
         </div>
@@ -162,11 +155,7 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
                 View real-time same-day court availability across all Seattle tennis facilities.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/courts">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                    See Today's Availability
-                  </Button>
-                </Link>
+                <InteractiveCTA size="xl" />
                 <Link href="https://firstserveseattle.com">
                   <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
                     Visit First Serve Seattle
