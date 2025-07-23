@@ -69,13 +69,13 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         {/* Header Navigation */}
-        <div className="bg-white border-b">
+        <div className="bg-white border-b border-slate-200">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <Link 
               href="/courts" 
-              className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
+              className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Courts
@@ -84,23 +84,23 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
         </div>
 
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white">
-          <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="bg-gradient-to-br from-[#0c372b] to-[#0a2e21] text-white">
+          <div className="max-w-4xl mx-auto px-4 py-16">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-4">{data.facility_name}</h1>
-                <div className="flex items-center text-green-100 mb-4">
-                  <MapPin className="w-5 h-5 mr-2" />
-                  <span className="text-lg">{data.address}</span>
+                <h1 className="text-5xl font-bold mb-6 leading-tight">{data.facility_name}</h1>
+                <div className="flex items-center text-white/90 mb-6">
+                  <MapPin className="w-5 h-5 mr-3" />
+                  <span className="text-xl">{data.address}</span>
                 </div>
-                <div className="flex items-center space-x-6 text-green-100">
+                <div className="flex items-center space-x-8 text-white/90">
                   <div className="flex items-center">
-                    <Users className="w-5 h-5 mr-2" />
-                    <span>{data.court_count} Court{data.court_count !== 1 ? 's' : ''}</span>
+                    <Users className="w-5 h-5 mr-3" />
+                    <span className="text-lg">{data.court_count} Court{data.court_count !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex items-center">
-                    <MapIcon className="w-5 h-5 mr-2" />
-                    <span>{data.neighborhood}</span>
+                    <MapIcon className="w-5 h-5 mr-3" />
+                    <span className="text-lg">{data.neighborhood}</span>
                   </div>
                 </div>
               </div>
@@ -109,28 +109,24 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="bg-white border-b">
-          <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="bg-white border-b border-slate-200 shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="flex flex-wrap gap-4">
-              <Button 
+              <button 
                 onClick={copyAddress}
-                variant="outline"
-                size="lg"
-                className="flex items-center"
+                className="w-full md:w-auto md:px-8 border border-slate-300 text-slate-700 py-4 px-6 text-lg font-semibold rounded hover:bg-slate-50 hover:border-slate-400 transition-colors flex items-center justify-center"
               >
                 <MapPin className="w-4 h-4 mr-2" />
                 Copy Address
-              </Button>
+              </button>
               
-              <Button 
+              <button 
                 onClick={openInMaps}
-                variant="outline"
-                size="lg" 
-                className="flex items-center"
+                className="w-full md:w-auto md:px-8 border border-slate-300 text-slate-700 py-4 px-6 text-lg font-semibold rounded hover:bg-slate-50 hover:border-slate-400 transition-colors flex items-center justify-center"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View in Maps
-              </Button>
+              </button>
 
               <InteractiveCTA size="lg" />
             </div>
@@ -138,30 +134,30 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="max-w-4xl mx-auto px-4 py-12">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-10">
             {/* Markdown Content */}
             <div 
-              className="prose prose-lg max-w-none prose-headings:text-green-800 prose-links:text-green-600 prose-strong:text-gray-900"
+              className="prose prose-lg max-w-none prose-headings:text-slate-900 prose-headings:font-semibold prose-p:text-slate-700 prose-p:leading-relaxed prose-strong:text-slate-900 prose-li:text-slate-700"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           </div>
 
           {/* Call-to-Action Section */}
-          <div className="mt-8 bg-green-50 rounded-lg border border-green-200 p-8">
+          <div className="mt-12 bg-slate-50 rounded-xl border border-slate-200 p-10">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-green-800 mb-4">
+              <h2 className="text-3xl font-bold text-slate-900 mb-6">
                 Ready to Play Tennis in Seattle?
               </h2>
-              <p className="text-green-700 mb-6 text-lg">
+              <p className="text-slate-700 mb-8 text-xl max-w-2xl mx-auto leading-relaxed">
                 View real-time same-day court availability across all Seattle tennis facilities.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
                 <InteractiveCTA size="lg" />
                 <Link href="https://firstserveseattle.com">
-                  <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <button className="w-full md:w-auto md:px-8 border border-[#0c372b] text-[#0c372b] py-4 px-6 text-lg font-semibold rounded hover:bg-[#0c372b]/5 hover:border-[#0a2e21] transition-colors">
                     Visit First Serve Seattle
-                  </Button>
+                  </button>
                 </Link>
               </div>
             </div>
