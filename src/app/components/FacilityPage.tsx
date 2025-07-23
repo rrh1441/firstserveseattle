@@ -115,6 +115,7 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
               <Button 
                 onClick={copyAddress}
                 variant="outline"
+                size="lg"
                 className="flex items-center"
               >
                 <MapPin className="w-4 h-4 mr-2" />
@@ -124,13 +125,14 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
               <Button 
                 onClick={openInMaps}
                 variant="outline"
+                size="lg" 
                 className="flex items-center"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 View in Maps
               </Button>
 
-              <InteractiveCTA />
+              <InteractiveCTA size="lg" />
             </div>
           </div>
         </div>
@@ -155,7 +157,7 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
                 View real-time same-day court availability across all Seattle tennis facilities.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <InteractiveCTA size="xl" />
+                <InteractiveCTA size="lg" />
                 <Link href="https://firstserveseattle.com">
                   <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
                     Visit First Serve Seattle
