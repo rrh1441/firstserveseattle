@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
 import remarkHtml from 'remark-html';
 
 export interface FacilityData {
@@ -40,15 +41,22 @@ const FACILITY_DIR = path.join(process.cwd(), 'facility_pages');
 /** Load one facility by slug (e.g. "beacon_hill_playfield_tennis") */
 export async function loadFacility(slug: string): Promise<FacilityPage> {
   const filePath = path.join(FACILITY_DIR, `${slug}.md`);
-  const rawSrc = await fs.readFile(filePath, 'utf8');
+  
+  try {
+    const rawSrc = await fs.readFile(filePath, 'utf8');
+    const { content, data } = matter(rawSrc);
 
-  const { content, data } = matter(rawSrc);
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkHtml)
+      .process(content);
 
-  const file = await remark()
-    .use(remarkHtml)
-    .process(content);
-
-  return { data: data as FacilityData, htmlContent: String(file) };
+    return { data: data as FacilityData, htmlContent: String(file) };
+  } catch (error) {
+    console.error(`Error loading facility ${slug}:`, error);
+    console.error(`Attempted path: ${filePath}`);
+    throw error;
+  }
 }
 
 /** Return all facility slugs (for getStaticPaths or build‑time loops) */
