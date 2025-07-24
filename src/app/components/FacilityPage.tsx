@@ -138,15 +138,19 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
             {/* Markdown Content */}
             <div 
               className="prose prose-lg max-w-none 
-                prose-headings:text-slate-900 prose-headings:font-bold prose-headings:mb-6 prose-headings:mt-8
-                prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                prose-headings:text-slate-900 prose-headings:font-bold
+                prose-h2:text-4xl prose-h2:font-bold prose-h2:mb-2 prose-h2:mt-0
+                prose-h3:text-2xl prose-h3:font-bold prose-h3:mb-4 prose-h3:mt-10
+                prose-h4:text-xl prose-h4:font-bold prose-h4:mb-3 prose-h4:mt-8
                 prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-6
                 prose-strong:text-slate-900 prose-strong:font-bold
                 prose-li:text-slate-700 prose-li:mb-2
                 prose-ul:mb-6 prose-ol:mb-6
-                prose-table:border-collapse prose-table:w-full prose-table:mb-6
-                prose-th:border prose-th:border-slate-300 prose-th:bg-slate-50 prose-th:p-3 prose-th:text-left prose-th:font-bold
-                prose-td:border prose-td:border-slate-300 prose-td:p-3"
+                prose-em:hidden
+                prose-table:bg-white prose-table:border-collapse prose-table:w-full prose-table:mb-8 prose-table:rounded-lg prose-table:overflow-hidden prose-table:shadow-sm prose-table:border prose-table:border-slate-200
+                prose-th:border prose-th:border-slate-200 prose-th:bg-slate-50 prose-th:p-4 prose-th:text-left prose-th:font-bold prose-th:text-slate-900
+                prose-td:border prose-td:border-slate-200 prose-td:p-4 prose-td:text-slate-700
+                prose-tbody:bg-white"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           </div>
