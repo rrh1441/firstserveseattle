@@ -493,7 +493,7 @@ export default function TennisCourtList() {
                         }}
                       >
                         <FileText size={14} />
-                        See Reviews
+                        See Details
                       </Button>
                     </Link>
                   )}
