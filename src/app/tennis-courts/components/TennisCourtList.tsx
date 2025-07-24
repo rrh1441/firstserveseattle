@@ -441,11 +441,7 @@ export default function TennisCourtList() {
                 ))}
               </div>
 
-              <div className="mt-2 space-y-3">
-                <p className="text-sm text-gray-700">
-                  {court.address ?? "Address unavailable"}
-                </p>
-                
+              <div className="mt-2">
                 {/* Action Buttons Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <Button
