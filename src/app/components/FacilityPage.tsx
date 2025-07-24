@@ -87,19 +87,19 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
           <div className="max-w-4xl mx-auto px-4 py-16">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h1 className="text-5xl font-bold mb-6 leading-tight">{data.facility_name}</h1>
-                <div className="flex items-center text-white/90 mb-6">
-                  <MapPin className="w-5 h-5 mr-3" />
-                  <span className="text-xl">{data.address}</span>
+                <h1 className="text-5xl font-bold mb-6 leading-tight text-white">{data.facility_name}</h1>
+                <div className="flex items-center text-white/95 mb-6">
+                  <MapPin className="w-5 h-5 mr-3 text-white" />
+                  <span className="text-xl text-white">{data.address}</span>
                 </div>
-                <div className="flex items-center space-x-8 text-white/90">
+                <div className="flex items-center space-x-8 text-white/95">
                   <div className="flex items-center">
-                    <Users className="w-5 h-5 mr-3" />
-                    <span className="text-lg">{data.court_count} Court{data.court_count !== 1 ? 's' : ''}</span>
+                    <Users className="w-5 h-5 mr-3 text-white" />
+                    <span className="text-lg text-white">{data.court_count} Court{data.court_count !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex items-center">
-                    <MapIcon className="w-5 h-5 mr-3" />
-                    <span className="text-lg">{data.neighborhood}</span>
+                    <MapIcon className="w-5 h-5 mr-3 text-white" />
+                    <span className="text-lg text-white">{data.neighborhood}</span>
                   </div>
                 </div>
               </div>
@@ -137,7 +137,16 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-10">
             {/* Markdown Content */}
             <div 
-              className="prose prose-lg max-w-none prose-headings:text-slate-900 prose-headings:font-semibold prose-p:text-slate-700 prose-p:leading-relaxed prose-strong:text-slate-900 prose-li:text-slate-700"
+              className="prose prose-lg max-w-none 
+                prose-headings:text-slate-900 prose-headings:font-bold prose-headings:mb-6 prose-headings:mt-8
+                prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-6
+                prose-strong:text-slate-900 prose-strong:font-bold
+                prose-li:text-slate-700 prose-li:mb-2
+                prose-ul:mb-6 prose-ol:mb-6
+                prose-table:border-collapse prose-table:w-full prose-table:mb-6
+                prose-th:border prose-th:border-slate-300 prose-th:bg-slate-50 prose-th:p-3 prose-th:text-left prose-th:font-bold
+                prose-td:border prose-td:border-slate-300 prose-td:p-3"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           </div>
