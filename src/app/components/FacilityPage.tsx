@@ -10,6 +10,21 @@ interface FacilityPageProps {
   facility: FacilityPageType;
 }
 
+// Facilities that have ball machines available
+const BALL_MACHINE_FACILITIES = [
+  'green-lake-park-west-tennis',
+  'lower-woodland-playfield',
+  'lower-woodland-playfield-upper-courts',
+  'observatory-tennis',
+  'david-rodgers-park-tennis',
+  'delridge-playfield-tennis',
+  'gilman-playfield-tennis',
+  'magnolia-park-tennis',
+  'magnolia-playfield-tennis',
+  'rogers-playfield-tennis',
+  'wallingford-playfield-tennis'
+];
+
 export default function FacilityPage({ facility }: FacilityPageProps) {
   const { data, htmlContent } = facility;
 
@@ -25,6 +40,12 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
   const openInMaps = () => {
     window.open(data.google_map_url, '_blank');
   };
+
+  const openBallMachine = () => {
+    window.open('https://www.seattleballmachine.com', '_blank');
+  };
+
+  const hasBallMachine = BALL_MACHINE_FACILITIES.includes(data.slug);
 
   // Generate structured data for local business
   const structuredData = {
@@ -164,13 +185,16 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
               <p className="text-slate-700 mb-8 text-xl max-w-2xl mx-auto leading-relaxed">
                 View real-time same-day court availability across all Seattle tennis facilities.
               </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <div className={`flex flex-col sm:flex-row gap-6 ${hasBallMachine ? 'justify-center' : 'justify-center'}`}>
                 <InteractiveCTA size="lg" />
-                <Link href="https://firstserveseattle.com">
-                  <button className="w-full md:w-auto md:px-8 border border-[#0c372b] text-[#0c372b] py-4 px-6 text-lg font-semibold rounded hover:bg-[#0c372b]/5 hover:border-[#0a2e21] transition-colors">
-                    Visit First Serve Seattle
+                {hasBallMachine && (
+                  <button 
+                    onClick={openBallMachine}
+                    className="w-full md:w-auto md:px-8 border border-[#0c372b] text-[#0c372b] py-4 px-6 text-lg font-semibold rounded hover:bg-[#0c372b]/5 hover:border-[#0a2e21] transition-colors"
+                  >
+                    Rent a Ball Machine
                   </button>
-                </Link>
+                )}
               </div>
             </div>
           </div>
