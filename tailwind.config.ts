@@ -16,7 +16,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 }
 
 // Export default for Next.js ESM usage
