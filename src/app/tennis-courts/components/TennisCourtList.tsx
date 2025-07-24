@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Info,
   Star,
-  MapPin,
   Footprints,
   ThumbsUp,
   X,
@@ -139,7 +138,7 @@ export default function TennisCourtList() {
     ball_machine: false,
   });
   const [popFilter, setPopFilter] = useState<PopFilter>(null);
-  const [expanded, setExpanded] = useState<number[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [about, setAbout] = useState(false);
@@ -258,22 +257,7 @@ export default function TennisCourtList() {
     ball_machine: { label: "Machine", icon: "/icons/ballmachine.png" },
   };
 
-  const handleExpand = (courtId: number, title: string) => {
-    const isCurrentlyExpanded = expanded.includes(courtId);
-    setExpanded((e) =>
-      e.includes(courtId) ? e.filter((x) => x !== courtId) : [...e, courtId]
-    );
-    
-    // Track court detail expand/collapse with Vercel Analytics
-    track('court_detail_toggled', {
-      court_id: courtId,
-      court_name: title,
-      action: isCurrentlyExpanded ? 'collapse' : 'expand'
-    });
-    
-    // Track as high-value engagement action
-    EngagementTracker.trackHighValueAction("court_detail_expand", courtId, title);
-  };
+
 
   const copyAddress = async (address: string, courtName: string) => {
     try {
