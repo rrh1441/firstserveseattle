@@ -10,8 +10,8 @@ import {
 
 export default function MaintenanceModal() {
   // Uncomment the line below to show the maintenance modal
-  const isMaintenanceMode = true;
-  // const isMaintenanceMode = false;
+  // const isMaintenanceMode = true;
+  const isMaintenanceMode = false;
 
   if (!isMaintenanceMode) return null;
 
