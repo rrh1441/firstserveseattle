@@ -23,7 +23,7 @@ export default function MaintenanceModal() {
             🔧 Scheduled Maintenance
           </DialogTitle>
           <DialogDescription className="text-orange-700">
-            We apologize for the inconvenience. Our website is currently undergoing scheduled maintenance on June 30, 2025. 
+            We apologize for the inconvenience. Our website is currently undergoing scheduled maintenance on July 25, 2025. 
             Please check back tomorrow as we work to improve your experience.
           </DialogDescription>
         </DialogHeader>
