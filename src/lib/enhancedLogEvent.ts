@@ -3,7 +3,7 @@ import { logEvent, LogMetadata } from '@/lib/logEvent';
 // GTM dataLayer interface
 declare global {
   interface Window {
-    dataLayer: any[];
+    dataLayer: Record<string, unknown>[];
   }
 }
 
@@ -41,7 +41,7 @@ function pushToDataLayer(event: string, metadata: LogMetadata): void {
 /**
  * Map your detailed business events to marketing-focused dataLayer events
  */
-function mapToMarketingEvent(event: string, metadata: LogMetadata): any {
+function mapToMarketingEvent(event: string, metadata: LogMetadata): Record<string, unknown> | null {
   const baseData = {
     user_id: metadata.userId,
     session_id: metadata.sessionId,
