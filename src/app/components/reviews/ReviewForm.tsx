@@ -183,7 +183,7 @@ export default function ReviewForm({
                     disabled={isSubmitting}
                   />
                   <p className="text-sm text-slate-500 mt-1">
-                    We won't share your email or use it for marketing
+                    We won&apos;t share your email or use it for marketing
                   </p>
                 </div>
               </>

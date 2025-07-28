@@ -1,8 +1,8 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+}) : null;
 
 export interface ModerationResult {
   approved: boolean;
@@ -48,6 +48,15 @@ Review text: "${reviewText.replace(/"/g, '\\"')}"
 Rating: ${rating}/5 tennis balls`;
 
   try {
+    if (!openai) {
+      console.error(`❌ [MODERATION] OpenAI API key not configured`);
+      return {
+        approved: false,
+        reason: 'Moderation system not configured - manual review required',
+        confidence: 0.0
+      };
+    }
+
     console.log(`🤖 [MODERATION] Calling OpenAI API...`);
     const startTime = Date.now();
     const response = await openai.chat.completions.create({

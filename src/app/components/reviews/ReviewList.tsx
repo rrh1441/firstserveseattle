@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TennisBallRating from './TennisBallRating';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -28,7 +28,7 @@ export default function ReviewList({ facilitySlug, refreshTrigger }: ReviewListP
     total: 0
   });
 
-  const fetchReviews = async (page = 1, append = false) => {
+  const fetchReviews = useCallback(async (page = 1, append = false) => {
     try {
       if (page === 1) setLoading(true);
       else setLoadingMore(true);
@@ -61,11 +61,11 @@ export default function ReviewList({ facilitySlug, refreshTrigger }: ReviewListP
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [facilitySlug]);
 
   useEffect(() => {
     fetchReviews(1, false);
-  }, [facilitySlug, refreshTrigger]);
+  }, [facilitySlug, refreshTrigger, fetchReviews]);
 
   const loadMore = () => {
     if (pagination.hasNext && !loadingMore) {

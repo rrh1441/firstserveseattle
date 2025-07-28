@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Star, Plus } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import TennisBallRating from './TennisBallRating';
 import ReviewForm from './ReviewForm';
 import ReviewList from './ReviewList';
@@ -35,7 +35,7 @@ export default function ReviewSection({
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoadingStats(true);
       const response = await fetch(`/api/reviews/stats/${facilitySlug}`);
@@ -48,11 +48,11 @@ export default function ReviewSection({
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [facilitySlug]);
 
   useEffect(() => {
     fetchStats();
-  }, [facilitySlug, refreshTrigger]);
+  }, [facilitySlug, refreshTrigger, fetchStats]);
 
   const handleReviewSubmitted = () => {
     setRefreshTrigger(prev => prev + 1);
