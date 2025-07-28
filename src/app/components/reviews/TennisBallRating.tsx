@@ -40,6 +40,7 @@ export default function TennisBallRating({
         return (
           <button
             key={index}
+            type="button"
             onClick={() => handleClick(ballNumber)}
             disabled={!interactive}
             className={cn(

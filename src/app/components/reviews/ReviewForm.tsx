@@ -23,7 +23,6 @@ export default function ReviewForm({
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [reviewerName, setReviewerName] = useState('');
-  const [reviewerEmail, setReviewerEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +51,6 @@ export default function ReviewForm({
           rating,
           review_text: reviewText.trim() || null,
           reviewer_name: !userId ? reviewerName.trim() : null,
-          reviewer_email: !userId ? reviewerEmail.trim() || null : null,
           user_id: userId || null,
         }),
       });
@@ -142,51 +140,27 @@ export default function ReviewForm({
               </div>
             </div>
 
-            {/* Anonymous user fields */}
+            {/* Name field for anonymous users */}
             {!userId && (
-              <>
-                <div>
-                  <label 
-                    htmlFor="reviewer-name" 
-                    className="block text-sm font-semibold text-slate-900 mb-2"
-                  >
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="reviewer-name"
-                    type="text"
-                    value={reviewerName}
-                    onChange={(e) => setReviewerName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:border-transparent"
-                    maxLength={100}
-                    required={!userId}
-                    disabled={isSubmitting}
-                  />
-                </div>
-
-                <div>
-                  <label 
-                    htmlFor="reviewer-email" 
-                    className="block text-sm font-semibold text-slate-900 mb-2"
-                  >
-                    Email (optional)
-                  </label>
-                  <input
-                    id="reviewer-email"
-                    type="email"
-                    value={reviewerEmail}
-                    onChange={(e) => setReviewerEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:border-transparent"
-                    maxLength={255}
-                    disabled={isSubmitting}
-                  />
-                  <p className="text-sm text-slate-500 mt-1">
-                    We won&apos;t share your email or use it for marketing
-                  </p>
-                </div>
-              </>
+              <div>
+                <label 
+                  htmlFor="reviewer-name" 
+                  className="block text-sm font-semibold text-slate-900 mb-2"
+                >
+                  Your Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="reviewer-name"
+                  type="text"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:border-transparent"
+                  maxLength={100}
+                  required={!userId}
+                  disabled={isSubmitting}
+                />
+              </div>
             )}
 
             {/* Submit Button */}

@@ -12,11 +12,13 @@ export interface ModerationResult {
 
 export async function moderateReview(
   reviewText: string,
-  rating: number
+  rating: number,
+  reviewerName?: string | null
 ): Promise<ModerationResult> {
   console.log(`🔍 [MODERATION] Starting moderation for review:`, {
     textLength: reviewText.length,
     rating,
+    hasReviewerName: !!reviewerName,
     timestamp: new Date().toISOString()
   });
 
@@ -29,13 +31,14 @@ Analyze this review and respond with JSON only:
   "confidence": 0.0-1.0
 }
 
-REJECT if review contains:
-- Profanity, harassment, hate speech, offensive language
+REJECT if review OR reviewer name contains:
+- Profanity, harassment, hate speech, offensive language (including inappropriate usernames like "bigdick69")
 - Spam, promotional content, advertising, irrelevant content
 - Personal attacks on staff, other users, or individuals
 - False/misleading facility information or claims
 - Off-topic content not related to tennis facilities
 - Gibberish or nonsensical text
+- Inappropriate, sexual, or offensive usernames/names
 
 APPROVE if review:
 - Gives honest facility feedback (positive or negative opinions welcome)
@@ -45,6 +48,7 @@ APPROVE if review:
 - Contains constructive criticism or praise
 
 Review text: "${reviewText.replace(/"/g, '\\"')}"
+Reviewer name: "${reviewerName ? reviewerName.replace(/"/g, '\\"') : 'Anonymous'}"
 Rating: ${rating}/5 tennis balls`;
 
   try {

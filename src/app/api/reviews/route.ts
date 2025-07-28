@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { facility_slug, rating, review_text, reviewer_name, reviewer_email, user_id } = body;
+    const { facility_slug, rating, review_text, reviewer_name, user_id } = body;
 
     console.log(`📝 [REVIEW-${requestId}] Request data:`, {
       facility_slug,
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       textLength: review_text?.length || 0,
       hasReviewerName: !!reviewer_name,
       hasUserId: !!user_id,
-      hasEmail: !!reviewer_email
+      isAnonymous: !user_id
     });
 
     // Validation
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     if (review_text && review_text.trim()) {
       console.log(`🔍 [REVIEW-${requestId}] Starting moderation for text review`);
-      const moderationResult = await moderateReview(review_text, rating);
+      const moderationResult = await moderateReview(review_text, rating, reviewer_name);
       moderation_status = moderationResult.approved ? 'approved' : 'rejected';
       moderation_reason = moderationResult.reason;
       console.log(`✅ [REVIEW-${requestId}] Moderation complete:`, {
@@ -66,8 +66,18 @@ export async function POST(req: Request) {
         reason: moderation_reason,
         confidence: moderationResult.confidence
       });
+    } else if (reviewer_name && reviewer_name.trim()) {
+      console.log(`🔍 [REVIEW-${requestId}] Starting moderation for reviewer name only`);
+      const moderationResult = await moderateReview('No review text provided', rating, reviewer_name);
+      moderation_status = moderationResult.approved ? 'approved' : 'rejected';
+      moderation_reason = moderationResult.reason;
+      console.log(`✅ [REVIEW-${requestId}] Name moderation complete:`, {
+        status: moderation_status,
+        reason: moderation_reason,
+        confidence: moderationResult.confidence
+      });
     } else {
-      console.log(`ℹ️ [REVIEW-${requestId}] No text content, skipping moderation`);
+      console.log(`ℹ️ [REVIEW-${requestId}] No text content or name, skipping moderation`);
     }
 
     // Insert the review
@@ -80,7 +90,6 @@ export async function POST(req: Request) {
         rating,
         review_text: review_text || null,
         reviewer_name: reviewer_name || null,
-        reviewer_email: reviewer_email || null,
         moderation_status,
         moderation_reason,
       })
