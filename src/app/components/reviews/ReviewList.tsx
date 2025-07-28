@@ -109,11 +109,7 @@ export default function ReviewList({ facilitySlug, refreshTrigger }: ReviewListP
   }
 
   if (reviews.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-slate-600">No reviews yet. Be the first to review this facility!</p>
-      </div>
-    );
+    return null; // Parent component handles empty state display
   }
 
   return (

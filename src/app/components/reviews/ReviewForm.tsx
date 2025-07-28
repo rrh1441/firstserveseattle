@@ -25,6 +25,8 @@ export default function ReviewForm({
   const [reviewerName, setReviewerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log('ReviewForm - userId:', userId, 'showNameField:', !userId);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -33,7 +35,7 @@ export default function ReviewForm({
       return;
     }
 
-    if (!userId && !reviewerName.trim()) {
+    if (!reviewerName.trim()) {
       toast.error('Please enter your name');
       return;
     }
@@ -50,7 +52,7 @@ export default function ReviewForm({
           facility_slug: facilitySlug,
           rating,
           review_text: reviewText.trim() || null,
-          reviewer_name: !userId ? reviewerName.trim() : null,
+          reviewer_name: reviewerName.trim(),
           user_id: userId || null,
         }),
       });
@@ -141,7 +143,7 @@ export default function ReviewForm({
             </div>
 
             {/* Name field for anonymous users */}
-            {!userId && (
+            {true && (
               <div>
                 <label 
                   htmlFor="reviewer-name" 
@@ -157,7 +159,7 @@ export default function ReviewForm({
                   placeholder="Enter your name"
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:border-transparent"
                   maxLength={100}
-                  required={!userId}
+                  required={true}
                   disabled={isSubmitting}
                 />
               </div>
