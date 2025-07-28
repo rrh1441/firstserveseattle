@@ -4,7 +4,11 @@ import { FacilityPage as FacilityPageType } from '@/lib/markdown';
 import { MapPin, ExternalLink, ArrowLeft, Users, MapIcon } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import InteractiveCTA from './InteractiveCTA';
+import ReviewSection from '@/components/reviews/ReviewSection';
+import TennisBallRating from '@/components/reviews/TennisBallRating';
 
 interface FacilityPageProps {
   facility: FacilityPageType;
@@ -27,6 +31,45 @@ const BALL_MACHINE_FACILITIES = [
 
 export default function FacilityPage({ facility }: FacilityPageProps) {
   const { data, htmlContent } = facility;
+  const [userId, setUserId] = useState<string | null>(null);
+  const [reviewStats, setReviewStats] = useState<{
+    average_rating: number;
+    total_reviews: number;
+  } | null>(null);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
+    };
+    
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUserId(session?.user?.id || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
+
+  useEffect(() => {
+    const fetchReviewStats = async () => {
+      try {
+        const response = await fetch(`/api/reviews/stats/${data.slug}`);
+        if (response.ok) {
+          const stats = await response.json();
+          if (stats.total_reviews > 0) {
+            setReviewStats(stats);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching review stats:', error);
+      }
+    };
+
+    fetchReviewStats();
+  }, [data.slug]);
 
   const copyAddress = async () => {
     try {
@@ -122,6 +165,18 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
                     <MapIcon className="w-5 h-5 mr-3 text-white" />
                     <span className="text-lg text-white">{data.neighborhood}</span>
                   </div>
+                  {reviewStats && (
+                    <div className="flex items-center">
+                      <TennisBallRating 
+                        rating={Math.round(reviewStats.average_rating)} 
+                        size="sm" 
+                        className="mr-2"
+                      />
+                      <span className="text-lg text-white">
+                        {reviewStats.average_rating.toFixed(1)} ({reviewStats.total_reviews})
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -174,6 +229,15 @@ export default function FacilityPage({ facility }: FacilityPageProps) {
                 [&_h2+p_em]:hidden
                 [&_p:has(em:only-child)]:hidden"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
+            />
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12">
+            <ReviewSection 
+              facilitySlug={data.slug}
+              facilityName={data.facility_name}
+              userId={userId}
             />
           </div>
 
