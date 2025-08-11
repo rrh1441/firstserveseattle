@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "mail-missing-cards": "ts-node --transpile-only scripts/mailMissingCards.ts",
-    "monitor-accounts": "ts-node --transpile-only scripts/monitorAccounts.ts"
+    "monitor-accounts": "ts-node --transpile-only scripts/monitorAccounts.ts",
+    "analyze-courts": "ts-node --transpile-only scripts/analyzeBestTimes.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.70",
