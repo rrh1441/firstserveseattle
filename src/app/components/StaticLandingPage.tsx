@@ -10,7 +10,7 @@ const structuredData = {
       "@id": "https://www.firstserveseattle.com/#organization",
       "name": "First Serve Seattle",
       "url": "https://www.firstserveseattle.com",
-      "description": "Real-time list of every free Seattle tennis & pickleball court, updated daily by 5 AM. Try 3 free checks.",
+      "description": "Daily list of every free Seattle tennis & pickleball court, updated daily by 5 AM. Try 3 free checks.",
       "serviceArea": {
         "@type": "City",
         "name": "Seattle",
@@ -81,9 +81,22 @@ export default function StaticLandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="min-h-screen bg-white max-w-4xl mx-auto">
-      {/* Header */}
-      <header className="px-4 py-3 border-b border-gray-200">
+      <div className="min-h-screen bg-white">
+        {/* Seattle Ball Machine Banner */}
+        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-2 px-4 text-center">
+          <a 
+            href="https://seattleballmachine.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm md:text-base font-medium hover:underline"
+          >
+            🎾 Need a ball machine for practice? Check out Seattle Ball Machine →
+          </a>
+        </div>
+        
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <header className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
@@ -142,7 +155,7 @@ export default function StaticLandingPage() {
               <svg className="w-5 h-5 text-[#0c372b] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span className="text-gray-900">Real-time list of every unreserved slot across 100+ courts</span>
+              <span className="text-gray-900">Daily list of every unreserved slot across 100+ courts</span>
             </div>
             
             <div className="flex gap-3">
@@ -174,7 +187,7 @@ export default function StaticLandingPage() {
           <InteractiveCTA size="xl" />
           
           <p className="text-sm text-gray-600 text-center md:text-base">
-            Free trial includes 3 daily court checks • $4 first month, then $8/month • Cancel anytime
+            $4 first month, then $8/month • Cancel anytime
           </p>
         </section>
 
@@ -185,6 +198,7 @@ export default function StaticLandingPage() {
           </p>
         </footer>
       </main>
+        </div>
       </div>
     </>
   );

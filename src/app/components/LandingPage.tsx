@@ -29,9 +29,23 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
   }
 
   return (
-    <div className="min-h-screen bg-white max-w-4xl mx-auto">
-      {/* Header */}
-      <header className="px-4 py-3 border-b border-gray-200">
+    <div className="min-h-screen bg-white">
+      {/* Seattle Ball Machine Banner */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-2 px-4 text-center">
+        <a 
+          href="https://seattleballmachine.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm md:text-base font-medium hover:underline"
+          onClick={() => track('banner_seattle_ball_machine_clicked')}
+        >
+          🎾 Need a ball machine for practice? Check out Seattle Ball Machine →
+        </a>
+      </div>
+      
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <header className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
@@ -124,7 +138,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
               <svg className="w-5 h-5 text-[#0c372b] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span className="text-gray-900">Real-time list of every unreserved slot across 100+ courts</span>
+              <span className="text-gray-900">Daily list of every unreserved slot across 100+ courts</span>
             </div>
             
             <div className="flex gap-3">
@@ -161,7 +175,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
           </button>
           
           <p className="text-sm text-gray-600 text-center md:text-base">
-            Free trial includes 3 daily court checks • $4 first month, then $8/month • Cancel anytime
+            $4 first month, then $8/month • Cancel anytime
           </p>
         </div>
 
@@ -178,6 +192,7 @@ export default function LandingPage({ isLoading, onGetFreeViews }: LandingPagePr
           </p>
         </div>
       </main>
+      </div>
     </div>
   )
 }
