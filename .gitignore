@@ -43,3 +43,6 @@ next-env.d.ts
 
 # ignore ui dependencies
 ui/node_modules/
+
+# sensitive files
+fulltest.md
