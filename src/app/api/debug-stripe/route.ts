@@ -15,7 +15,7 @@ export async function GET() {
         PROMO_CODE_NEW: !!process.env.STRIPE_FIFTY_OFF_PROMO_NEW,
         RESEND_KEY: !!process.env.RESEND_API_KEY,
       },
-      activeAccount: process.env.USE_NEW_STRIPE_ACCOUNT === 'true' ? 'NEW' : 'OLD',
+      activeAccount: process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true' ? 'NEW' : 'OLD',
       timestamp: new Date().toISOString(),
     }
   });
