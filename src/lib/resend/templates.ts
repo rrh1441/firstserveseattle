@@ -36,15 +36,15 @@ export const emailTemplates = {
             <!-- Main Content -->
             <div style="padding: 32px;">
               <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                Thank you for subscribing! You now have instant access to real-time availability for tennis and pickleball courts across Seattle.
+                Thank you for subscribing! You now have access to court availability information for tennis courts across Seattle.
               </p>
               
               <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
-                <strong>What you can do now:</strong><br>
-                • Check which courts are free right now<br>
-                • See estimated wait times<br>
-                • Find courts near you<br>
-                • Avoid wasted trips to full courts
+                <strong>What you get:</strong><br>
+                • Daily updated court availability<br>
+                • Information on 100+ Seattle courts<br>
+                • Court details including lights, walls, and surfaces<br>
+                • Save time finding available courts
               </p>
               
               <div style="background-color: #f9fafb; border-radius: 12px; padding: 32px; margin-bottom: 32px; border: 1px solid #e5e7eb;">
@@ -52,17 +52,17 @@ export const emailTemplates = {
                   Your Account Details
                 </h3>
                 <div style="space-y: 12px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                    <span style="color: #6b7280; font-size: 15px;">Plan</span>
-                    <span style="color: #111827; font-size: 15px; font-weight: 600;">${plan === 'monthly' ? 'Monthly ($6.99/mo)' : 'Annual ($69.99/yr)'}</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 15px; margin-right: 20px;">Plan</span>
+                    <span style="color: #111827; font-size: 15px; font-weight: 600; text-align: right;">${plan === 'monthly' ? 'Monthly ($4 first month, then $8/mo)' : 'Annual ($69.99/yr)'}</span>
                   </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-                    <span style="color: #6b7280; font-size: 15px;">Email</span>
-                    <span style="color: #111827; font-size: 15px; font-weight: 600;">${email}</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="color: #6b7280; font-size: 15px; margin-right: 20px;">Email</span>
+                    <span style="color: #111827; font-size: 15px; font-weight: 600; text-align: right; word-break: break-all;">${email}</span>
                   </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                    <span style="color: #6b7280; font-size: 15px;">Status</span>
-                    <span style="color: #059669; font-size: 15px; font-weight: 600;">Active</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                    <span style="color: #6b7280; font-size: 15px; margin-right: 20px;">Status</span>
+                    <span style="color: #059669; font-size: 15px; font-weight: 600; text-align: right;">Active</span>
                   </div>
                 </div>
               </div>
@@ -80,18 +80,15 @@ export const emailTemplates = {
               </div>
             </div>
             
-            <!-- Tips Section -->
+            <!-- Quick Access Reminder -->
             <div style="padding: 32px; background-color: #fef3c7; border-top: 1px solid #fde68a;">
               <div style="text-align: left; max-width: 500px;">
                 <h4 style="color: #92400e; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">
-                  💡 Quick Tips
+                  💡 Quick Access
                 </h4>
-                <ul style="color: #92400e; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
-                  <li>Bookmark <a href="https://firstserveseattle.com/login" style="color: #92400e; text-decoration: underline;">firstserveseattle.com/login</a> for quick access</li>
-                  <li>Check courts early morning (6-8am) for best availability</li>
-                  <li>Weekday afternoons typically have more open courts</li>
-                  <li>You can cancel or change your plan anytime from the billing portal</li>
-                </ul>
+                <p style="color: #92400e; font-size: 14px; margin: 0; line-height: 1.6;">
+                  Bookmark <a href="https://firstserveseattle.com/login" style="color: #92400e; text-decoration: underline;">firstserveseattle.com/login</a> for quick access to court availability. You can manage or cancel your subscription anytime from the billing portal.
+                </p>
               </div>
             </div>
             
