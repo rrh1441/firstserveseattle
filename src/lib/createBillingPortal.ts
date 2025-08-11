@@ -6,7 +6,13 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Determine which Stripe account to use based on environment variable
+const useNewStripeAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
+const stripeKey = useNewStripeAccount 
+  ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY!)
+  : process.env.STRIPE_SECRET_KEY!;
+
+const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as Stripe.LatestApiVersion,
 });
 
