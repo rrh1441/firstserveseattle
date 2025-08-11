@@ -1,8 +1,8 @@
 // Stripe configuration with support for migration between accounts
 
 export const stripeConfig = {
-  // Feature flag to switch between accounts
-  useNewAccount: process.env.USE_NEW_STRIPE_ACCOUNT === 'true',
+  // Feature flag to switch between accounts (case-insensitive)
+  useNewAccount: process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true',
   
   // Old Stripe account (SimpleApps)
   old: {

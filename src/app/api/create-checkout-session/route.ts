@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 /* -------------------------------------------------------------------------- */
 // Support for gradual migration between Stripe accounts
 console.log('🚀 Checkout route initializing with USE_NEW_STRIPE_ACCOUNT:', process.env.USE_NEW_STRIPE_ACCOUNT);
-const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
+const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
 const STRIPE_SECRET_KEY = useNewAccount
   ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY || '')
   : (process.env.STRIPE_SECRET_KEY || '') as string;

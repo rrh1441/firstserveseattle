@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'; // disables edge caching for this route
 // ──────────────────────────────────────────────────────────────────────────
 // Support for both old and new Stripe accounts during migration
 console.log('🌐 Webhook (OLD endpoint) - USE_NEW_STRIPE_ACCOUNT:', process.env.USE_NEW_STRIPE_ACCOUNT);
-const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
+const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
 const stripeKey = useNewAccount 
   ? process.env.STRIPE_SECRET_KEY_NEW! 
   : process.env.STRIPE_SECRET_KEY!;

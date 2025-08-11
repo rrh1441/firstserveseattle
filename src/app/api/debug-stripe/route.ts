@@ -5,6 +5,7 @@ export async function GET() {
     environment: {
       USE_NEW_STRIPE_ACCOUNT: process.env.USE_NEW_STRIPE_ACCOUNT,
       isTrue: process.env.USE_NEW_STRIPE_ACCOUNT === 'true',
+      isTrueLowercase: process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true',
       hasNewKeys: {
         SECRET_KEY_NEW: !!process.env.STRIPE_SECRET_KEY_NEW,
         PUBLISHABLE_KEY_NEW: !!process.env.STRIPE_PUBLISHABLE_KEY_NEW,
