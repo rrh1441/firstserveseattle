@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'; // disables edge caching for this route
 //  1. Library / client setup
 // ──────────────────────────────────────────────────────────────────────────
 // Support for both old and new Stripe accounts during migration
+console.log('🌐 Webhook (OLD endpoint) - USE_NEW_STRIPE_ACCOUNT:', process.env.USE_NEW_STRIPE_ACCOUNT);
 const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
 const stripeKey = useNewAccount 
   ? process.env.STRIPE_SECRET_KEY_NEW! 
@@ -137,7 +138,8 @@ function planFromPrice(priceId: string): string {
 //  3. Route handler
 // ──────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  console.log('🔔 Webhook received!');
+  console.log('🔔 Webhook received on OLD endpoint!');
+  console.log('Using account:', useNewAccount ? 'NEW' : 'OLD');
   
   /* 3-a  Verify webhook signature */
   const rawBody = Buffer.from(await req.arrayBuffer());

@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 /*  ENV & constants                                                           */
 /* -------------------------------------------------------------------------- */
 // Support for gradual migration between Stripe accounts
+console.log('🚀 Checkout route initializing with USE_NEW_STRIPE_ACCOUNT:', process.env.USE_NEW_STRIPE_ACCOUNT);
 const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
 const STRIPE_SECRET_KEY = useNewAccount
   ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY || '')
@@ -45,6 +46,17 @@ export async function POST(request: Request) {
     const stripe = new Stripe(STRIPE_SECRET_KEY);
     const cookieStore = await cookies();
 
+    // Debug: Log which account is being used
+    console.log('🔍 STRIPE ACCOUNT DEBUG:', {
+      USE_NEW_STRIPE_ACCOUNT: process.env.USE_NEW_STRIPE_ACCOUNT,
+      useNewAccount,
+      STRIPE_SECRET_KEY: STRIPE_SECRET_KEY?.substring(0, 20) + '...',
+      MONTHLY_ID,
+      ANNUAL_ID,
+      NEW_KEY_EXISTS: !!process.env.STRIPE_SECRET_KEY_NEW,
+      NEW_PRICE_EXISTS: !!process.env.STRIPE_MONTHLY_PRICE_ID_NEW
+    });
+    
     // Check if this is the 50% off first month offer
     const isDiscountOffer = offerId === 'fifty_percent_off_first_month';
     console.log('API received:', { email, plan, offerId, isDiscountOffer });
@@ -83,6 +95,12 @@ export async function POST(request: Request) {
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
+    
+    console.log('✅ Checkout session created:', {
+      sessionId: session.id,
+      usingNewAccount: useNewAccount,
+      priceId
+    });
 
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
