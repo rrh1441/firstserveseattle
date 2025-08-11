@@ -156,12 +156,28 @@ export async function POST(req: NextRequest) {
         const session  = event.data.object as Stripe.Checkout.Session;
         const custId   = session.customer as string;
         const subId    = session.subscription as string;
+        
+        // Skip if this is not a subscription checkout (could be one-time payment)
+        if (!subId) {
+          console.log('Skipping non-subscription checkout');
+          return NextResponse.json({ received: true });
+        }
+        
         const customer = (await stripe.customers.retrieve(
           custId,
         )) as Stripe.Customer;
 
         // Get the actual subscription to get details
         const subscription = await stripe.subscriptions.retrieve(subId);
+        
+        // Check if this is actually a First Serve Seattle subscription
+        const priceId = subscription.items.data[0]?.price.id ?? '';
+        const validPriceIds = [MONTHLY_ID, ANNUAL_ID];
+        
+        if (!validPriceIds.includes(priceId)) {
+          console.log(`Skipping non-FSS subscription with price ID: ${priceId}`);
+          return NextResponse.json({ received: true });
+        }
 
         const customerEmail = customer.email ?? session.customer_details?.email ?? '';
         const plan = planFromPrice(subscription.items.data[0]?.price.id ?? '');
@@ -188,6 +204,16 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const sub      = event.data.object as Stripe.Subscription;
         const custId   = sub.customer as string;
+        
+        // Check if this is a First Serve Seattle subscription
+        const priceId = sub.items.data[0]?.price.id ?? '';
+        const validPriceIds = [MONTHLY_ID, ANNUAL_ID];
+        
+        if (!validPriceIds.includes(priceId)) {
+          console.log(`Skipping non-FSS subscription update with price ID: ${priceId}`);
+          return NextResponse.json({ received: true });
+        }
+        
         const customer = (await stripe.customers.retrieve(
           custId,
         )) as Stripe.Customer;
@@ -207,6 +233,15 @@ export async function POST(req: NextRequest) {
       // ──────────────── subscription *deleted* ──────────────
       case 'customer.subscription.deleted': {
         const sub    = event.data.object as Stripe.Subscription;
+        
+        // Check if this is a First Serve Seattle subscription
+        const priceId = sub.items?.data[0]?.price.id ?? '';
+        const validPriceIds = [MONTHLY_ID, ANNUAL_ID];
+        
+        if (!validPriceIds.includes(priceId)) {
+          console.log(`Skipping non-FSS subscription deletion with price ID: ${priceId}`);
+          return NextResponse.json({ received: true });
+        }
         const custId = sub.customer as string;
         
         // Get customer email for cancellation notification
