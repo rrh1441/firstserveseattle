@@ -79,7 +79,7 @@ export async function createBillingPortal(
       });
       console.log('[BILLING PORTAL] SUCCESS with OLD account');
     }
-  } catch (err: any) {
+  } catch (err) {
     // If customer not found in primary account, try the other one
     console.log('Customer not found in primary Stripe account, trying alternate...');
     
@@ -99,7 +99,7 @@ export async function createBillingPortal(
       } else {
         throw err; // Re-throw if we can't try alternate
       }
-    } catch (finalErr) {
+    } catch {
       console.error('Customer not found in either Stripe account');
       throw new Error('Customer not found in payment system');
     }

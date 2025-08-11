@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     try {
       oldAccountSub = await stripeOld.subscriptions.retrieve(subscriber.stripe_subscription_id);
       oldAccountCustomer = await stripeOld.customers.retrieve(oldAccountSub.customer as string);
-    } catch (e) {
+    } catch {
       console.log('Subscription not in OLD account');
     }
 
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
       try {
         newAccountSub = await stripeNew.subscriptions.retrieve(subscriber.stripe_subscription_id);
         newAccountCustomer = await stripeNew.customers.retrieve(newAccountSub.customer as string);
-      } catch (e) {
+      } catch {
         console.log('Subscription not in NEW account');
       }
     }
