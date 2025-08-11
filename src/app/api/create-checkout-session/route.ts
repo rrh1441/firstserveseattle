@@ -5,13 +5,21 @@ import { cookies } from "next/headers";
 /* -------------------------------------------------------------------------- */
 /*  ENV & constants                                                           */
 /* -------------------------------------------------------------------------- */
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY as string;
+// Support for gradual migration between Stripe accounts
+const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
+const STRIPE_SECRET_KEY = useNewAccount
+  ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY)
+  : process.env.STRIPE_SECRET_KEY as string;
 
 const SUCCESS_URL = "https://firstserveseattle.com/checkout-success";
 const CANCEL_URL  = "https://firstserveseattle.com/";
 
-const MONTHLY_ID = "price_1Qbm96KSaqiJUYkj7SWySbjU";
-const ANNUAL_ID  = "price_1QowMRKSaqiJUYkjgeqLADm4";
+const MONTHLY_ID = useNewAccount
+  ? (process.env.STRIPE_MONTHLY_PRICE_ID_NEW || "price_1Qbm96KSaqiJUYkj7SWySbjU")
+  : "price_1Qbm96KSaqiJUYkj7SWySbjU";
+const ANNUAL_ID = useNewAccount
+  ? (process.env.STRIPE_ANNUAL_PRICE_ID_NEW || "price_1QowMRKSaqiJUYkjgeqLADm4")
+  : "price_1QowMRKSaqiJUYkjgeqLADm4";
 
 /* -------------------------------------------------------------------------- */
 /*  POST handler – returns { url }                                            */
@@ -60,9 +68,12 @@ export async function POST(request: Request) {
 
     // Apply 50% discount for first month if applicable (monthly plans only)
     if (isDiscountOffer && selectedPlan === 'monthly') {
+      const promoCode = useNewAccount
+        ? (process.env.STRIPE_FIFTY_OFF_PROMO_NEW || 'promo_1R8o3pKSaqiJUYkjLMJ3UX4z')
+        : 'promo_1R8o3pKSaqiJUYkjLMJ3UX4z';
       sessionConfig.discounts = [
         {
-          promotion_code: 'promo_1R8o3pKSaqiJUYkjLMJ3UX4z',
+          promotion_code: promoCode,
         }
       ];
       sessionConfig.metadata!.discount_applied = "FIRST50";
