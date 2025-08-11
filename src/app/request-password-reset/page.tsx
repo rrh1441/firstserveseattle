@@ -29,6 +29,7 @@ export default function RequestPasswordResetPage() {
     setLoading(false);
 
     if (resetError) {
+      console.error('Password reset error:', resetError);
       if (resetError.message.includes("Unable to validate email address")) {
         setError("Please enter a valid email address.");
       } else if (
