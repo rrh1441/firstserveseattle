@@ -303,7 +303,7 @@ export const emailTemplates = {
     `
   }),
 
-  subscriptionCancelled: (email: string) => ({
+  subscriptionCancelled: () => ({
     subject: 'Subscription Cancelled - First Serve Seattle',
     html: `
       <!DOCTYPE html>

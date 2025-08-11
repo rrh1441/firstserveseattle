@@ -100,7 +100,7 @@ export class EmailService {
     }
 
     try {
-      const template = emailTemplates.subscriptionCancelled(email)
+      const template = emailTemplates.subscriptionCancelled()
       
       const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,

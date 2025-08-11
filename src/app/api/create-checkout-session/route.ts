@@ -8,8 +8,8 @@ import { cookies } from "next/headers";
 // Support for gradual migration between Stripe accounts
 const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT === 'true';
 const STRIPE_SECRET_KEY = useNewAccount
-  ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY)
-  : process.env.STRIPE_SECRET_KEY as string;
+  ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY || '')
+  : (process.env.STRIPE_SECRET_KEY || '') as string;
 
 const SUCCESS_URL = "https://firstserveseattle.com/checkout-success";
 const CANCEL_URL  = "https://firstserveseattle.com/";

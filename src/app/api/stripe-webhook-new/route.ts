@@ -14,7 +14,9 @@ export const dynamic = 'force-dynamic'; // disables edge caching for this route
 // ──────────────────────────────────────────────────────────────────────────
 //  1. Library / client setup - NEW ACCOUNT
 // ──────────────────────────────────────────────────────────────────────────
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY_NEW!, {
+// Use fallback to old key if new key not configured yet
+const stripeKey = process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY || '';
+const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as Stripe.LatestApiVersion,
 });
 
@@ -23,9 +25,9 @@ const supa = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-// NEW account price IDs
-const MONTHLY_ID = process.env.STRIPE_MONTHLY_PRICE_ID_NEW!;
-const ANNUAL_ID  = process.env.STRIPE_ANNUAL_PRICE_ID_NEW!;
+// NEW account price IDs (fallback to old if not configured)
+const MONTHLY_ID = process.env.STRIPE_MONTHLY_PRICE_ID_NEW || 'price_1Qbm96KSaqiJUYkj7SWySbjU';
+const ANNUAL_ID  = process.env.STRIPE_ANNUAL_PRICE_ID_NEW || 'price_1QowMRKSaqiJUYkjgeqLADm4';
 
 // ──────────────────────────────────────────────────────────────────────────
 //  2. Helper utilities
@@ -134,10 +136,11 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event;
   try {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_NEW || process.env.STRIPE_WEBHOOK_SECRET || '';
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET_NEW!,
+      webhookSecret,
     );
     console.log('✅ [NEW ACCOUNT] Webhook signature verified. Event type:', event.type);
   } catch (err) {
