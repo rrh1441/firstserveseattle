@@ -81,13 +81,13 @@ export async function GET(req: NextRequest) {
         hasSubscription: !!oldAccountSub,
         subscriptionStatus: oldAccountSub?.status,
         customerId: oldAccountCustomer?.id,
-        customerEmail: oldAccountCustomer?.email
+        customerEmail: (oldAccountCustomer && 'email' in oldAccountCustomer) ? oldAccountCustomer.email : null
       },
       newAccount: {
         hasSubscription: !!newAccountSub,
         subscriptionStatus: newAccountSub?.status,
         customerId: newAccountCustomer?.id,
-        customerEmail: newAccountCustomer?.email
+        customerEmail: (newAccountCustomer && 'email' in newAccountCustomer) ? newAccountCustomer.email : null
       }
     }
   });
