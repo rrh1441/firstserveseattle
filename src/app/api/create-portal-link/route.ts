@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Determine which Stripe account to use based on environment variable
-const useNewStripeAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
-const stripeKey = useNewStripeAccount 
-  ? (process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY!)
-  : process.env.STRIPE_SECRET_KEY!;
-
-// Use the API version required by the installed Stripe library
-const stripe = new Stripe(stripeKey, {
-  apiVersion: '2025-02-24.acacia', // <<<< ENSURE THIS VERSION IS SAVED
+// Initialize both Stripe accounts to handle migrations
+const stripeOld = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-02-24.acacia',
 });
+
+const stripeNew = process.env.STRIPE_SECRET_KEY_NEW
+  ? new Stripe(process.env.STRIPE_SECRET_KEY_NEW, {
+      apiVersion: '2025-02-24.acacia',
+    })
+  : null;
 
 // Ensure Supabase Admin client uses appropriate keys from environment variables
 const supabaseAdmin = createClient(
@@ -58,21 +58,45 @@ export async function POST(req: NextRequest) {
     const subscriptionId = subscriberData.stripe_subscription_id;
     console.log(`Create Portal Link: Found subscription ID ${subscriptionId} for user ${user.email}`);
 
-    // Fetch the subscription from Stripe to get the customer ID
+    // Try to fetch the subscription from both Stripe accounts
     let customerId: string | null = null;
+    let stripeToUse: Stripe = stripeOld;
+    
+    // First try the old account
     try {
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        // Handle case where subscription might exist but has no customer attached (unlikely but possible)
+        console.log(`Trying OLD Stripe account for subscription ${subscriptionId}`);
+        const subscription = await stripeOld.subscriptions.retrieve(subscriptionId);
         if (!subscription.customer) {
-            console.error(`Create Portal Link Error: No customer ID attached to subscription ${subscriptionId}`);
             throw new Error("No customer ID attached to subscription.");
         }
-        customerId = subscription.customer as string; // Assuming customer is always a string ID here
-        console.log(`Create Portal Link: Retrieved customer ID ${customerId} from subscription ${subscriptionId}`);
-    } catch (stripeError) {
-        console.error(`Create Portal Link Error: Failed to retrieve subscription ${subscriptionId} from Stripe:`, stripeError);
-        // Handle cases like subscription not found in Stripe, network errors etc.
-        return NextResponse.json({ error: "Could not retrieve subscription details from payment provider." }, { status: 500 });
+        customerId = subscription.customer as string;
+        stripeToUse = stripeOld;
+        console.log(`Found in OLD account: customer ${customerId}`);
+    } catch (oldError) {
+        console.log(`Subscription not found in OLD account, trying NEW...`);
+        
+        // Try the new account if available
+        if (stripeNew) {
+            try {
+                const subscription = await stripeNew.subscriptions.retrieve(subscriptionId);
+                if (!subscription.customer) {
+                    throw new Error("No customer ID attached to subscription.");
+                }
+                customerId = subscription.customer as string;
+                stripeToUse = stripeNew;
+                console.log(`Found in NEW account: customer ${customerId}`);
+            } catch (newError) {
+                console.error(`Subscription ${subscriptionId} not found in either Stripe account`);
+                return NextResponse.json({ 
+                    error: "Could not find subscription in payment system. Please contact support." 
+                }, { status: 404 });
+            }
+        } else {
+            console.error(`Subscription ${subscriptionId} not found and no NEW account configured`);
+            return NextResponse.json({ 
+                error: "Could not retrieve subscription details from payment provider." 
+            }, { status: 500 });
+        }
     }
     // --- End of Customer ID Logic ---
 
@@ -85,11 +109,11 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`Create Portal Link: Creating portal session for customer ID: ${customerId}`);
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await stripeToUse.billingPortal.sessions.create({
       customer: customerId,
-      return_url: "https://firstserveseattle.com/members", // Ensure this URL matches your site and Stripe settings
+      return_url: "https://firstserveseattle.com/members",
     });
-    console.log(`Create Portal Link: Portal session created successfully for customer ID: ${customerId}`);
+    console.log(`Create Portal Link: Portal session created successfully for customer ID: ${customerId} using ${stripeToUse === stripeNew ? 'NEW' : 'OLD'} account`);
 
     // 4. Return the portal URL to the client
     return NextResponse.json({ url: portalSession.url });
