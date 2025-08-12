@@ -93,10 +93,10 @@ export async function POST(req: NextRequest) {
             try {
                 const customer = await stripeNew.customers.retrieve(customerId);
                 console.log(`✅ PORTAL: Confirmed customer exists in NEW account: ${customer.email}`);
-            } catch (custErr) {
+            } catch {
                 console.error(`⚠️ PORTAL: Customer ${customerId} NOT found in NEW account, but subscription exists!`);
             }
-        } catch (newErr) {
+        } catch {
             console.log(`❌ PORTAL: Subscription ${subscriptionId} NOT found in NEW account`);
             console.log(`🔄 PORTAL: Falling back to OLD account...`);
             
