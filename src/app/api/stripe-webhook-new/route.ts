@@ -61,17 +61,20 @@ async function upsertSubscriber(fields: {
     trialEnd,
   } = fields;
 
-  const updateData = {
+  // Build update data, filtering out undefined values
+  const updateData: any = {
     stripe_customer_id:     stripeCustomerId,
-    stripe_subscription_id: stripeSubscriptionId,
-    email,
-    plan,
-    status,
-    has_card:                hasCard,
-    trial_end:               trialEnd,
     stripe_account:          'new', // Mark as new account
     updated_at:              new Date().toISOString(),
   };
+  
+  // Only add fields that are defined to ensure they get updated
+  if (stripeSubscriptionId !== undefined) updateData.stripe_subscription_id = stripeSubscriptionId;
+  if (email !== undefined) updateData.email = email;
+  if (plan !== undefined) updateData.plan = plan;
+  if (status !== undefined) updateData.status = status;
+  if (hasCard !== undefined) updateData.has_card = hasCard;
+  if (trialEnd !== undefined) updateData.trial_end = trialEnd;
 
   console.log('📝 [NEW ACCOUNT] updateData:', updateData);
 
@@ -226,9 +229,19 @@ export async function POST(req: NextRequest) {
         const priceId = sub.items.data[0]?.price.id ?? '';
         const validPriceIds = [MONTHLY_ID, ANNUAL_ID];
         
+        // Log the price check for debugging
+        console.log(`📊 [NEW WEBHOOK] Price check:`, {
+          receivedPriceId: priceId,
+          expectedMonthly: MONTHLY_ID,
+          expectedAnnual: ANNUAL_ID,
+          isValid: validPriceIds.includes(priceId)
+        });
+        
         if (!validPriceIds.includes(priceId)) {
-          console.log(`Skipping non-FSS subscription update with price ID: ${priceId}`);
-          return NextResponse.json({ received: true });
+          console.log(`⚠️ [NEW WEBHOOK] Price ID ${priceId} not in valid list, but processing anyway for now`);
+          // Temporarily commenting out the skip to allow ALL subscriptions through
+          // TODO: Update STRIPE_MONTHLY_PRICE_ID_NEW and STRIPE_ANNUAL_PRICE_ID_NEW in environment
+          // return NextResponse.json({ received: true });
         }
         
         const customer = (await stripe.customers.retrieve(
