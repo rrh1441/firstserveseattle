@@ -65,19 +65,40 @@ export async function POST(req: NextRequest) {
     // Check if we should prioritize the NEW account
     const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
     
+    // Add detailed logging
+    console.log(`🔍 Portal Debug:`, {
+        USE_NEW_STRIPE_ACCOUNT: process.env.USE_NEW_STRIPE_ACCOUNT,
+        useNewAccount,
+        hasNewStripe: !!stripeNew,
+        subscriptionId,
+        userEmail: user.email
+    });
+    
     // Try NEW account first if configured and enabled
     if (useNewAccount && stripeNew) {
+        console.log(`🎯 PORTAL: USE_NEW_STRIPE_ACCOUNT is TRUE, checking NEW account FIRST`);
         try {
-            console.log(`Trying NEW Stripe account for subscription ${subscriptionId}`);
+            console.log(`🔍 PORTAL: Attempting to retrieve subscription ${subscriptionId} from NEW Stripe account`);
             const subscription = await stripeNew.subscriptions.retrieve(subscriptionId);
             if (!subscription.customer) {
                 throw new Error("No customer ID attached to subscription.");
             }
             customerId = subscription.customer as string;
             stripeToUse = stripeNew;
-            console.log(`Found in NEW account: customer ${customerId}`);
-        } catch {
-            console.log(`Subscription not found in NEW account, trying OLD...`);
+            console.log(`✅ PORTAL: Found subscription in NEW account!`);
+            console.log(`✅ PORTAL: Customer ID: ${customerId}`);
+            console.log(`✅ PORTAL: Will use NEW Stripe instance for portal creation`);
+            
+            // Double-check the customer exists in NEW account
+            try {
+                const customer = await stripeNew.customers.retrieve(customerId);
+                console.log(`✅ PORTAL: Confirmed customer exists in NEW account: ${customer.email}`);
+            } catch (custErr) {
+                console.error(`⚠️ PORTAL: Customer ${customerId} NOT found in NEW account, but subscription exists!`);
+            }
+        } catch (newErr) {
+            console.log(`❌ PORTAL: Subscription ${subscriptionId} NOT found in NEW account`);
+            console.log(`🔄 PORTAL: Falling back to OLD account...`);
             
             // Fall back to OLD account
             try {
@@ -87,9 +108,11 @@ export async function POST(req: NextRequest) {
                 }
                 customerId = subscription.customer as string;
                 stripeToUse = stripeOld;
-                console.log(`Found in OLD account: customer ${customerId}`);
+                console.log(`⚠️ PORTAL: Found subscription in OLD account (fallback)`);
+                console.log(`⚠️ PORTAL: Customer ID: ${customerId}`);
+                console.log(`⚠️ PORTAL: Will use OLD Stripe instance for portal creation`);
             } catch {
-                console.error(`Subscription ${subscriptionId} not found in either Stripe account`);
+                console.error(`💀 PORTAL: Subscription ${subscriptionId} not found in either Stripe account`);
                 return NextResponse.json({ 
                     error: "Could not find subscription in payment system. Please contact support." 
                 }, { status: 404 });
@@ -142,13 +165,56 @@ export async function POST(req: NextRequest) {
          console.error(`Create Portal Link Error: Customer ID is null or undefined before creating portal session for user ${user.email}`);
          return NextResponse.json({ error: "Could not determine customer details." }, { status: 500 });
     }
+    
+    // CRITICAL: Check if this customer ID exists in BOTH accounts
+    console.log(`🔍 PORTAL: Checking if customer ${customerId} exists in both accounts...`);
+    let existsInOld = false;
+    let existsInNew = false;
+    
+    try {
+        await stripeOld.customers.retrieve(customerId);
+        existsInOld = true;
+        console.log(`⚠️ PORTAL: Customer ${customerId} EXISTS in OLD account (Simple Apps)`);
+    } catch {
+        console.log(`✅ PORTAL: Customer ${customerId} does NOT exist in OLD account`);
+    }
+    
+    if (stripeNew) {
+        try {
+            await stripeNew.customers.retrieve(customerId);
+            existsInNew = true;
+            console.log(`✅ PORTAL: Customer ${customerId} EXISTS in NEW account (First Serve Seattle)`);
+        } catch {
+            console.log(`❌ PORTAL: Customer ${customerId} does NOT exist in NEW account`);
+        }
+    }
+    
+    if (existsInOld && existsInNew) {
+        console.log(`🚨 PORTAL: CRITICAL - Customer ${customerId} exists in BOTH accounts!`);
+        console.log(`🚨 PORTAL: This can cause portal branding issues!`);
+        console.log(`🚨 PORTAL: We will use: ${stripeToUse === stripeNew ? 'NEW account' : 'OLD account'}`);
+    }
 
-    console.log(`Create Portal Link: Creating portal session for customer ID: ${customerId}`);
+    console.log(`🚀 PORTAL: Creating portal session...`);
+    console.log(`🚀 PORTAL: Customer ID: ${customerId}`);
+    console.log(`🚀 PORTAL: Using Stripe instance: ${stripeToUse === stripeNew ? '✅ NEW ACCOUNT (First Serve Seattle)' : '⚠️ OLD ACCOUNT (Simple Apps)'}`);
+    console.log(`🚀 PORTAL: Stripe instance check:`, {
+        isNewInstance: stripeToUse === stripeNew,
+        isOldInstance: stripeToUse === stripeOld,
+        hasNewStripe: !!stripeNew,
+        newKeyPrefix: process.env.STRIPE_SECRET_KEY_NEW?.substring(0, 20),
+        oldKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 20)
+    });
+    
     const portalSession = await stripeToUse.billingPortal.sessions.create({
       customer: customerId,
       return_url: "https://firstserveseattle.com/members",
     });
-    console.log(`Create Portal Link: Portal session created successfully for customer ID: ${customerId} using ${stripeToUse === stripeNew ? 'NEW' : 'OLD'} account`);
+    
+    console.log(`✅ PORTAL: Portal session created successfully!`);
+    console.log(`✅ PORTAL: Session ID: ${portalSession.id}`);
+    console.log(`✅ PORTAL: Portal URL: ${portalSession.url}`);
+    console.log(`✅ PORTAL: Account used: ${stripeToUse === stripeNew ? 'NEW (First Serve Seattle)' : 'OLD (Simple Apps)'}`);
 
     // 4. Return the portal URL to the client
     return NextResponse.json({ url: portalSession.url });
