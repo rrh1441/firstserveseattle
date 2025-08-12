@@ -1,65 +1,95 @@
-# Next Steps - Email Template Update
+# NEXTSTEPS - Fix Stripe Portal Issues
 
-## Current Status
-The First Serve Seattle subscription service now has dual Stripe account support with automated emails via Resend. The welcome email template needs a final update to remove the tips section that was based on incorrect assumptions about the data.
+## Problem Summary
+1. The Customer Portal is showing "Simple Apps, LLC" (OLD Stripe account) instead of First Serve Seattle account
+2. No cancel subscription option is showing even though it's configured
+3. New subscriptions may be going to the wrong Stripe account
 
-## Required Change
-Remove the "Quick Tips" section from the welcome email since we don't have hourly court availability data to provide accurate tips about best times to find courts.
+## Root Cause Analysis
+The subscription lookup is finding the customer in the OLD account but there's no active subscription there. This suggests:
+- The customer exists in BOTH Stripe accounts
+- The subscription is in the NEW account but the portal is opening for the OLD account customer
 
-## File to Update
-`/Users/ryanheger/firstserveseattle/src/lib/resend/templates.ts`
+## Required Fixes
 
-### Current Tips Section to Remove (lines ~97-111):
-```html
-<!-- Tips Section -->
-<div style="padding: 32px; background-color: #fef3c7; border-top: 1px solid #fde68a;">
-  <div style="text-align: left; max-width: 500px;">
-    <h4 style="color: #92400e; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">
-      💡 Quick Tips
-    </h4>
-    <ul style="color: #92400e; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
-      <li>Bookmark <a href="https://firstserveseattle.com/login" style="color: #92400e; text-decoration: underline;">firstserveseattle.com/login</a> for quick access</li>
-      <li>Check courts early morning (6-8am) for best availability</li>
-      <li>Weekday afternoons typically have more open courts</li>
-      <li>You can cancel or change your plan anytime from the billing portal</li>
-    </ul>
-  </div>
-</div>
+### 1. Verify Environment Variables in Vercel
+Go to Vercel Dashboard → Settings → Environment Variables and confirm:
+```
+USE_NEW_STRIPE_ACCOUNT=TRUE (not true, not True - must be uppercase TRUE)
+STRIPE_SECRET_KEY_NEW=[your new account secret key]
+STRIPE_PUBLISHABLE_KEY_NEW=[your new account publishable key]
+STRIPE_WEBHOOK_SECRET_NEW=[your new webhook secret]
+STRIPE_MONTHLY_PRICE_ID_NEW=[monthly price from new account]
+STRIPE_ANNUAL_PRICE_ID_NEW=[annual price from new account]
 ```
 
-### Replace With Simpler Section:
-```html
-<!-- Quick Access Reminder -->
-<div style="padding: 32px; background-color: #fef3c7; border-top: 1px solid #fde68a;">
-  <div style="text-align: left; max-width: 500px;">
-    <h4 style="color: #92400e; font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">
-      💡 Quick Access
-    </h4>
-    <p style="color: #92400e; font-size: 14px; margin: 0; line-height: 1.6;">
-      Bookmark <a href="https://firstserveseattle.com/login" style="color: #92400e; text-decoration: underline;">firstserveseattle.com/login</a> for quick access to court availability. You can manage or cancel your subscription anytime from the billing portal.
-    </p>
-  </div>
-</div>
+### 2. Update create-portal-link Logic
+The current logic tries to find the subscription but then creates a portal for whichever customer it finds. Instead, it should:
+1. Try to create portal with subscription's customer ID in NEW account first
+2. If that fails, try OLD account
+3. Don't rely on subscription lookup - use the customer ID directly from subscribers table
+
+### 3. Update Database Schema
+Add a flag to track which Stripe account each subscription belongs to:
+```sql
+ALTER TABLE subscribers 
+ADD COLUMN stripe_account VARCHAR(10) DEFAULT 'old';
+
+-- Update existing new account subscriptions
+UPDATE subscribers 
+SET stripe_account = 'new' 
+WHERE created_at > '2024-08-10' -- or whatever date you started using new account
 ```
 
-## Testing After Update
-1. Commit and push the change
-2. Wait for Vercel deployment
-3. Test a new signup with `USE_NEW_STRIPE_ACCOUNT=TRUE` 
-4. Verify welcome email arrives with:
-   - Correct First Serve Seattle branding
-   - Service description about real-time court availability
-   - Login link to `/login`
-   - Billing portal link to `/billing`
-   - NO specific tips about best times (since we don't have that data)
+### 4. Fix Portal Creation Logic
+In `/src/app/api/create-portal-link/route.ts`:
+- Don't lookup subscription first
+- Use stripe_customer_id directly
+- Try creating portal in NEW account first if stripe_account = 'new'
+- Fall back to OLD account if it fails
 
-## Current Environment Variables in Vercel
-- `USE_NEW_STRIPE_ACCOUNT=TRUE` (note: uppercase TRUE)
-- All new Stripe keys are configured
-- `RESEND_API_KEY` is configured
+### 5. Configure BOTH Stripe Accounts
+Ensure Customer Portal settings are identical in both accounts:
+1. Go to each Stripe account → Settings → Billing → Customer portal
+2. Enable "Cancel subscriptions" in BOTH
+3. Set the same return URL for both
+4. Save configuration
 
-## Important Context
-- The `tennis_courts_history` table stores court information snapshots but NOT real-time availability counts
-- The `available_dates` field shows when courts are open (e.g., "06:00:00-23:00:00") but not how many are free
-- We cannot provide data-driven tips about best times without proper availability tracking data
-- The system is set up to run both old and new Stripe accounts simultaneously for gradual migration
+### 6. Debug Which Account Has What
+Create a simple debug script to check:
+```javascript
+// Which account has the customer
+// Which account has the subscription  
+// Which portal configuration is being used
+```
+
+## Testing Steps
+1. Create a NEW test subscription with a fresh email
+2. Verify it goes to NEW Stripe account
+3. Test the portal - should show cancel option
+4. Check logs to see which account is being used
+
+## Key Issue
+The main problem is that customers exist in BOTH Stripe accounts (probably from old signups), but subscriptions only exist in one. The portal is opening for the wrong customer record.
+
+## Quick Fix Option
+If you need this working immediately:
+1. Manually create the portal session in Stripe Dashboard
+2. Go to NEW account → Customers → Find customer → Actions → Customer portal
+3. This will show you if the configuration is correct
+
+## Environment Variable Check
+Run this in Vercel Functions logs to verify:
+```javascript
+console.log({
+  USE_NEW: process.env.USE_NEW_STRIPE_ACCOUNT,
+  HAS_NEW_KEY: !!process.env.STRIPE_SECRET_KEY_NEW,
+  NEW_PRICE: process.env.STRIPE_MONTHLY_PRICE_ID_NEW
+})
+```
+
+## Next Session TODO
+1. Verify all environment variables are set correctly
+2. Check which Stripe account has your test subscription
+3. Ensure portal configuration is enabled in the RIGHT account
+4. Update the portal code to use the correct customer from the correct account

@@ -62,40 +62,75 @@ export async function POST(req: NextRequest) {
     let customerId: string | null = null;
     let stripeToUse: Stripe = stripeOld;
     
-    // First try the old account
-    try {
-        console.log(`Trying OLD Stripe account for subscription ${subscriptionId}`);
-        const subscription = await stripeOld.subscriptions.retrieve(subscriptionId);
-        if (!subscription.customer) {
-            throw new Error("No customer ID attached to subscription.");
-        }
-        customerId = subscription.customer as string;
-        stripeToUse = stripeOld;
-        console.log(`Found in OLD account: customer ${customerId}`);
-    } catch {
-        console.log(`Subscription not found in OLD account, trying NEW...`);
-        
-        // Try the new account if available
-        if (stripeNew) {
+    // Check if we should prioritize the NEW account
+    const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
+    
+    // Try NEW account first if configured and enabled
+    if (useNewAccount && stripeNew) {
+        try {
+            console.log(`Trying NEW Stripe account for subscription ${subscriptionId}`);
+            const subscription = await stripeNew.subscriptions.retrieve(subscriptionId);
+            if (!subscription.customer) {
+                throw new Error("No customer ID attached to subscription.");
+            }
+            customerId = subscription.customer as string;
+            stripeToUse = stripeNew;
+            console.log(`Found in NEW account: customer ${customerId}`);
+        } catch (newError) {
+            console.log(`Subscription not found in NEW account, trying OLD...`);
+            
+            // Fall back to OLD account
             try {
-                const subscription = await stripeNew.subscriptions.retrieve(subscriptionId);
+                const subscription = await stripeOld.subscriptions.retrieve(subscriptionId);
                 if (!subscription.customer) {
                     throw new Error("No customer ID attached to subscription.");
                 }
                 customerId = subscription.customer as string;
-                stripeToUse = stripeNew;
-                console.log(`Found in NEW account: customer ${customerId}`);
-            } catch {
+                stripeToUse = stripeOld;
+                console.log(`Found in OLD account: customer ${customerId}`);
+            } catch (oldError) {
                 console.error(`Subscription ${subscriptionId} not found in either Stripe account`);
                 return NextResponse.json({ 
                     error: "Could not find subscription in payment system. Please contact support." 
                 }, { status: 404 });
             }
-        } else {
-            console.error(`Subscription ${subscriptionId} not found and no NEW account configured`);
-            return NextResponse.json({ 
-                error: "Could not retrieve subscription details from payment provider." 
-            }, { status: 500 });
+        }
+    } else {
+        // Original logic: try OLD first, then NEW
+        try {
+            console.log(`Trying OLD Stripe account for subscription ${subscriptionId}`);
+            const subscription = await stripeOld.subscriptions.retrieve(subscriptionId);
+            if (!subscription.customer) {
+                throw new Error("No customer ID attached to subscription.");
+            }
+            customerId = subscription.customer as string;
+            stripeToUse = stripeOld;
+            console.log(`Found in OLD account: customer ${customerId}`);
+        } catch {
+            console.log(`Subscription not found in OLD account, trying NEW...`);
+            
+            // Try the new account if available
+            if (stripeNew) {
+                try {
+                    const subscription = await stripeNew.subscriptions.retrieve(subscriptionId);
+                    if (!subscription.customer) {
+                        throw new Error("No customer ID attached to subscription.");
+                    }
+                    customerId = subscription.customer as string;
+                    stripeToUse = stripeNew;
+                    console.log(`Found in NEW account: customer ${customerId}`);
+                } catch {
+                    console.error(`Subscription ${subscriptionId} not found in either Stripe account`);
+                    return NextResponse.json({ 
+                        error: "Could not find subscription in payment system. Please contact support." 
+                    }, { status: 404 });
+                }
+            } else {
+                console.error(`Subscription ${subscriptionId} not found and no NEW account configured`);
+                return NextResponse.json({ 
+                    error: "Could not retrieve subscription details from payment provider." 
+                }, { status: 500 });
+            }
         }
     }
     // --- End of Customer ID Logic ---
