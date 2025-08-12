@@ -182,6 +182,14 @@ export async function POST(req: NextRequest) {
         const customerEmail = customer.email ?? session.customer_details?.email ?? '';
         const plan = planFromPrice(subscription.items.data[0]?.price.id ?? '');
 
+        console.log(`🆕 [NEW WEBHOOK] Checkout completed - Creating subscription:`, {
+          subscriptionId: subId,
+          customerId: custId,
+          email: customerEmail,
+          plan: plan,
+          status: subscription.status
+        });
+
         await upsertSubscriber({
           stripeCustomerId: custId,
           stripeSubscriptionId: subId,
@@ -191,6 +199,8 @@ export async function POST(req: NextRequest) {
           hasCard: true,
           trialEnd: subscription.trial_end ?? null,
         });
+        
+        console.log(`✅ [NEW WEBHOOK] Subscription created in database`);
 
         // Send welcome email for new subscriptions
         if (customerEmail && (plan === 'monthly' || plan === 'annual')) {
@@ -205,6 +215,13 @@ export async function POST(req: NextRequest) {
         const sub      = event.data.object as Stripe.Subscription;
         const custId   = sub.customer as string;
         
+        console.log(`🔄 [NEW WEBHOOK] Subscription updated:`, {
+          subscriptionId: sub.id,
+          customerId: custId,
+          status: sub.status,
+          priceId: sub.items.data[0]?.price.id
+        });
+        
         // Check if this is a First Serve Seattle subscription
         const priceId = sub.items.data[0]?.price.id ?? '';
         const validPriceIds = [MONTHLY_ID, ANNUAL_ID];
@@ -218,6 +235,13 @@ export async function POST(req: NextRequest) {
           custId,
         )) as Stripe.Customer;
 
+        console.log(`📝 [NEW WEBHOOK] Upserting subscriber:`, {
+          email: customer.email,
+          subscriptionId: sub.id,
+          customerId: custId,
+          status: sub.status
+        });
+
         await upsertSubscriber({
           stripeCustomerId: custId,
           stripeSubscriptionId: sub.id,
@@ -227,6 +251,8 @@ export async function POST(req: NextRequest) {
           hasCard: cardOnFile(customer),
           trialEnd: sub.trial_end ?? null,
         });
+        
+        console.log(`✅ [NEW WEBHOOK] Subscriber updated successfully`);
         break;
       }
 
