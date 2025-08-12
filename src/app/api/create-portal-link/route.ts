@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         customerId = subscription.customer as string;
         stripeToUse = stripeOld;
         console.log(`Found in OLD account: customer ${customerId}`);
-    } catch (oldError) {
+    } catch {
         console.log(`Subscription not found in OLD account, trying NEW...`);
         
         // Try the new account if available
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
                 customerId = subscription.customer as string;
                 stripeToUse = stripeNew;
                 console.log(`Found in NEW account: customer ${customerId}`);
-            } catch (newError) {
+            } catch {
                 console.error(`Subscription ${subscriptionId} not found in either Stripe account`);
                 return NextResponse.json({ 
                     error: "Could not find subscription in payment system. Please contact support." 
