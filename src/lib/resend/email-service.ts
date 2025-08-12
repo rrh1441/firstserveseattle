@@ -1,7 +1,7 @@
 import { resend } from './client'
 import { emailTemplates } from './templates'
 
-const FROM_EMAIL = 'First Serve Seattle <noreply@firstserveseattle.com>'
+const FROM_EMAIL = 'First Serve Seattle <support@firstserveseattle.com>'
 
 export class EmailService {
   static async sendWelcomeEmail(email: string, plan: 'monthly' | 'annual') {
