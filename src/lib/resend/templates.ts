@@ -25,7 +25,7 @@ export const emailTemplates = {
                               First Serve Seattle
                             </h1>
                             <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px;">
-                              Real-time Tennis Court Availability
+                              Find Today's Open Courts
                             </p>
                           </td>
                         </tr>
@@ -160,10 +160,10 @@ export const emailTemplates = {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td>
-                            <h4 style="color: #92400e; font-size: 16px; font-weight: bold; margin: 0 0 12px 0;">
-                              💡 Quick Access
+                            <h4 style="color: #92400e; font-size: 18px; font-weight: bold; margin: 0 0 12px 0;">
+                              Quick Access
                             </h4>
-                            <p style="color: #92400e; font-size: 14px; margin: 0; line-height: 20px;">
+                            <p style="color: #92400e; font-size: 16px; margin: 0; line-height: 24px;">
                               Bookmark <a href="https://firstserveseattle.com/login" style="color: #92400e;">firstserveseattle.com/login</a> for quick access to court availability. You can manage or cancel your subscription anytime from the billing portal.
                             </p>
                           </td>
