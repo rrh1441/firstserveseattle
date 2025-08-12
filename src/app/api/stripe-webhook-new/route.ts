@@ -62,7 +62,19 @@ async function upsertSubscriber(fields: {
   } = fields;
 
   // Build update data, filtering out undefined values
-  const updateData: any = {
+  interface UpdateData {
+    stripe_customer_id: string;
+    stripe_account: string;
+    updated_at: string;
+    stripe_subscription_id?: string;
+    email?: string;
+    plan?: string;
+    status?: Stripe.Subscription.Status | 'expired';
+    has_card?: boolean;
+    trial_end?: number | null;
+  }
+  
+  const updateData: UpdateData = {
     stripe_customer_id:     stripeCustomerId,
     stripe_account:          'new', // Mark as new account
     updated_at:              new Date().toISOString(),
