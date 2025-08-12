@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             // Double-check the customer exists in NEW account
             try {
                 const customer = await stripeNew.customers.retrieve(customerId);
-                console.log(`✅ PORTAL: Confirmed customer exists in NEW account: ${customer.email}`);
+                console.log(`✅ PORTAL: Confirmed customer exists in NEW account: ${('email' in customer) ? customer.email : 'DELETED CUSTOMER'}`);
             } catch {
                 console.error(`⚠️ PORTAL: Customer ${customerId} NOT found in NEW account, but subscription exists!`);
             }
