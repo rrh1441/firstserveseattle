@@ -13,15 +13,11 @@ export const dynamic = 'force-dynamic'; // disables edge caching for this route
 // ──────────────────────────────────────────────────────────────────────────
 //  1. Library / client setup
 // ──────────────────────────────────────────────────────────────────────────
-// Support for both old and new Stripe accounts during migration
-console.log('🌐 Webhook (OLD endpoint) - USE_NEW_STRIPE_ACCOUNT:', process.env.USE_NEW_STRIPE_ACCOUNT);
-const useNewAccount = process.env.USE_NEW_STRIPE_ACCOUNT?.toLowerCase() === 'true';
-const stripeKey = useNewAccount 
-  ? process.env.STRIPE_SECRET_KEY_NEW! 
-  : process.env.STRIPE_SECRET_KEY!;
-const webhookSecret = useNewAccount
-  ? process.env.STRIPE_WEBHOOK_SECRET_NEW!
-  : process.env.STRIPE_WEBHOOK_SECRET!;
+// OLD webhook endpoint - ALWAYS use original Stripe account credentials
+// This endpoint is configured in the original Stripe account dashboard
+console.log('🌐 Webhook (OLD endpoint) - Using original Stripe account');
+const stripeKey = process.env.STRIPE_SECRET_KEY!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as Stripe.LatestApiVersion,
@@ -32,13 +28,9 @@ const supa = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-// Price IDs for both accounts
-const MONTHLY_ID = useNewAccount 
-  ? (process.env.STRIPE_MONTHLY_PRICE_ID_NEW || 'price_1Qbm96KSaqiJUYkj7SWySbjU')
-  : 'price_1Qbm96KSaqiJUYkj7SWySbjU';
-const ANNUAL_ID = useNewAccount
-  ? (process.env.STRIPE_ANNUAL_PRICE_ID_NEW || 'price_1QowMRKSaqiJUYkjgeqLADm4')
-  : 'price_1QowMRKSaqiJUYkjgeqLADm4';
+// Price IDs for original Stripe account
+const MONTHLY_ID = 'price_1Qbm96KSaqiJUYkj7SWySbjU';
+const ANNUAL_ID = 'price_1QowMRKSaqiJUYkjgeqLADm4';
 
 // ──────────────────────────────────────────────────────────────────────────
 //  2. Helper utilities
@@ -139,7 +131,7 @@ function planFromPrice(priceId: string): string {
 // ──────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   console.log('🔔 Webhook received on OLD endpoint!');
-  console.log('Using account:', useNewAccount ? 'NEW' : 'OLD');
+  console.log('Using original Stripe account for existing customers');
   
   /* 3-a  Verify webhook signature */
   const rawBody = Buffer.from(await req.arrayBuffer());
