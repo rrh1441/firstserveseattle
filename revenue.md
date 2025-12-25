@@ -177,34 +177,26 @@ Add to sitemap.xml:
 - Footer: Add "Pickleball Courts" link
 - Facility pages: Cross-link to /pickleball for courts with pickleball lines
 
-#### Link to Court Pages with Pickleball (23 courts)
+#### Link to Court Pages with Pickleball (15 facilities, 30+ courts)
 
-The /pickleball landing page should include a "Popular Pickleball Courts" section linking to individual facility pages:
+The /pickleball landing page should include a "Seattle Pickleball Courts" section linking to individual facility pages. These are the courts with `pickleball_lined: true` in the database:
 
 | Court | Slug | Neighborhood |
 |-------|------|--------------|
 | Alki Playfield | `/courts/alki_playfield_tennis` | West Seattle |
 | Beacon Hill Playfield | `/courts/beacon_hill_playfield_tennis` | Beacon Hill |
 | Bitter Lake Playfield | `/courts/bitter_lake_playfield_tennis` | Bitter Lake |
-| Brighton Playfield | `/courts/brighton_playfield_tennis` | Brighton |
-| Bryant Playground | `/courts/bryant_playground_tennis` | Bryant |
-| David Rodgers Park | `/courts/david_rodgers_park_tennis` | Capitol Hill |
+| Brighton Playfield | `/courts/brighton_playfield_tennis` | Rainier Valley |
+| Dearborn Park | `/courts/dearborn_park_tennis` | Beacon Hill |
 | Delridge Playfield | `/courts/delridge_playfield_tennis` | Delridge |
 | Discovery Park | `/courts/discovery_park_tennis` | Magnolia |
-| Froula Playground | `/courts/froula_playground_tennis` | North Seattle |
-| Gilman Playfield | `/courts/gilman_playfield_tennis` | Gilman |
-| Green Lake Park West | `/courts/green_lake_park_west_tennis` | Green Lake |
-| Lower Woodland (Upper) | `/courts/lower_woodland_playfield_upper_courts` | Woodland Park |
+| Gilman Playfield | `/courts/gilman_playfield_tennis` | Ballard |
 | Magnolia Playfield | `/courts/magnolia_playfield_tennis` | Magnolia |
 | Miller Playfield | `/courts/miller_playfield_tennis` | Capitol Hill |
-| Montlake Playfield | `/courts/montlake_playfield_tennis` | Montlake |
 | Mount Baker Park | `/courts/mount_baker_park_tennis` | Mount Baker |
-| Observatory Courts | `/courts/observatory_tennis` | Capitol Hill |
+| Observatory Courts | `/courts/observatory_tennis` | Queen Anne |
 | Rainier Beach Playfield | `/courts/rainier_beach_playfield_tennis` | Rainier Beach |
-| Rogers Playfield | `/courts/rogers_playfield_tennis` | Eastlake |
-| Solstice Park | `/courts/solstice_park` | West Seattle |
-| Soundview Playfield | `/courts/soundview_playfield` | Soundview |
-| Volunteer Park | `/courts/volunteer_park` | Capitol Hill |
+| Soundview Playfield | `/courts/soundview_playfield` | Crown Hill |
 | Walt Hundley Playfield | `/courts/walt_hundley_playfield` | West Seattle |
 
 **SEO Benefit:** These internal links:
