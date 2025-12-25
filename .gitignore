@@ -46,3 +46,4 @@ ui/node_modules/
 
 # sensitive files
 fulltest.md
+.env*.local
