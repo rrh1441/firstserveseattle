@@ -40,7 +40,10 @@ export class GmailClient {
     return this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
-      scope: ['https://www.googleapis.com/auth/gmail.send']
+      scope: [
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.readonly'
+      ]
     });
   }
 
@@ -126,6 +129,56 @@ export class GmailClient {
     });
 
     return response.data;
+  }
+
+  /**
+   * Search for bounce/failed delivery emails
+   */
+  async getBounces(maxResults = 50): Promise<Array<{
+    id: string;
+    date: string;
+    subject: string;
+    snippet: string;
+    failedRecipient?: string;
+  }>> {
+    // Search for common bounce email patterns
+    const query = 'from:(mailer-daemon OR postmaster) OR subject:(delivery failed OR undeliverable OR returned mail OR failure notice)';
+
+    const response = await this.gmail.users.messages.list({
+      userId: 'me',
+      q: query,
+      maxResults
+    });
+
+    const messages = response.data.messages || [];
+    const bounces = [];
+
+    for (const msg of messages) {
+      const detail = await this.gmail.users.messages.get({
+        userId: 'me',
+        id: msg.id!,
+        format: 'metadata',
+        metadataHeaders: ['Subject', 'Date', 'From']
+      });
+
+      const headers = detail.data.payload?.headers || [];
+      const subject = headers.find(h => h.name === 'Subject')?.value || '';
+      const date = headers.find(h => h.name === 'Date')?.value || '';
+      const snippet = detail.data.snippet || '';
+
+      // Try to extract failed recipient from snippet
+      const emailMatch = snippet.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+
+      bounces.push({
+        id: msg.id!,
+        date,
+        subject,
+        snippet,
+        failedRecipient: emailMatch?.[1]
+      });
+    }
+
+    return bounces;
   }
 }
 
