@@ -120,11 +120,9 @@ export default function LoginFormClient({
           )}
 
           {/* Social Auth Buttons */}
-          <div className="relative mb-6">
+          <div className="mb-6">
             {lastLogin === 'apple' && (
-              <div className="absolute -left-20 top-1/2 -translate-y-1/2 flex items-center text-sm text-gray-500">
-                Last login <span className="ml-1">→</span>
-              </div>
+              <p className="text-xs text-gray-500 mb-2 text-center">You last signed in with Apple</p>
             )}
             <SocialAuthButtons
               mode="login"
@@ -133,11 +131,9 @@ export default function LoginFormClient({
             />
           </div>
 
-          <form onSubmit={handleLogin} className="relative space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5">
             {lastLogin === 'email' && (
-              <div className="absolute -left-20 top-4 flex items-center text-sm text-gray-500">
-                Last login <span className="ml-1">→</span>
-              </div>
+              <p className="text-xs text-gray-500 -mt-1 mb-1 text-center">You last signed in with email</p>
             )}
             <div>
               <label
