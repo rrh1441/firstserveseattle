@@ -1,6 +1,13 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Service role client for updating subscribers table
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+)
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -32,6 +39,20 @@ export async function GET(request: NextRequest) {
         )
       }
 
+      // Store Apple provider ID if this is an Apple OAuth user
+      const appleIdentity = data.user.identities?.find(i => i.provider === 'apple')
+      if (appleIdentity?.id) {
+        console.log('🍎 Storing Apple provider ID:', appleIdentity.id)
+        // Update subscriber with Apple provider ID and user_id
+        await supabaseAdmin
+          .from('subscribers')
+          .update({
+            apple_provider_id: appleIdentity.id,
+            user_id: data.user.id,
+          })
+          .eq('email', userEmail)
+      }
+
       // If this is signup mode, we need to check if user has completed payment
       if (mode === 'signup' || redirectTo === '/signup') {
         console.log('🔄 Checking if Apple user needs to complete payment setup')
@@ -46,7 +67,7 @@ export async function GET(request: NextRequest) {
         if (!subscriber) {
           console.log('💳 Apple user needs payment setup, creating Stripe checkout with prefilled email')
           
-          // Create Stripe checkout session with prefilled email
+          // Create Stripe checkout session with prefilled email and user ID
           try {
             const checkoutResponse = await fetch(`${requestUrl.origin}/api/create-checkout-session`, {
               method: 'POST',
@@ -55,7 +76,8 @@ export async function GET(request: NextRequest) {
               },
               body: JSON.stringify({
                 email: data.user.email,
-                plan: 'monthly' // default to monthly
+                plan: 'monthly', // default to monthly
+                userId: data.user.id,
               })
             })
 

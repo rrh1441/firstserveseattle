@@ -42,10 +42,11 @@ function cardOnFile(cust: Stripe.Customer): boolean {
   );
 }
 
-/** Upsert row - update by email first, then by stripe_customer_id */
+/** Upsert row - update by user_id first, then email, then stripe_customer_id */
 async function upsertSubscriber(fields: {
   stripeCustomerId:     string;
   stripeSubscriptionId?:string;
+  userId?:              string;
   email?:               string;
   plan?:                string;
   status?:              Stripe.Subscription.Status | 'expired';
@@ -57,6 +58,7 @@ async function upsertSubscriber(fields: {
   const {
     stripeCustomerId,
     stripeSubscriptionId,
+    userId,
     email,
     plan,
     status,
@@ -64,27 +66,57 @@ async function upsertSubscriber(fields: {
     trialEnd,
   } = fields;
 
-  const updateData = {
+  const updateData: Record<string, unknown> = {
     stripe_customer_id:     stripeCustomerId,
     stripe_subscription_id: stripeSubscriptionId,
     email,
     plan,
     status,
-    has_card:                hasCard,
-    trial_end:               trialEnd,
-    updated_at:              new Date().toISOString(),
+    has_card:               hasCard,
+    trial_end:              trialEnd,
+    updated_at:             new Date().toISOString(),
   };
+
+  // Include user_id in update if provided
+  if (userId) {
+    updateData.user_id = userId;
+  }
 
   console.log('📝 updateData:', updateData);
 
-  // Try to update by email first (from signup)
+  // Try to update by user_id first (most reliable)
+  if (userId) {
+    console.log('🔍 Looking for existing record by user_id:', userId);
+    const { data: existingByUserId, error: userIdError } = await supa
+      .from('subscribers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingByUserId && !userIdError) {
+      console.log('✅ Found existing record, updating by user_id');
+      const { error: updateError } = await supa
+        .from('subscribers')
+        .update(updateData)
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('❌ Supabase update by user_id error:', updateError);
+      } else {
+        console.log('✅ Successfully updated by user_id');
+      }
+      return;
+    }
+  }
+
+  // Try to update by email second
   if (email) {
     console.log('🔍 Looking for existing record by email:', email);
     const { data: existingByEmail, error: emailError } = await supa
       .from('subscribers')
       .select('id')
       .eq('email', email)
-      .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 or multiple rows
+      .maybeSingle();
 
     console.log('📋 Email lookup result:', { existingByEmail, emailError });
 
@@ -94,7 +126,7 @@ async function upsertSubscriber(fields: {
         .from('subscribers')
         .update(updateData)
         .eq('email', email);
-      
+
       if (updateError) {
         console.error('❌ Supabase update by email error:', updateError);
       } else {
@@ -167,10 +199,12 @@ export async function POST(req: NextRequest) {
 
         const customerEmail = customer.email ?? session.customer_details?.email ?? '';
         const plan = planFromPrice(session.metadata?.plan ?? '');
+        const userId = session.metadata?.userId || session.client_reference_id || undefined;
 
         await upsertSubscriber({
           stripeCustomerId: custId,
           stripeSubscriptionId: subId,
+          userId:  userId,
           email:   customerEmail,
           plan:    plan,
           status:  'trialing',

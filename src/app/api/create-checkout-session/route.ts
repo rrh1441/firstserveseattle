@@ -27,10 +27,11 @@ const ANNUAL_ID = useNewAccount
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {
-    const { email, plan, offerId } = (await request.json()) as {
+    const { email, plan, offerId, userId } = (await request.json()) as {
       email?: string;
       plan?: string;
       offerId?: string;
+      userId?: string;
     };
 
     if (!email || !plan) {
@@ -70,9 +71,11 @@ export async function POST(request: Request) {
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       payment_method_collection: "always",
+      client_reference_id: userId ?? undefined,
       metadata: {
         plan: selectedPlan,
         offerId: offerId ?? "default",
+        userId: userId ?? null,
         visitorId: cookieStore.get("datafast_visitor_id")?.value ?? null,
         sessionId: cookieStore.get("datafast_session_id")?.value ?? null,
       },
