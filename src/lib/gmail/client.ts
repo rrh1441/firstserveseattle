@@ -4,8 +4,7 @@
  * Wrapper around Google Gmail API with OAuth token management.
  */
 
-import { google, gmail_v1 } from 'googleapis';
-import type { OAuth2Client } from 'google-auth-library';
+import { google, gmail_v1, Auth } from 'googleapis';
 
 export interface GmailConfig {
   clientId: string;
@@ -15,7 +14,7 @@ export interface GmailConfig {
 }
 
 export class GmailClient {
-  private oauth2Client: OAuth2Client;
+  private oauth2Client: Auth.OAuth2Client;
   private gmail: gmail_v1.Gmail;
 
   constructor(config: GmailConfig) {
