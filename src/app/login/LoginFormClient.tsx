@@ -122,7 +122,7 @@ export default function LoginFormClient({
           {/* Social Auth Buttons */}
           <div className="mb-6">
             {lastLogin === 'apple' && (
-              <p className="text-xs text-gray-500 mb-2 text-center">You last signed in with Apple</p>
+              <p className="text-sm font-semibold text-gray-600 mb-2 text-center">You last signed in with Apple <span className="inline-block">↓</span></p>
             )}
             <SocialAuthButtons
               mode="login"
@@ -133,7 +133,7 @@ export default function LoginFormClient({
 
           <form onSubmit={handleLogin} className="space-y-5">
             {lastLogin === 'email' && (
-              <p className="text-xs text-gray-500 -mt-1 mb-1 text-center">You last signed in with email</p>
+              <p className="text-sm font-semibold text-gray-600 mb-2 text-center">You last signed in with email <span className="inline-block">↓</span></p>
             )}
             <div>
               <label
