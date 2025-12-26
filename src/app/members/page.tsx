@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertTriangle, X } from 'lucide-react';
 
 import TennisCourtList from '../tennis-courts/components/TennisCourtList';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,10 @@ export default function MembersPage() {
   const [error,    setError]        = useState<string | null>(null);
   const [token,    setToken]        = useState<string | null>(null);
   const [loadingPortal, setLP]      = useState(false);
+  const [userEmail, setUserEmail]   = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const isPrivateRelay = userEmail?.endsWith('@privaterelay.appleid.com') ?? false;
 
   console.log('🏠 Members page component loaded');
 
@@ -53,6 +57,7 @@ export default function MembersPage() {
         }
         console.log('✅ Session found for:', session.user.email);
         setToken(session.access_token);
+        setUserEmail(session.user.email ?? null);
 
         console.log('🧪 Checking membership status...');
         const ok = await fetchMemberStatus(session.user.email);
@@ -111,6 +116,34 @@ export default function MembersPage() {
 
   return (
     <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8">
+      {/* Private relay warning banner */}
+      {isPrivateRelay && !bannerDismissed && (
+        <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-800">Your account uses Apple&apos;s private email</p>
+              <p className="mt-1 text-sm text-amber-700">
+                This can make it hard to log back in. Add a backup email in your Stripe billing settings so you can always access your account.
+              </p>
+              <button
+                onClick={manageSub}
+                className="mt-3 text-sm font-medium text-amber-800 underline hover:text-amber-900"
+              >
+                Update email in billing settings
+              </button>
+            </div>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="text-amber-600 hover:text-amber-800"
+              aria-label="Dismiss"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* header */}
       <header className="mb-8 flex flex-col items-center gap-4 md:flex-row md:justify-between">
         <div className="flex items-center gap-6">

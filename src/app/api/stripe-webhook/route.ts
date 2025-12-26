@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { EmailService } from '@/lib/resend/email-service';
+import { GmailEmailService as EmailService } from '@/lib/gmail/email-service';
 
 export const dynamic = 'force-dynamic'; // disables edge caching for this route
 
