@@ -22,7 +22,16 @@ export async function GET(request: NextRequest) {
 
     if (data.user) {
       console.log('✅ OAuth user authenticated:', data.user.email)
-      
+
+      // Block Apple's private relay emails - they break login for subscriptions
+      const userEmail = data.user.email || ''
+      if (userEmail.endsWith('@privaterelay.appleid.com')) {
+        console.log('❌ Private relay email detected, blocking signup:', userEmail)
+        return NextResponse.redirect(
+          new URL('/signup?error=private_email', requestUrl.origin)
+        )
+      }
+
       // If this is signup mode, we need to check if user has completed payment
       if (mode === 'signup' || redirectTo === '/signup') {
         console.log('🔄 Checking if Apple user needs to complete payment setup')

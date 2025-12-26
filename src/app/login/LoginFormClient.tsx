@@ -25,6 +25,13 @@ export default function LoginFormClient({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastLogin, setLastLogin] = useState<'apple' | 'email' | null>(null);
+
+  // Check last login method on this device
+  useEffect(() => {
+    const method = localStorage.getItem('last_login_method') as 'apple' | 'email' | null;
+    setLastLogin(method);
+  }, []);
 
   // Check for OAuth errors in URL
   useEffect(() => {
@@ -70,6 +77,7 @@ export default function LoginFormClient({
     }
 
     console.log('✅ Login successful, redirecting to:', redirectTo);
+    localStorage.setItem('last_login_method', 'email');
     router.push(redirectTo);
   };
 
@@ -112,15 +120,25 @@ export default function LoginFormClient({
           )}
 
           {/* Social Auth Buttons */}
-          <div className="mb-6">
-            <SocialAuthButtons 
-              mode="login" 
+          <div className="relative mb-6">
+            {lastLogin === 'apple' && (
+              <div className="absolute -left-20 top-1/2 -translate-y-1/2 flex items-center text-sm text-gray-500">
+                Last login <span className="ml-1">→</span>
+              </div>
+            )}
+            <SocialAuthButtons
+              mode="login"
               redirectTo={redirectTo}
               disabled={loading}
             />
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="relative space-y-5">
+            {lastLogin === 'email' && (
+              <div className="absolute -left-20 top-4 flex items-center text-sm text-gray-500">
+                Last login <span className="ml-1">→</span>
+              </div>
+            )}
             <div>
               <label
                 htmlFor="email"

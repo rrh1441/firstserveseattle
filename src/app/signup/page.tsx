@@ -38,6 +38,7 @@ export default function SignUpPage() {
   const prefilledEmail      = searchParams.get("email") || "";
   const isAppleUser         = searchParams.get("apple_user") === "true";
   const fromPaywall         = searchParams.get("from") === "paywall";
+  const errorParam          = searchParams.get("error");
   void headlineGroupParam;
 
   /* -------------------------------------------------------------------- */
@@ -299,6 +300,18 @@ export default function SignUpPage() {
       <div className="mx-auto max-w-lg">
         <div className="overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100">
           <div className="px-6 py-8 sm:px-10">
+            {errorParam === 'private_email' && (
+              <div className="text-center mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-lg font-medium text-red-900 mb-1">
+                  Please use &quot;Share My Email&quot; with Apple
+                </p>
+                <p className="text-sm text-red-700">
+                  &quot;Hide My Email&quot; is great for one-time purchases, but breaks logins for subscriptions.
+                  Please try again and select &quot;Share My Email&quot; when signing in with Apple.
+                </p>
+              </div>
+            )}
+
             {fromPaywall && (
               <div className="text-center mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-lg font-medium text-blue-900 mb-1">

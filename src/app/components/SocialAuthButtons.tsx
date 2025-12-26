@@ -17,6 +17,9 @@ export default function SocialAuthButtons({
 
   const handleAppleSignIn = async () => {
     console.log(`🍎 Apple sign-in initiated (${mode} mode)`);
+
+    // Remember they used Apple on this device
+    localStorage.setItem('last_login_method', 'apple');
     
     // For signup mode, redirect to signup page to complete Stripe checkout
     // For login mode, redirect to members page
@@ -36,6 +39,12 @@ export default function SocialAuthButtons({
 
   return (
     <div className="space-y-3">
+      {mode === 'signup' && (
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
+          <p className="font-medium mb-1">Important: Use &quot;Share My Email&quot;</p>
+          <p>&quot;Hide My Email&quot; is great for one-time purchases, but breaks logins for subscriptions. Please select &quot;Share My Email&quot; when signing in with Apple.</p>
+        </div>
+      )}
       <button
         onClick={handleAppleSignIn}
         disabled={disabled}
