@@ -8,10 +8,11 @@ import { useRandomUserId } from '../randomUserSetup';
 
 interface InteractiveCTAProps {
   size?: 'lg' | 'xl';
+  variant?: 'dark' | 'light';
   className?: string;
 }
 
-export default function InteractiveCTA({ size = 'lg', className = '' }: InteractiveCTAProps) {
+export default function InteractiveCTA({ size = 'lg', variant = 'dark', className = '' }: InteractiveCTAProps) {
   useRandomUserId();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -37,15 +38,19 @@ export default function InteractiveCTA({ size = 'lg', className = '' }: Interact
     router.push(isPaywalled ? '/signup?from=paywall' : '/courts');
   };
 
-  const sizeClasses = size === 'xl' 
-    ? 'text-xl font-semibold mb-3' 
+  const sizeClasses = size === 'xl'
+    ? 'text-xl font-semibold mb-3'
     : 'text-lg font-semibold';
+
+  const variantClasses = variant === 'light'
+    ? 'bg-white text-[#0c372b] hover:bg-gray-100 shadow-lg'
+    : 'bg-[#0c372b] text-white hover:bg-[#0a2e21]';
 
   return (
     <button
       onClick={handleGetFreeViews}
       disabled={isLoading}
-      className={`w-full md:w-auto md:px-8 bg-[#0c372b] text-white py-4 px-6 ${sizeClasses} rounded hover:bg-[#0a2e21] transition-colors disabled:opacity-50 ${className}`}
+      className={`w-full md:w-auto md:px-8 py-4 px-6 ${sizeClasses} rounded ${variantClasses} transition-colors disabled:opacity-50 ${className}`}
     >
       {isLoading ? (
         <div className="flex items-center justify-center gap-2">
