@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import InteractiveCTA from "./InteractiveCTA";
 import { AuthButtons, FooterSignInButton } from "./InteractiveAuth";
