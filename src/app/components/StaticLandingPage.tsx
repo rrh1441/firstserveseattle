@@ -118,105 +118,79 @@ export default function StaticLandingPage() {
 
       <main className="px-4 md:px-8">
         {/* Hero */}
-        <section className="pt-10 pb-8 text-center md:pt-16 md:pb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-6 md:text-5xl leading-tight max-w-2xl mx-auto">
-            Stop hunting for courts. Start playing.
+        <section className="py-16 text-center md:py-24">
+          <h1 className="text-5xl font-bold text-gray-900 mb-8 md:text-7xl leading-[1.1] tracking-tight">
+            Stop hunting for courts.<br />Start playing.
           </h1>
-          <p className="text-lg text-gray-600 max-w-xl mx-auto mb-2 md:text-xl">
-            Seattle&apos;s reservation system locks overnight, hiding which courts are first-come, first-served.
-          </p>
-          <p className="text-lg text-gray-900 max-w-xl mx-auto mb-8 md:text-xl">
-            We check availability before it locks, so you know which courts will actually be open.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 md:text-2xl leading-relaxed">
+            Seattle&apos;s reservation system locks overnight, hiding which courts are first-come, first-served. We check availability before it locks, so you know which courts will actually be open.
           </p>
 
           <InteractiveCTA />
-          <p className="text-sm text-gray-500 mt-3">No credit card required • 2,500+ Seattle players use this every month</p>
+          <p className="text-sm text-gray-500 mt-4">No credit card required • 2,500+ Seattle players use this every month</p>
         </section>
 
         {/* The Problem */}
-        <section className="py-10 border-t border-gray-100 md:py-14">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-1 md:text-3xl">The issue isn&apos;t court availability.</h2>
-            <p className="text-lg text-gray-500 mb-8 md:text-xl">It&apos;s what happens overnight.</p>
+        <section className="py-16 md:py-20">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 md:text-4xl">The issue isn&apos;t court availability.</h2>
+            <p className="text-xl text-gray-500 mb-10 md:text-2xl">It&apos;s what happens overnight.</p>
 
-            <div className="space-y-4">
-              <p className="text-gray-700 pl-4 border-l-2 border-gray-200">Once the reservation system locks, first-come courts are no longer visible</p>
-              <p className="text-gray-700 pl-4 border-l-2 border-gray-200">Players wake up without knowing which courts are truly open</p>
-              <p className="text-gray-700 pl-4 border-l-2 border-gray-200">The result: wasted time, unnecessary driving, and missed play</p>
+            <div className="space-y-5 text-lg md:text-xl text-gray-700">
+              <p>Once the reservation system locks, first-come courts are no longer visible.</p>
+              <p>Players wake up without knowing which courts are truly open.</p>
+              <p>The result: wasted time, unnecessary driving, and missed play.</p>
             </div>
           </div>
         </section>
 
-        {/* How We Help */}
-        <section className="py-10 border-t border-gray-100 md:py-14">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-8 md:text-3xl">How First Serve Seattle Helps</h2>
+        {/* The Solution */}
+        <section className="py-16 md:py-20">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 md:text-4xl">What you get</h2>
 
-            <div className="space-y-4">
-              <div className="flex gap-3 items-baseline">
-                <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="space-y-5 text-lg md:text-xl">
+              <div className="flex gap-4 items-start">
+                <svg className="w-6 h-6 text-[#0c372b] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="text-gray-700">We monitor 100+ Seattle tennis and pickleball courts</p>
+                <p className="text-gray-700">Every unreserved court across 100+ Seattle locations</p>
               </div>
-              <div className="flex gap-3 items-baseline">
-                <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex gap-4 items-start">
+                <svg className="w-6 h-6 text-[#0c372b] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="text-gray-700">We capture availability <strong>before</strong> the overnight lock</p>
+                <p className="text-gray-700">Updated daily before the overnight lock</p>
               </div>
-              <div className="flex gap-3 items-baseline">
-                <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex gap-4 items-start">
+                <svg className="w-6 h-6 text-[#0c372b] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="text-gray-700">You get a clear, same-day list of walk-up-ready courts</p>
+                <p className="text-gray-700">Filters for lighted courts, pickleball lines, practice walls, and ball machines</p>
               </div>
-            </div>
-
-            <p className="mt-6 text-sm text-gray-500">Updated daily. Simple. Reliable.</p>
-          </div>
-        </section>
-
-        {/* What You Get */}
-        <section className="py-10 border-t border-gray-100 md:py-14">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-8 md:text-3xl">What You Get</h2>
-
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex gap-3 items-baseline">
-              <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-gray-700">Every unreserved court across Seattle</p>
-            </div>
-            <div className="flex gap-3 items-baseline">
-              <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-gray-700">Updated daily by early morning</p>
-            </div>
-            <div className="flex gap-3 items-baseline">
-              <svg className="w-5 h-5 text-[#0c372b] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-gray-700">Filters for lighted courts, pickleball lines, practice walls, and ball-machine rentals</p>
             </div>
           </div>
         </section>
 
         {/* Testimonial */}
-        <section className="py-10 border-t border-gray-100 md:py-14">
-          <blockquote className="max-w-xl">
-            <p className="text-lg text-gray-700 mb-2">&quot;Used to waste 30 minutes driving between courts. Now I know exactly where to go.&quot;</p>
-            <cite className="text-sm text-gray-500 not-italic">— Mike R., Capitol Hill</cite>
+        <section className="py-20 md:py-28">
+          <blockquote className="max-w-3xl mx-auto text-center">
+            <p className="text-2xl text-gray-900 mb-6 md:text-3xl leading-relaxed font-medium">
+              &quot;Used to waste 30 minutes driving between courts. Now I know exactly where to go.&quot;
+            </p>
+            <cite className="text-base text-gray-500 not-italic md:text-lg">— Mike R., Capitol Hill</cite>
           </blockquote>
         </section>
 
         {/* CTA */}
-        <section className="py-10 border-t border-gray-100 md:py-14">
-          <InteractiveCTA size="xl" />
-          <p className="text-sm text-gray-500 mt-3">
-            $4 for your first month, then $8/month • Cancel anytime
-          </p>
+        <section className="py-16 md:py-20 bg-gray-50 -mx-4 md:-mx-8 px-4 md:px-8">
+          <div className="text-center max-w-xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 md:text-3xl">See which courts are open today</h2>
+            <InteractiveCTA size="xl" />
+            <p className="text-sm text-gray-500 mt-4">
+              $4 for your first month, then $8/month • Cancel anytime
+            </p>
+          </div>
         </section>
 
         {/* Footer */}
