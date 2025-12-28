@@ -56,8 +56,8 @@ export default function TestAPage() {
   useEffect(() => {
     getTennisCourts()
       .then((data) => {
-        // Take first 3 courts as subset for testing
-        setCourts(data.slice(0, 3));
+        // Sort alphabetically by title
+        setCourts(data.sort((a, b) => a.title.localeCompare(b.title)));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -87,12 +87,9 @@ export default function TestAPage() {
     <section className="mx-auto max-w-sm px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-          View A: Micro-Timeline
-        </p>
-        <h1 className="mt-1 text-xl font-bold text-gray-900">{today}</h1>
+        <h1 className="text-xl font-bold text-gray-900">{today}</h1>
         <p className="text-sm text-gray-600">
-          Showing {courts.length} courts
+          {courts.length} courts
         </p>
       </div>
 
