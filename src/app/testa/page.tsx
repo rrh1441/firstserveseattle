@@ -9,8 +9,10 @@ import { Star, MapPin } from "lucide-react";
 
 type AmenityKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
 
-// Compact time labels: 6a, 7, 8... 12p, 1, 2...
+// Compact time labels - 16 slots total (8 per row)
+// Row 1: 6a-1 (covers 6am-2pm), Row 2: 2-9 (covers 2pm-10pm)
 const TIME_SLOTS = [
+  // Morning row
   { time: "6:00 AM", label: "6a" },
   { time: "7:00 AM", label: "7" },
   { time: "8:00 AM", label: "8" },
@@ -19,6 +21,7 @@ const TIME_SLOTS = [
   { time: "11:00 AM", label: "11" },
   { time: "12:00 PM", label: "12p" },
   { time: "1:00 PM", label: "1" },
+  // Afternoon/Evening row
   { time: "2:00 PM", label: "2" },
   { time: "3:00 PM", label: "3" },
   { time: "4:00 PM", label: "4" },
@@ -27,7 +30,6 @@ const TIME_SLOTS = [
   { time: "7:00 PM", label: "7" },
   { time: "8:00 PM", label: "8" },
   { time: "9:00 PM", label: "9" },
-  { time: "10:00 PM", label: "10p" },
 ];
 
 const toMin = (t: string) => {
@@ -236,11 +238,11 @@ export default function TestAPage() {
                 </div>
               </div>
 
-              {/* Timeline - two rows */}
+              {/* Timeline - two rows of 8 */}
               <div className="px-2 py-2 space-y-1">
-                {/* Morning row: 6a - 12p */}
+                {/* Morning row: 6a - 1 */}
                 <div className="flex gap-px">
-                  {TIME_SLOTS.slice(0, 7).map((slot) => {
+                  {TIME_SLOTS.slice(0, 8).map((slot) => {
                     const available = isSlotAvailable(court, slot.time);
                     return (
                       <div
@@ -259,9 +261,9 @@ export default function TestAPage() {
                     );
                   })}
                 </div>
-                {/* Afternoon/Evening row: 1p - 10p */}
+                {/* Afternoon/Evening row: 2 - 9 */}
                 <div className="flex gap-px">
-                  {TIME_SLOTS.slice(7).map((slot) => {
+                  {TIME_SLOTS.slice(8).map((slot) => {
                     const available = isSlotAvailable(court, slot.time);
                     return (
                       <div
