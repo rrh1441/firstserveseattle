@@ -190,28 +190,33 @@ export default function TestAPage() {
               {/* Court Header */}
               <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">{court.title}</h3>
-                  {/* Amenity icons */}
-                  <div className="flex gap-2 mt-0.5">
-                    {court.lights && (
-                      <Image src="/icons/lighticon.png" alt="Lights" width={10} height={10} />
-                    )}
-                    {court.hitting_wall && (
-                      <Image src="/icons/wallicon.png" alt="Wall" width={10} height={10} />
-                    )}
-                    {court.pickleball_lined && (
-                      <Image src="/icons/pickleballicon.png" alt="Pickleball" width={10} height={10} />
-                    )}
-                    {court.ball_machine && (
-                      <Image src="/icons/ballmachine.png" alt="Ball Machine" width={10} height={10} />
-                    )}
-                  </div>
+                  <h3 className="font-medium text-sm leading-tight">
+                    {court.title.replace(/ - Court \d+$/, "")}
+                  </h3>
+                  {court.title.includes(" - Court") && (
+                    <p className="text-xs text-gray-500">
+                      Court {court.title.match(/Court (\d+)/)?.[1]}
+                    </p>
+                  )}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
+                  {/* Amenity icons */}
+                  {court.lights && (
+                    <Image src="/icons/lighticon.png" alt="Lights" width={16} height={16} className="opacity-70" />
+                  )}
+                  {court.hitting_wall && (
+                    <Image src="/icons/wallicon.png" alt="Wall" width={16} height={16} className="opacity-70" />
+                  )}
+                  {court.pickleball_lined && (
+                    <Image src="/icons/pickleballicon.png" alt="Pickleball" width={16} height={16} className="opacity-70" />
+                  )}
+                  {court.ball_machine && (
+                    <Image src="/icons/ballmachine.png" alt="Ball Machine" width={16} height={16} className="opacity-70" />
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-8 w-8 p-0 ml-1"
                     onClick={() => window.open(mapsUrl(court), "_blank")}
                   >
                     <MapPin size={16} className="text-gray-600" />
@@ -231,16 +236,38 @@ export default function TestAPage() {
                 </div>
               </div>
 
-              {/* Timeline - single row with all slots */}
-              <div className="px-2 py-2">
+              {/* Timeline - two rows */}
+              <div className="px-2 py-2 space-y-1">
+                {/* Morning row: 6a - 12p */}
                 <div className="flex gap-px">
-                  {TIME_SLOTS.map((slot) => {
+                  {TIME_SLOTS.slice(0, 7).map((slot) => {
                     const available = isSlotAvailable(court, slot.time);
                     return (
                       <div
                         key={slot.time}
                         className={`
-                          flex-1 h-7 flex items-center justify-center
+                          flex-1 h-6 flex items-center justify-center
+                          text-[10px] font-medium rounded-sm
+                          ${available
+                            ? "bg-emerald-500 text-white"
+                            : "bg-gray-200 text-gray-400"
+                          }
+                        `}
+                      >
+                        {slot.label}
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Afternoon/Evening row: 1p - 10p */}
+                <div className="flex gap-px">
+                  {TIME_SLOTS.slice(7).map((slot) => {
+                    const available = isSlotAvailable(court, slot.time);
+                    return (
+                      <div
+                        key={slot.time}
+                        className={`
+                          flex-1 h-6 flex items-center justify-center
                           text-[10px] font-medium rounded-sm
                           ${available
                             ? "bg-emerald-500 text-white"
@@ -260,10 +287,9 @@ export default function TestAPage() {
                 <div className="px-3 pb-2">
                   <Button
                     size="sm"
-                    className="w-full h-7 text-xs bg-blue-700 hover:bg-blue-800"
+                    className="w-full h-8 text-sm font-semibold bg-blue-700 hover:bg-blue-800 text-white"
                     onClick={() => window.open("https://seattleballmachine.com", "_blank")}
                   >
-                    <Image src="/icons/ballmachine.png" alt="" width={12} height={12} className="mr-1" />
                     Ball Machine Rental
                   </Button>
                 </div>
