@@ -1,16 +1,87 @@
 "use client";
 
-import { useState } from "react";
-import { mockCourtData } from "@/components/test/courtTestData";
+import { useState, useEffect } from "react";
+import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
+
+const TIME_SLOTS = [
+  { time: "6:00 AM", hour: 6 },
+  { time: "7:00 AM", hour: 7 },
+  { time: "8:00 AM", hour: 8 },
+  { time: "9:00 AM", hour: 9 },
+  { time: "10:00 AM", hour: 10 },
+  { time: "11:00 AM", hour: 11 },
+  { time: "12:00 PM", hour: 12 },
+  { time: "1:00 PM", hour: 13 },
+  { time: "2:00 PM", hour: 14 },
+  { time: "3:00 PM", hour: 15 },
+  { time: "4:00 PM", hour: 16 },
+  { time: "5:00 PM", hour: 17 },
+  { time: "6:00 PM", hour: 18 },
+  { time: "7:00 PM", hour: 19 },
+  { time: "8:00 PM", hour: 20 },
+  { time: "9:00 PM", hour: 21 },
+  { time: "10:00 PM", hour: 22 },
+];
+
+// Convert time string to minutes for comparison
+const toMin = (t: string) => {
+  const [clock, ap] = t.toUpperCase().split(" ");
+  const [h, m] = clock.split(":").map(Number);
+  return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
+};
+
+// Check if a slot is available for a court
+const isSlotAvailable = (court: TennisCourt, timeStr: string): boolean => {
+  const slotStart = toMin(timeStr);
+  const slotEnd = slotStart + 60; // 1 hour slot
+
+  return court.parsed_intervals.some(({ start, end }) => {
+    const intervalStart = toMin(start);
+    const intervalEnd = toMin(end);
+    // Slot is available if the interval covers the entire slot
+    return intervalStart <= slotStart && intervalEnd >= slotEnd;
+  });
+};
 
 export default function TestAPage() {
-  const [selectedHour, setSelectedHour] = useState<number | null>(null);
+  const [courts, setCourts] = useState<TennisCourt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSlot, setSelectedSlot] = useState<{
+    courtId: number;
+    hour: number;
+    time: string;
+    available: boolean;
+  } | null>(null);
 
-  // Split hours into morning (6 AM - 2 PM) and evening (3 PM - 10 PM)
-  const morningHours = mockCourtData.hours.filter((h) => h.hour >= 6 && h.hour <= 14);
-  const eveningHours = mockCourtData.hours.filter((h) => h.hour >= 15 && h.hour <= 22);
+  useEffect(() => {
+    getTennisCourts()
+      .then((data) => {
+        // Take first 3 courts as subset for testing
+        setCourts(data.slice(0, 3));
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const selectedSlot = mockCourtData.hours.find((h) => h.hour === selectedHour);
+  const morningSlots = TIME_SLOTS.filter((s) => s.hour >= 6 && s.hour <= 14);
+  const eveningSlots = TIME_SLOTS.filter((s) => s.hour >= 15 && s.hour <= 22);
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
+  });
+
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-sm px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-1/2" />
+          <div className="h-32 bg-gray-200 rounded" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto max-w-sm px-4 py-8">
@@ -19,80 +90,112 @@ export default function TestAPage() {
         <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
           View A: Micro-Timeline
         </p>
-        <h1 className="mt-1 text-xl font-bold text-gray-900">
-          {mockCourtData.courtName}
-        </h1>
-        <p className="text-sm text-gray-600">{mockCourtData.date}</p>
+        <h1 className="mt-1 text-xl font-bold text-gray-900">{today}</h1>
+        <p className="text-sm text-gray-600">
+          Showing {courts.length} courts
+        </p>
       </div>
 
-      {/* Timeline Container */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        {/* Morning Row */}
-        <div className="mb-4">
-          <div className="mb-1 flex justify-between text-xs text-gray-500">
-            <span>6 AM</span>
-            <span>2 PM</span>
-          </div>
-          <div className="flex gap-1">
-            {morningHours.map((slot) => (
-              <button
-                key={slot.hour}
-                onClick={() => setSelectedHour(slot.hour)}
-                className={`
-                  h-4 flex-1 rounded-sm transition-all
-                  ${slot.isAvailable ? "bg-emerald-500" : "bg-gray-200"}
-                  ${selectedHour === slot.hour ? "ring-2 ring-emerald-600 ring-offset-1" : ""}
-                `}
-                aria-label={`${slot.time} - ${slot.isAvailable ? "Available" : "Booked"}`}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Courts */}
+      <div className="space-y-4">
+        {courts.map((court) => (
+          <div
+            key={court.id}
+            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+          >
+            <h2 className="mb-3 text-sm font-semibold text-gray-900">
+              {court.title}
+            </h2>
 
-        {/* Evening Row */}
-        <div>
-          <div className="mb-1 flex justify-between text-xs text-gray-500">
-            <span>3 PM</span>
-            <span>10 PM</span>
-          </div>
-          <div className="flex gap-1">
-            {eveningHours.map((slot) => (
-              <button
-                key={slot.hour}
-                onClick={() => setSelectedHour(slot.hour)}
-                className={`
-                  h-4 flex-1 rounded-sm transition-all
-                  ${slot.isAvailable ? "bg-emerald-500" : "bg-gray-200"}
-                  ${selectedHour === slot.hour ? "ring-2 ring-emerald-600 ring-offset-1" : ""}
-                `}
-                aria-label={`${slot.time} - ${slot.isAvailable ? "Available" : "Booked"}`}
-              />
-            ))}
-          </div>
-        </div>
+            {/* Morning Row */}
+            <div className="mb-3">
+              <div className="mb-1 flex justify-between text-xs text-gray-500">
+                <span>6 AM</span>
+                <span>2 PM</span>
+              </div>
+              <div className="flex gap-0.5">
+                {morningSlots.map((slot) => {
+                  const available = isSlotAvailable(court, slot.time);
+                  const isSelected =
+                    selectedSlot?.courtId === court.id &&
+                    selectedSlot?.hour === slot.hour;
 
-        {/* Selected Time Display */}
-        {selectedSlot && (
-          <div className="mt-4 rounded-md bg-gray-50 p-3 text-center">
-            <p className="text-sm font-medium text-gray-900">
-              {selectedSlot.time}
-            </p>
-            <p
-              className={`text-xs font-semibold ${
-                selectedSlot.isAvailable ? "text-emerald-600" : "text-gray-500"
-              }`}
-            >
-              {selectedSlot.isAvailable ? "Available" : "Booked"}
-            </p>
-          </div>
-        )}
+                  return (
+                    <button
+                      key={slot.hour}
+                      onClick={() =>
+                        setSelectedSlot({
+                          courtId: court.id,
+                          hour: slot.hour,
+                          time: slot.time,
+                          available,
+                        })
+                      }
+                      className={`
+                        h-4 flex-1 rounded-sm transition-all
+                        ${available ? "bg-emerald-500" : "bg-gray-200"}
+                        ${isSelected ? "ring-2 ring-emerald-600 ring-offset-1" : ""}
+                      `}
+                      aria-label={`${slot.time} - ${available ? "Available" : "Booked"}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Tap hint */}
-        {!selectedSlot && (
-          <p className="mt-4 text-center text-xs text-gray-400">
-            Tap a slot to see details
-          </p>
-        )}
+            {/* Evening Row */}
+            <div>
+              <div className="mb-1 flex justify-between text-xs text-gray-500">
+                <span>3 PM</span>
+                <span>10 PM</span>
+              </div>
+              <div className="flex gap-0.5">
+                {eveningSlots.map((slot) => {
+                  const available = isSlotAvailable(court, slot.time);
+                  const isSelected =
+                    selectedSlot?.courtId === court.id &&
+                    selectedSlot?.hour === slot.hour;
+
+                  return (
+                    <button
+                      key={slot.hour}
+                      onClick={() =>
+                        setSelectedSlot({
+                          courtId: court.id,
+                          hour: slot.hour,
+                          time: slot.time,
+                          available,
+                        })
+                      }
+                      className={`
+                        h-4 flex-1 rounded-sm transition-all
+                        ${available ? "bg-emerald-500" : "bg-gray-200"}
+                        ${isSelected ? "ring-2 ring-emerald-600 ring-offset-1" : ""}
+                      `}
+                      aria-label={`${slot.time} - ${available ? "Available" : "Booked"}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected Time Display */}
+            {selectedSlot?.courtId === court.id && (
+              <div className="mt-3 rounded-md bg-gray-50 p-2 text-center">
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedSlot.time}
+                </p>
+                <p
+                  className={`text-xs font-semibold ${
+                    selectedSlot.available ? "text-emerald-600" : "text-gray-500"
+                  }`}
+                >
+                  {selectedSlot.available ? "Available" : "Booked"}
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Legend */}
