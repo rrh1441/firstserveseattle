@@ -60,12 +60,12 @@ const mapsUrl = (c: TennisCourt) =>
         c.address ?? c.title
       )}`;
 
-// Amenity config with Lucide icons
-const amenityConfig: Record<AmenityKey, { label: string; icon: React.ReactNode }> = {
-  lights: { label: "Lights", icon: <Sun size={14} /> },
-  hitting_wall: { label: "Wall", icon: <Target size={14} /> },
-  pickleball_lined: { label: "Pickleball", icon: <Circle size={14} /> },
-  ball_machine: { label: "Machine", icon: <Zap size={14} /> },
+// Amenity config with Lucide icons and colors
+const amenityConfig: Record<AmenityKey, { label: string; icon: React.ReactNode; color: string; activeColor: string }> = {
+  lights: { label: "Lights", icon: <Sun size={14} />, color: "text-amber-500", activeColor: "text-white" },
+  hitting_wall: { label: "Wall", icon: <Target size={14} />, color: "text-blue-500", activeColor: "text-white" },
+  pickleball_lined: { label: "Pickleball", icon: <Circle size={14} />, color: "text-green-500", activeColor: "text-white" },
+  ball_machine: { label: "Machine", icon: <Zap size={14} />, color: "text-purple-500", activeColor: "text-white" },
 };
 
 export default function TestAPage() {
@@ -160,8 +160,8 @@ export default function TestAPage() {
 
         {/* Amenity Filters */}
         <div className="flex flex-wrap gap-2">
-          {(Object.entries(amenityConfig) as [AmenityKey, { label: string; icon: React.ReactNode }][]).map(
-            ([k, { label, icon }]) => {
+          {(Object.entries(amenityConfig) as [AmenityKey, { label: string; icon: React.ReactNode; color: string; activeColor: string }][]).map(
+            ([k, { label, icon, color, activeColor }]) => {
               const active = amenities[k];
               return (
                 <button
@@ -176,7 +176,7 @@ export default function TestAPage() {
                   `}
                   onClick={() => setAmenities((f) => ({ ...f, [k]: !f[k] }))}
                 >
-                  {icon}
+                  <span className={active ? activeColor : color}>{icon}</span>
                   {label}
                 </button>
               );

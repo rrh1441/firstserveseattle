@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Script from 'next/script';
+import { GeistSans } from 'geist/font/sans';
 
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
@@ -41,7 +42,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`scroll-smooth ${GeistSans.className}`}>
       <head>
         {/* ---------------------------------------------------------------- */}
         {/*  HARD KILL: unregister any existing SW, then register a dummy one */}
