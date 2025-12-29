@@ -241,9 +241,20 @@ export default function TestAPage() {
                         </span>
                       )}
                       {court.ball_machine && (
-                        <span className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center" title="Ball Machine">
-                          <Zap size={14} className="text-purple-600" />
-                        </span>
+                        <>
+                          {/* Mobile: just icon */}
+                          <span className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center sm:hidden" title="Ball Machine">
+                            <Zap size={14} className="text-purple-600" />
+                          </span>
+                          {/* Desktop: button with text */}
+                          <button
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-semibold shadow-sm hover:shadow-md transition-shadow"
+                            onClick={() => window.open("https://seattleballmachine.com", "_blank")}
+                          >
+                            <Zap size={12} />
+                            Rent
+                          </button>
+                        </>
                       )}
                       <button
                         className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
@@ -310,9 +321,9 @@ export default function TestAPage() {
                     </div>
                   </div>
 
-                  {/* Ball Machine Link */}
+                  {/* Ball Machine Link - mobile only */}
                   {court.ball_machine && (
-                    <div className="px-3 pb-3">
+                    <div className="px-3 pb-3 sm:hidden">
                       <button
                         className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-200 hover:shadow-lg transition-shadow"
                         onClick={() => window.open("https://seattleballmachine.com", "_blank")}
