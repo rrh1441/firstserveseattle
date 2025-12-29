@@ -48,16 +48,15 @@ export default function LPTestPage() {
 
         <main className="px-4">
           {/* Hero */}
-          <section className="py-16 text-center md:py-20">
+          <section className="py-10 text-center md:py-14">
             <h1 className="text-4xl font-bold text-gray-900 mb-6 md:text-6xl leading-tight tracking-tight">
               Stop hunting for courts.
               <br />
               Start playing.
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8 md:text-xl leading-relaxed font-medium">
-              Seattle&apos;s reservation system locks overnight, hiding which
-              courts are first-come, first-served. We check availability before
-              it locks, so you know which courts will actually be open.
+              Seattle hides unreserved courts overnight. We capture availability
+              before it locks so you know where to play.
             </p>
 
             <InteractiveCTA />
@@ -68,54 +67,35 @@ export default function LPTestPage() {
           </section>
 
           {/* Savings Calculator */}
-          <section className="py-12 md:py-16">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-                Why pay for reservations?
-              </h2>
-              <p className="text-gray-600 mt-2 font-medium">
-                Use first-come, first-served courts and save
-              </p>
-            </div>
+          <section className="py-8 md:py-10">
             <SavingsCalculator />
           </section>
 
           {/* The Problem */}
-          <section className="py-12 md:py-16">
+          <section className="py-8 md:py-10">
             <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 md:text-3xl">
-                The issue isn&apos;t court availability.
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 md:text-3xl">
+                The problem isn&apos;t availability—it&apos;s visibility.
               </h2>
-              <p className="text-lg text-gray-500 mb-8 font-semibold">
-                It&apos;s what happens overnight.
+              <p className="text-gray-700 font-medium">
+                Once the reservation system locks overnight, unreserved courts
+                disappear from view. You&apos;re left guessing which courts are
+                actually open.
               </p>
-
-              <div className="space-y-4">
-                <p className="text-gray-700 font-medium">
-                  Once the reservation system locks, first-come courts are no
-                  longer visible.
-                </p>
-                <p className="text-gray-700 font-medium">
-                  Players wake up without knowing which courts are truly open.
-                </p>
-                <p className="text-gray-700 font-medium">
-                  The result: wasted time, unnecessary driving, and missed play.
-                </p>
-              </div>
             </div>
           </section>
 
           {/* The Solution */}
-          <section className="py-12 md:py-16">
+          <section className="py-8 md:py-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 md:text-3xl">
               What you get
             </h2>
 
             <div className="space-y-3">
               {[
-                "Every unreserved court across 100+ Seattle locations",
-                "Updated daily before the overnight lock",
-                "Filters for lighted courts, pickleball lines, practice walls, and ball machines",
+                "Unreserved courts across 100+ Seattle locations",
+                "Updated daily before the system locks",
+                "Filter by lights, pickleball lines & amenities",
               ].map((item, i) => (
                 <div
                   key={i}
@@ -143,7 +123,7 @@ export default function LPTestPage() {
           </section>
 
           {/* Testimonial */}
-          <section className="py-12 md:py-16">
+          <section className="py-8 md:py-10">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
               <p className="text-xl text-gray-900 mb-4 md:text-2xl leading-relaxed font-semibold">
                 &quot;Used to waste 30 minutes driving between courts. Now I
@@ -154,7 +134,7 @@ export default function LPTestPage() {
           </section>
 
           {/* CTA */}
-          <section className="py-12 md:py-16">
+          <section className="py-8 md:py-10">
             <div className="bg-emerald-600 rounded-2xl p-8 text-center shadow-lg">
               <h2 className="text-2xl font-bold text-white mb-6 md:text-3xl">
                 See which courts are open today
@@ -167,7 +147,7 @@ export default function LPTestPage() {
           </section>
 
           {/* Footer */}
-          <footer className="py-8 text-center">
+          <footer className="py-6 text-center">
             <p className="text-sm text-gray-600 font-medium">
               Have an account? <FooterSignInButton />
             </p>
