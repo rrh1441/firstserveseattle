@@ -81,18 +81,18 @@ export default function TestAPage() {
   });
 
   useEffect(() => {
-    getTennisCourts()
-      .then((data) => setCourts(data))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
+    // Load favorites from localStorage first (sync)
     try {
       const raw = localStorage.getItem("favoriteCourts");
       if (raw) setFav(JSON.parse(raw));
     } catch {
       /* ignore */
     }
+
+    // Then fetch courts
+    getTennisCourts()
+      .then((data) => setCourts(data))
+      .finally(() => setLoading(false));
   }, []);
 
   const toggleFav = (id: number) => {
@@ -144,7 +144,7 @@ export default function TestAPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b shadow-sm px-4 pb-3 pt-4">
+      <div className="sticky top-0 z-10 bg-white border-b shadow-sm px-4 pb-3 pt-4">
         <h1 className="text-xl font-bold text-gray-900 mb-3">{today}</h1>
 
         {/* Search */}
