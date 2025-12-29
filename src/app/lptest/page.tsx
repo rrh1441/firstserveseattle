@@ -73,11 +73,11 @@ export default function LPTestPage() {
           </section>
 
           {/* The Problem */}
-          <section className="py-8 md:py-10">
+          <section className="py-8 md:py-10 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4 md:text-3xl">
               The problem isn&apos;t availability—it&apos;s visibility.
             </h2>
-            <p className="text-gray-600 font-medium max-w-2xl">
+            <p className="text-gray-600 font-medium max-w-2xl mx-auto">
               Once the reservation system locks overnight, unreserved courts
               disappear from view. You&apos;re left guessing which courts are
               actually open.
@@ -85,12 +85,12 @@ export default function LPTestPage() {
           </section>
 
           {/* The Solution */}
-          <section className="py-8 md:py-10">
+          <section className="py-8 md:py-10 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 md:text-3xl">
               What you get
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-md mx-auto text-left">
               {[
                 "Unreserved courts across 100+ Seattle locations",
                 "Updated daily before the system locks",
@@ -117,13 +117,13 @@ export default function LPTestPage() {
           </section>
 
           {/* Testimonial */}
-          <section className="py-8 md:py-10">
-            <blockquote className="border-l-4 border-emerald-600 pl-6">
-              <p className="text-xl text-gray-900 mb-3 md:text-2xl leading-relaxed font-medium italic">
+          <section className="py-8 md:py-10 text-center">
+            <blockquote className="max-w-2xl mx-auto">
+              <p className="text-xl text-gray-900 mb-3 md:text-2xl leading-relaxed font-medium">
                 &quot;Used to waste 30 minutes driving between courts. Now I
                 know exactly where to go.&quot;
               </p>
-              <cite className="text-gray-500 font-medium not-italic">— Mike R., Capitol Hill</cite>
+              <cite className="text-gray-500 font-medium">— Mike R., Capitol Hill</cite>
             </blockquote>
           </section>
 

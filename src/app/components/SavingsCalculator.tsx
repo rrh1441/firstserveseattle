@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export function SavingsCalculator() {
-  const [playsPerMonth, setPlaysPerMonth] = useState(4);
+  const [playsPerMonth, setPlaysPerMonth] = useState(3);
 
   const RESERVATION_COST = 24;
   const MEMBERSHIP_COST = 8;
