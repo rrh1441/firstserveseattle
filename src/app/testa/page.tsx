@@ -383,11 +383,9 @@ export default function TestAPage() {
                     {selectedSlot?.courtId === court.id && (
                       <div className={`
                         mt-2 px-3 py-2 rounded-lg text-center text-sm font-medium
-                        ${selectedSlot.status === "full" ? "bg-emerald-50 text-emerald-700" : ""}
-                        ${selectedSlot.status === "first_half" || selectedSlot.status === "second_half" ? "bg-orange-50 text-orange-700" : ""}
-                        ${selectedSlot.status === "none" ? "bg-gray-100 text-gray-600" : ""}
+                        ${selectedSlot.status !== "none" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}
                       `}>
-                        {selectedSlot.description}
+                        {selectedSlot.status !== "none" ? `Available ${selectedSlot.description}` : selectedSlot.description}
                       </div>
                     )}
                   </div>
