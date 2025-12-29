@@ -43,14 +43,57 @@ const toMin = (t: string) => {
   return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
 };
 
-const isSlotAvailable = (court: TennisCourt, timeStr: string): boolean => {
+type SlotStatus = "full" | "first_half" | "second_half" | "none";
+
+const getSlotStatus = (court: TennisCourt, timeStr: string): SlotStatus => {
   const slotStart = toMin(timeStr);
-  const slotEnd = slotStart + 60;
-  return court.parsed_intervals.some(({ start, end }) => {
-    const intervalStart = toMin(start);
-    const intervalEnd = toMin(end);
-    return intervalStart <= slotStart && intervalEnd >= slotEnd;
-  });
+  const mid = slotStart + 30;
+
+  const isFree = (start: number, end: number) =>
+    court.parsed_intervals.some(({ start: s, end: e }) => {
+      const intervalStart = toMin(s);
+      const intervalEnd = toMin(e);
+      return intervalStart <= start && intervalEnd >= end;
+    });
+
+  const firstHalfFree = isFree(slotStart, mid);
+  const secondHalfFree = isFree(mid, mid + 30);
+
+  if (firstHalfFree && secondHalfFree) return "full";
+  if (firstHalfFree) return "first_half";
+  if (secondHalfFree) return "second_half";
+  return "none";
+};
+
+const getSlotColor = (status: SlotStatus): string => {
+  switch (status) {
+    case "full": return "bg-emerald-500 text-white";
+    case "first_half":
+    case "second_half": return "bg-orange-400 text-white";
+    case "none": return "bg-gray-100 text-gray-400";
+  }
+};
+
+const getSlotDescription = (timeStr: string, status: SlotStatus): string => {
+  const hour = parseInt(timeStr.split(":")[0]);
+  const isPM = timeStr.includes("PM");
+  const hour12 = hour;
+  const nextHour = hour === 12 ? 1 : hour + 1;
+  const nextPM = hour === 11 ? !isPM : isPM;
+
+  const formatTime = (h: number, min: number, pm: boolean) =>
+    `${h}:${min.toString().padStart(2, '0')} ${pm ? 'PM' : 'AM'}`;
+
+  switch (status) {
+    case "full":
+      return `${formatTime(hour12, 0, isPM)} - ${formatTime(nextHour, 0, nextPM)}`;
+    case "first_half":
+      return `${formatTime(hour12, 0, isPM)} - ${formatTime(hour12, 30, isPM)}`;
+    case "second_half":
+      return `${formatTime(hour12, 30, isPM)} - ${formatTime(nextHour, 0, nextPM)}`;
+    case "none":
+      return "Fully Reserved";
+  }
 };
 
 const mapsUrl = (c: TennisCourt) =>
@@ -79,6 +122,12 @@ export default function TestAPage() {
     pickleball_lined: false,
     ball_machine: false,
   });
+  const [selectedSlot, setSelectedSlot] = useState<{
+    courtId: number;
+    time: string;
+    status: SlotStatus;
+    description: string;
+  } | null>(null);
 
   useEffect(() => {
     // Load favorites from localStorage first (sync)
@@ -280,45 +329,67 @@ export default function TestAPage() {
                     {/* Morning row */}
                     <div className="flex gap-0.5">
                       {TIME_SLOTS.slice(0, 8).map((slot) => {
-                        const available = isSlotAvailable(court, slot.time);
+                        const status = getSlotStatus(court, slot.time);
+                        const isSelected = selectedSlot?.courtId === court.id && selectedSlot?.time === slot.time;
                         return (
-                          <div
+                          <button
                             key={slot.time}
+                            onClick={() => setSelectedSlot({
+                              courtId: court.id,
+                              time: slot.time,
+                              status,
+                              description: getSlotDescription(slot.time, status),
+                            })}
                             className={`
                               flex-1 h-7 flex items-center justify-center
-                              text-[11px] font-semibold rounded-md
-                              ${available
-                                ? "bg-emerald-500 text-white"
-                                : "bg-gray-100 text-gray-400"
-                              }
+                              text-[11px] font-semibold rounded-md transition-all
+                              ${getSlotColor(status)}
+                              ${isSelected ? "ring-2 ring-offset-1 ring-gray-800" : ""}
                             `}
                           >
                             {slot.label}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
                     {/* Afternoon row */}
                     <div className="flex gap-0.5">
                       {TIME_SLOTS.slice(8).map((slot) => {
-                        const available = isSlotAvailable(court, slot.time);
+                        const status = getSlotStatus(court, slot.time);
+                        const isSelected = selectedSlot?.courtId === court.id && selectedSlot?.time === slot.time;
                         return (
-                          <div
+                          <button
                             key={slot.time}
+                            onClick={() => setSelectedSlot({
+                              courtId: court.id,
+                              time: slot.time,
+                              status,
+                              description: getSlotDescription(slot.time, status),
+                            })}
                             className={`
                               flex-1 h-7 flex items-center justify-center
-                              text-[11px] font-semibold rounded-md
-                              ${available
-                                ? "bg-emerald-500 text-white"
-                                : "bg-gray-100 text-gray-400"
-                              }
+                              text-[11px] font-semibold rounded-md transition-all
+                              ${getSlotColor(status)}
+                              ${isSelected ? "ring-2 ring-offset-1 ring-gray-800" : ""}
                             `}
                           >
                             {slot.label}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
+
+                    {/* Selected slot info */}
+                    {selectedSlot?.courtId === court.id && (
+                      <div className={`
+                        mt-2 px-3 py-2 rounded-lg text-center text-sm font-medium
+                        ${selectedSlot.status === "full" ? "bg-emerald-50 text-emerald-700" : ""}
+                        ${selectedSlot.status === "first_half" || selectedSlot.status === "second_half" ? "bg-orange-50 text-orange-700" : ""}
+                        ${selectedSlot.status === "none" ? "bg-gray-100 text-gray-600" : ""}
+                      `}>
+                        {selectedSlot.description}
+                      </div>
+                    )}
                   </div>
 
                   {/* Ball Machine Link - mobile only */}
@@ -339,13 +410,17 @@ export default function TestAPage() {
         )}
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 text-xs font-medium text-gray-500 pt-6 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded-md bg-emerald-500" />
-            <span>Available</span>
+        <div className="flex items-center justify-center gap-4 text-xs font-medium text-gray-500 pt-6 pb-4">
+          <div className="flex items-center gap-1.5">
+            <div className="h-3.5 w-3.5 rounded bg-emerald-500" />
+            <span>Full Hour</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded-md bg-gray-100" />
+          <div className="flex items-center gap-1.5">
+            <div className="h-3.5 w-3.5 rounded bg-orange-400" />
+            <span>Half Hour</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-3.5 w-3.5 rounded bg-gray-200" />
             <span>Booked</span>
           </div>
         </div>
