@@ -104,4 +104,94 @@ export class GmailEmailService {
       return { success: false, error };
     }
   }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Email Alert Methods
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  static async sendAlertTrialWelcome(email: string, preferencesUrl: string, expiresAt: Date) {
+    const gmail = createGmailClient();
+    if (!gmail) {
+      console.error('Gmail client not initialized - missing credentials');
+      return { success: false, error: 'Gmail not configured' };
+    }
+
+    try {
+      const template = emailTemplates.alertTrialWelcome(email, preferencesUrl, expiresAt);
+
+      const result = await gmail.sendEmail({
+        from: FROM_EMAIL,
+        to: email,
+        subject: template.subject,
+        html: template.html,
+      });
+
+      console.log('Alert trial welcome email sent via Gmail to:', email);
+      return { success: true, data: result };
+    } catch (error) {
+      console.error('Failed to send alert trial welcome email via Gmail:', error);
+      return { success: false, error };
+    }
+  }
+
+  static async sendDailyCourtAlert(
+    email: string,
+    courts: Array<{ title: string; address: string; slots: string[]; mapsUrl: string }>,
+    daysRemaining: number,
+    preferencesUrl: string,
+    unsubscribeUrl: string
+  ) {
+    const gmail = createGmailClient();
+    if (!gmail) {
+      console.error('Gmail client not initialized - missing credentials');
+      return { success: false, error: 'Gmail not configured' };
+    }
+
+    try {
+      const template = emailTemplates.dailyCourtAlert(
+        courts,
+        daysRemaining,
+        preferencesUrl,
+        unsubscribeUrl
+      );
+
+      const result = await gmail.sendEmail({
+        from: FROM_EMAIL,
+        to: email,
+        subject: template.subject,
+        html: template.html,
+      });
+
+      console.log('Daily court alert sent via Gmail to:', email);
+      return { success: true, data: result };
+    } catch (error) {
+      console.error('Failed to send daily court alert via Gmail:', error);
+      return { success: false, error };
+    }
+  }
+
+  static async sendAlertTrialExpiring(email: string, preferencesUrl: string) {
+    const gmail = createGmailClient();
+    if (!gmail) {
+      console.error('Gmail client not initialized - missing credentials');
+      return { success: false, error: 'Gmail not configured' };
+    }
+
+    try {
+      const template = emailTemplates.alertTrialExpiring(preferencesUrl);
+
+      const result = await gmail.sendEmail({
+        from: FROM_EMAIL,
+        to: email,
+        subject: template.subject,
+        html: template.html,
+      });
+
+      console.log('Alert trial expiring email sent via Gmail to:', email);
+      return { success: true, data: result };
+    } catch (error) {
+      console.error('Failed to send alert trial expiring email via Gmail:', error);
+      return { success: false, error };
+    }
+  }
 }

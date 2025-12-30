@@ -1,13 +1,14 @@
 /* -------------------------------------------------------------------------- *
    Client-side pay-wall screen
-   • Unique-day gate already decided; simply renders.
-   • Enhanced with offer experiments and better analytics.
+   • Dual CTA: Subscribe now OR Get 7 free days + email alerts
+   • Emphasizes $24 savings vs paid court reservations
  * -------------------------------------------------------------------------- */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link                     from 'next/link';
+import { useRouter }            from 'next/navigation';
 
 import {
   Card,
@@ -17,22 +18,23 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PlanSelector }          from '@/components/PlanSelector';
+import EmailCaptureModal         from '@/app/components/EmailCaptureModal';
 
 import { shouldShowPaywall }     from '@/lib/shouldShowPaywall';
-import { HERO_HEADLINES,
-         FEATURES,
+import { FEATURES,
          SOCIAL_PROOF }          from '@/lib/paywallCopy';
 import { usePaywallAnalytics }   from '@/lib/usePaywallAnalytics';
 
 type Plan = 'monthly' | 'annual';
 
 export default function PaywallPage(): JSX.Element | null {
+  const router = useRouter();
+
   /* ---------------- local state --------------------------------------- */
-  const [canShow,   setCanShow]   = useState<boolean | null>(null);
-  const [plan,      setPlan]      = useState<Plan>('monthly');
-  const [headline,  setHeadline]  = useState<{ group: string; text: string }>();
-  const [gateDays,  setGateDays]  = useState<number>(0);
-  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number; duration: string }; description: string; freeTrialDays: number } | null>(null);
+  const [canShow,        setCanShow]        = useState<boolean | null>(null);
+  const [plan,           setPlan]           = useState<Plan>('monthly');
+  const [gateDays,       setGateDays]       = useState<number>(0);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   /* ---------------- gate check ---------------------------------------- */
   useEffect(() => {
@@ -45,31 +47,6 @@ export default function PaywallPage(): JSX.Element | null {
     return () => { mounted = false; };
   }, []);
 
-  /* ---------------- sticky A/B headline ------------------------------- */
-  useEffect(() => {
-    if (!canShow) return;
-    const idx     = Math.random() < 0.5 ? 0 : 1;
-    const chosen  = HERO_HEADLINES[idx];
-    setHeadline(chosen);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('abGroup', chosen.group);
-    }
-  }, [canShow]);
-
-  /* ---------------- offer assignment ---------------------------------- */
-  useEffect(() => {
-    if (!canShow) return;
-    
-    // Everyone gets the 50% off offer
-    const offer = { 
-      id: 'fifty_percent_off_first_month', 
-      discount: { percentage: 50, duration: 'first_month' },
-      description: 'Get 50% off your first month when you subscribe today.',
-      freeTrialDays: 0
-    };
-    setAssignedOffer(offer);
-  }, [canShow]);
-
   /* ---------------- read gateDays ------------------------------------- */
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -78,41 +55,40 @@ export default function PaywallPage(): JSX.Element | null {
   }, []);
 
   /* ---------------- analytics hook ------------------------------------ */
-  const { markCTA } = usePaywallAnalytics(headline?.group ?? null, gateDays);
+  const { markCTA } = usePaywallAnalytics(null, gateDays);
 
-  /* ---------------- CTA handler ---------------------------------------- */
-  const handleCTAClick = (selectedPlan: Plan) => {
-    // Track analytics
+  /* ---------------- CTA handlers -------------------------------------- */
+  const handleSubscribeClick = (selectedPlan: Plan) => {
     markCTA(selectedPlan);
+  };
+
+  const handleEmailTrialClick = () => {
+    // Track this path
+    if (typeof window !== 'undefined') {
+      try {
+        const event = {
+          event: 'paywall_email_trial_click',
+          timestamp: new Date().toISOString(),
+        };
+        console.log('Analytics:', event);
+      } catch { /* ignore */ }
+    }
+    setShowEmailModal(true);
+  };
+
+  const handleEmailSuccess = (preferencesUrl: string) => {
+    setShowEmailModal(false);
+    router.push(preferencesUrl);
   };
 
   /* ---------------- guard --------------------------------------------- */
   if (canShow !== true) return null;
 
-  /* ---------------- dynamic offer content ----------------------------- */
-  const getOfferDescription = () => {
-    if (!assignedOffer) return "Subscribe to see all court availability.";
-    
-    if (assignedOffer.discount && plan === 'monthly') {
-      return `Get ${assignedOffer.freeTrialDays} free days, then ${assignedOffer.discount.percentage}% off your ${assignedOffer.discount.duration.replace('_', ' ')}.`;
-    }
-    
-    if (plan === 'annual') {
-      return "Subscribe annually and save 33% vs monthly billing.";
-    }
-    
-    return assignedOffer.description;
-  };
-
+  /* ---------------- dynamic content ----------------------------------- */
   const getCtaText = () => {
-    if (!assignedOffer || !assignedOffer.discount || plan === 'annual') {
-      return plan === 'monthly'
-        ? 'Subscribe – Monthly'
-        : 'Subscribe – Annual';
-    }
-    
-    // For discount offers on monthly plans only
-    return `Get ${assignedOffer.discount.percentage}% Off – Monthly`;
+    return plan === 'monthly'
+      ? 'Subscribe – $4 First Month'
+      : 'Subscribe – $64/year (Save 33%)';
   };
 
   /* ---------------- UI ------------------------------------------------ */
@@ -120,13 +96,25 @@ export default function PaywallPage(): JSX.Element | null {
     <div className="flex min-h-screen items-center justify-center bg-white p-4">
       <Card className="w-full max-w-md border border-gray-200 shadow-lg">
         <CardHeader className="space-y-2 text-center">
+          {/* Savings-focused headline */}
           <CardTitle className="text-2xl font-bold">
-            {headline?.text ?? "You've reached your free limit"}
+            Stop paying $30 for court time
           </CardTitle>
 
           <CardDescription className="text-base text-gray-600">
-            {getOfferDescription()}
+            Seattle&apos;s public courts are <span className="font-semibold">free</span>.
+            We show you which ones are open.
           </CardDescription>
+
+          {/* Savings callout */}
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+            <p className="text-sm font-semibold text-green-800">
+              Save $24+ every time you play
+            </p>
+            <p className="text-xs text-green-700 mt-1">
+              vs. paying for a 90-minute reservation
+            </p>
+          </div>
 
           <p className="text-sm text-gray-500">{SOCIAL_PROOF}</p>
         </CardHeader>
@@ -139,15 +127,26 @@ export default function PaywallPage(): JSX.Element | null {
             features={FEATURES}
           />
 
-          {/* CTA */}
-          <Link
-            href={`/signup?plan=${plan}&headline_group=${headline?.group ?? ''}&offer_id=fifty_percent_off_first_month`}
-            onClick={() => handleCTAClick(plan)}
-            aria-label={getCtaText()}
-            className="block w-full rounded-md bg-[#0c372b] py-3 text-center text-lg font-semibold text-white transition-colors hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
-          >
-            {getCtaText()}
-          </Link>
+          {/* Dual CTAs */}
+          <div className="space-y-3">
+            {/* Primary CTA - Subscribe */}
+            <Link
+              href={`/signup?plan=${plan}&offer_id=fifty_percent_off_first_month`}
+              onClick={() => handleSubscribeClick(plan)}
+              aria-label={getCtaText()}
+              className="block w-full rounded-md bg-[#0c372b] py-3 text-center text-lg font-semibold text-white transition-colors hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
+            >
+              {getCtaText()}
+            </Link>
+
+            {/* Secondary CTA - Email Trial */}
+            <button
+              onClick={handleEmailTrialClick}
+              className="block w-full rounded-md border-2 border-[#0c372b] bg-white py-3 text-center text-lg font-semibold text-[#0c372b] transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
+            >
+              Get 7 Free Days + Court Alerts
+            </button>
+          </div>
 
           <p className="text-xs text-center text-gray-500">
             Secure payment powered by Stripe. Cancel anytime.
@@ -177,6 +176,13 @@ export default function PaywallPage(): JSX.Element | null {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Capture Modal */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={handleEmailSuccess}
+      />
     </div>
   );
 }

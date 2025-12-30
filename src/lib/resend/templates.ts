@@ -525,7 +525,7 @@ export const emailTemplates = {
             <tr>
               <td align="center" style="padding: 20px 0;">
                 <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb;">
-                  
+
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#6b7280" style="padding: 48px 32px;">
@@ -543,7 +543,7 @@ export const emailTemplates = {
                       </table>
                     </td>
                   </tr>
-                  
+
                   <!-- Cancelled Badge -->
                   <tr>
                     <td style="padding: 40px 32px 0 32px;">
@@ -558,7 +558,7 @@ export const emailTemplates = {
                       </table>
                     </td>
                   </tr>
-                  
+
                   <!-- Title -->
                   <tr>
                     <td style="padding: 24px 32px 0 32px;">
@@ -567,14 +567,14 @@ export const emailTemplates = {
                       </h2>
                     </td>
                   </tr>
-                  
+
                   <!-- Main Content -->
                   <tr>
                     <td style="padding: 32px;">
                       <p style="color: #374151; font-size: 18px; line-height: 28px; margin: 0 0 24px 0;">
                         Your subscription to First Serve Seattle has been cancelled. You'll continue to have access until the end of your current billing period.
                       </p>
-                      
+
                       <!-- Info Box -->
                       <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9fafb" style="border: 1px solid #e5e7eb; margin: 24px 0;">
                         <tr>
@@ -586,11 +586,11 @@ export const emailTemplates = {
                           </td>
                         </tr>
                       </table>
-                      
+
                       <p style="color: #374151; font-size: 18px; line-height: 28px; margin: 24px 0;">
                         We'd love to hear your feedback! If there's anything we could have done better, please let us know.
                       </p>
-                      
+
                       <!-- CTA Button -->
                       <table cellpadding="0" cellspacing="0" style="margin: 32px 0;">
                         <tr>
@@ -601,13 +601,13 @@ export const emailTemplates = {
                           </td>
                         </tr>
                       </table>
-                      
+
                       <p style="color: #6b7280; font-size: 16px; margin: 24px 0 0 0;">
                         You can reactivate your subscription anytime to regain instant access to court availability.
                       </p>
                     </td>
                   </tr>
-                  
+
                   <!-- Footer -->
                   <tr>
                     <td bgcolor="#111827" style="padding: 32px;">
@@ -632,6 +632,288 @@ export const emailTemplates = {
                           </td>
                         </tr>
                       </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `
+  }),
+
+  // ============================================================================
+  // EMAIL ALERT TEMPLATES
+  // ============================================================================
+
+  alertTrialWelcome: (email: string, preferencesUrl: string, expiresAt: Date) => ({
+    subject: 'Your 7-day court alerts are active!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Welcome to Court Alerts</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
+            <tr>
+              <td align="center" style="padding: 20px 0;">
+                <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb; border-radius: 8px;">
+
+                  <!-- Header -->
+                  <tr>
+                    <td bgcolor="#0c372b" style="padding: 32px; border-radius: 8px 8px 0 0;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">
+                        First Serve Seattle
+                      </h1>
+                    </td>
+                  </tr>
+
+                  <!-- Main Content -->
+                  <tr>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #111827; font-size: 24px; margin: 0 0 16px 0;">
+                        You're all set for 7 days of free court alerts!
+                      </h2>
+
+                      <p style="color: #374151; font-size: 16px; line-height: 24px; margin: 0 0 24px 0;">
+                        We'll send you personalized alerts when your favorite courts have open slots.
+                      </p>
+
+                      <!-- Savings callout -->
+                      <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#dcfce7" style="border: 1px solid #bbf7d0; border-radius: 8px; margin: 0 0 24px 0;">
+                        <tr>
+                          <td style="padding: 16px;">
+                            <p style="color: #166534; font-size: 16px; font-weight: bold; margin: 0 0 4px 0;">
+                              Save $24+ per session
+                            </p>
+                            <p style="color: #166534; font-size: 14px; margin: 0;">
+                              Skip the 90-minute court reservation and play for free on public courts.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="color: #374151; font-size: 16px; margin: 0 0 24px 0;">
+                        <strong>Your trial expires:</strong> ${expiresAt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                      </p>
+
+                      <!-- CTA -->
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td bgcolor="#0c372b" style="border-radius: 8px;">
+                            <a href="${preferencesUrl}" style="display: block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                              Customize Your Alert Preferences
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
+                        Want unlimited access? <a href="https://firstserveseattle.com/signup" style="color: #0c372b; font-weight: bold;">Subscribe now</a> and never miss an open court.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td bgcolor="#f9fafb" style="padding: 24px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+                      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                        First Serve Seattle | <a href="mailto:support@firstserveseattle.com" style="color: #6b7280;">support@firstserveseattle.com</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `
+  }),
+
+  dailyCourtAlert: (
+    courts: Array<{ title: string; address: string; slots: string[]; mapsUrl: string }>,
+    daysRemaining: number,
+    preferencesUrl: string,
+    unsubscribeUrl: string
+  ) => ({
+    subject: courts.length === 1
+      ? `${courts[0].title} has open slots today!`
+      : `${courts.length} of your courts are open today!`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Court Availability Alert</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
+            <tr>
+              <td align="center" style="padding: 20px 0;">
+                <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb; border-radius: 8px;">
+
+                  <!-- Header -->
+                  <tr>
+                    <td bgcolor="#0c372b" style="padding: 24px 32px; border-radius: 8px 8px 0 0;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: bold;">
+                        First Serve Seattle
+                      </h1>
+                    </td>
+                  </tr>
+
+                  <!-- Savings Banner -->
+                  <tr>
+                    <td bgcolor="#dcfce7" style="padding: 12px 32px;">
+                      <p style="color: #166534; font-size: 14px; font-weight: bold; margin: 0; text-align: center;">
+                        Save $24+ per session vs. 90-min reservations
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Main Content -->
+                  <tr>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #111827; font-size: 22px; margin: 0 0 24px 0;">
+                        Today's Open Courts
+                      </h2>
+
+                      ${courts.map(court => `
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
+                          <tr>
+                            <td style="padding: 16px;">
+                              <h3 style="color: #111827; font-size: 16px; margin: 0 0 4px 0;">
+                                ${court.title}
+                              </h3>
+                              <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
+                                ${court.address}
+                              </p>
+                              <p style="color: #059669; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
+                                Available: ${court.slots.join(', ')}
+                              </p>
+                              <a href="${court.mapsUrl}" style="color: #0c372b; font-size: 14px; text-decoration: none;">
+                                Get Directions →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                      `).join('')}
+
+                      <!-- Upgrade Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f0fdf4" style="border: 1px solid #bbf7d0; border-radius: 8px; margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 20px;">
+                            <p style="color: #166534; font-size: 14px; font-weight: bold; margin: 0 0 8px 0;">
+                              ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left of your free trial
+                            </p>
+                            <p style="color: #166534; font-size: 14px; margin: 0 0 12px 0;">
+                              Subscribe to keep getting alerts + see ALL courts anytime.
+                            </p>
+                            <a href="https://firstserveseattle.com/signup?plan=monthly" style="display: inline-block; background-color: #0c372b; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
+                              Subscribe - $4 First Month
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td bgcolor="#f9fafb" style="padding: 24px 32px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+                      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                        <a href="${preferencesUrl}" style="color: #6b7280;">Manage preferences</a> |
+                        <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `
+  }),
+
+  alertTrialExpiring: (subscribeUrl: string) => ({
+    subject: 'Your free court alerts expire tomorrow!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Trial Expiring</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
+            <tr>
+              <td align="center" style="padding: 20px 0;">
+                <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb; border-radius: 8px;">
+
+                  <!-- Header -->
+                  <tr>
+                    <td bgcolor="#0c372b" style="padding: 32px; border-radius: 8px 8px 0 0;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">
+                        First Serve Seattle
+                      </h1>
+                    </td>
+                  </tr>
+
+                  <!-- Main Content -->
+                  <tr>
+                    <td style="padding: 32px;">
+                      <h2 style="color: #111827; font-size: 24px; margin: 0 0 16px 0;">
+                        Last Day of Free Alerts
+                      </h2>
+
+                      <p style="color: #374151; font-size: 16px; line-height: 24px; margin: 0 0 24px 0;">
+                        Your 7-day trial ends tomorrow. Don't lose access to court availability!
+                      </p>
+
+                      <!-- Savings callout -->
+                      <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#dcfce7" style="border: 1px solid #bbf7d0; border-radius: 8px; margin: 0 0 24px 0;">
+                        <tr>
+                          <td style="padding: 16px;">
+                            <p style="color: #166534; font-size: 16px; font-weight: bold; margin: 0 0 4px 0;">
+                              Members save $24+ per session
+                            </p>
+                            <p style="color: #166534; font-size: 14px; margin: 0;">
+                              See all courts, any time, with instant availability updates.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- CTA -->
+                      <table cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td bgcolor="#0c372b" style="border-radius: 8px;">
+                            <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                              Subscribe Now - 50% Off First Month
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
+                        Questions? Reply to this email or contact support@firstserveseattle.com
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td bgcolor="#f9fafb" style="padding: 24px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+                      <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                        First Serve Seattle
+                      </p>
                     </td>
                   </tr>
                 </table>
