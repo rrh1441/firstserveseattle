@@ -1,15 +1,47 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Check, MapPin, Clock, Calendar, Bell, ArrowLeft, Loader2 } from 'lucide-react';
+import { Check, MapPin, Clock, Calendar, Bell, ArrowLeft, Loader2, Search } from 'lucide-react';
 import type { EmailAlertSubscriber } from '@/lib/emailAlerts/types';
 
 interface Court {
   id: number;
   title: string;
   address: string | null;
+}
+
+interface Park {
+  name: string;
+  courtIds: number[];
+  address: string | null;
+}
+
+// Extract park name from court title (e.g., "Alki Playfield Tennis Court 01" -> "Alki Playfield")
+function extractParkName(title: string): string {
+  return title.replace(/ Tennis Court \d+$/, '').replace(/ Outdoor Tennis Court \d+$/, '').trim();
+}
+
+// Group courts into parks
+function groupCourtsByPark(courts: Court[]): Park[] {
+  const parkMap = new Map<string, Park>();
+
+  for (const court of courts) {
+    const parkName = extractParkName(court.title);
+
+    if (parkMap.has(parkName)) {
+      parkMap.get(parkName)!.courtIds.push(court.id);
+    } else {
+      parkMap.set(parkName, {
+        name: parkName,
+        courtIds: [court.id],
+        address: court.address,
+      });
+    }
+  }
+
+  return Array.from(parkMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const DAYS_OF_WEEK = [
@@ -50,6 +82,39 @@ function AlertsPageContent() {
   const [startHour, setStartHour] = useState(6);
   const [endHour, setEndHour] = useState(21);
   const [alertHour, setAlertHour] = useState(7);
+  const [search, setSearch] = useState('');
+
+  // Group courts into parks
+  const parks = useMemo(() => groupCourtsByPark(courts), [courts]);
+
+  // Filter parks by search
+  const filteredParks = useMemo(() => {
+    if (!search.trim()) return parks;
+    const lower = search.toLowerCase();
+    return parks.filter(park =>
+      park.name.toLowerCase().includes(lower) ||
+      (park.address && park.address.toLowerCase().includes(lower))
+    );
+  }, [parks, search]);
+
+  // Check if a park is selected (all its courts are selected)
+  const isParkSelected = (park: Park) => {
+    return park.courtIds.every(id => selectedCourts.includes(id));
+  };
+
+  // Toggle a park (select/deselect all its courts)
+  const handleParkToggle = (park: Park) => {
+    if (isParkSelected(park)) {
+      // Deselect all courts in this park
+      setSelectedCourts(prev => prev.filter(id => !park.courtIds.includes(id)));
+    } else {
+      // Select all courts in this park
+      setSelectedCourts(prev => [...new Set([...prev, ...park.courtIds])]);
+    }
+  };
+
+  // Count selected parks
+  const selectedParksCount = parks.filter(isParkSelected).length;
 
   // Load subscriber preferences and courts
   useEffect(() => {
@@ -95,14 +160,6 @@ function AlertsPageContent() {
 
     loadData();
   }, [token]);
-
-  const handleCourtToggle = (courtId: number) => {
-    setSelectedCourts(prev =>
-      prev.includes(courtId)
-        ? prev.filter(id => id !== courtId)
-        : [...prev, courtId]
-    );
-  };
 
   const handleDayToggle = (day: number) => {
     setSelectedDays(prev =>
@@ -198,51 +255,69 @@ function AlertsPageContent() {
 
         {/* Form sections */}
         <div className="space-y-6">
-          {/* Courts Selection */}
+          {/* Parks Selection */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="h-5 w-5 text-green-600" />
-              <h2 className="text-lg font-semibold">Which courts do you want alerts for?</h2>
+              <h2 className="text-lg font-semibold">Which parks do you want alerts for?</h2>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Select the courts near you. Only these will appear in your alert emails.
+              Select the parks near you. Only these will appear in your alert emails.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-              {courts.map(court => (
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search parks or neighborhoods…"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+              {filteredParks.map(park => (
                 <label
-                  key={court.id}
-                  className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                    selectedCourts.includes(court.id)
+                  key={park.name}
+                  className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+                    isParkSelected(park)
                       ? 'bg-green-50 border border-green-200'
                       : 'hover:bg-gray-50 border border-transparent'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={selectedCourts.includes(court.id)}
-                    onChange={() => handleCourtToggle(court.id)}
+                    checked={isParkSelected(park)}
+                    onChange={() => handleParkToggle(park)}
                     className="sr-only"
                   />
                   <div
-                    className={`w-4 h-4 rounded border flex items-center justify-center ${
-                      selectedCourts.includes(court.id)
+                    className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                      isParkSelected(park)
                         ? 'bg-green-600 border-green-600'
                         : 'border-gray-300'
                     }`}
                   >
-                    {selectedCourts.includes(court.id) && (
+                    {isParkSelected(park) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
-                  <span className="text-sm">{court.title}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium block">{park.name}</span>
+                    <span className="text-xs text-gray-500">{park.courtIds.length} court{park.courtIds.length !== 1 ? 's' : ''}</span>
+                  </div>
                 </label>
               ))}
             </div>
-            {courts.length === 0 && (
-              <p className="text-gray-500 text-sm">Loading courts...</p>
+            {parks.length === 0 && (
+              <p className="text-gray-500 text-sm">Loading parks...</p>
             )}
-            <p className="text-xs text-gray-500 mt-2">
-              {selectedCourts.length} court{selectedCourts.length !== 1 ? 's' : ''} selected
+            {parks.length > 0 && filteredParks.length === 0 && (
+              <p className="text-gray-500 text-sm text-center py-4">No parks match your search</p>
+            )}
+            <p className="text-xs text-gray-500 mt-3">
+              {selectedParksCount} park{selectedParksCount !== 1 ? 's' : ''} selected ({selectedCourts.length} court{selectedCourts.length !== 1 ? 's' : ''})
             </p>
           </div>
 
