@@ -152,7 +152,8 @@ export class GmailEmailService {
         courts,
         daysRemaining,
         preferencesUrl,
-        unsubscribeUrl
+        unsubscribeUrl,
+        email
       );
 
       const result = await gmail.sendEmail({

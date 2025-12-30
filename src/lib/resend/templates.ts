@@ -739,7 +739,8 @@ export const emailTemplates = {
     courts: Array<{ title: string; address: string; slots: string[]; mapsUrl: string }>,
     daysRemaining: number,
     preferencesUrl: string,
-    unsubscribeUrl: string
+    unsubscribeUrl: string,
+    email?: string
   ) => ({
     subject: courts.length === 1
       ? `${courts[0].title} has open slots today!`
@@ -814,8 +815,8 @@ export const emailTemplates = {
                             <p style="color: #166534; font-size: 14px; margin: 0 0 12px 0;">
                               Subscribe to keep getting alerts + see ALL courts anytime.
                             </p>
-                            <a href="https://firstserveseattle.com/signup?plan=monthly" style="display: inline-block; background-color: #0c372b; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
-                              Subscribe - $4 First Month
+                            <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="display: inline-block; background-color: #0c372b; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
+                              Subscribe - $8/month
                             </a>
                           </td>
                         </tr>

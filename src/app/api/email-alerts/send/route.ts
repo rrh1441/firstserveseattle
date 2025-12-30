@@ -183,7 +183,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         availableCourts,
         daysRemaining,
         preferencesUrl,
-        unsubscribeUrl
+        unsubscribeUrl,
+        subscriber.email
       );
 
       try {

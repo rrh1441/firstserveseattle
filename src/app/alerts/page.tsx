@@ -438,10 +438,10 @@ function AlertsPageContent() {
               Subscribe and see availability anytime, not just in emails.
             </p>
             <Link
-              href="/signup?plan=monthly"
+              href={`/signup?plan=monthly${subscriber?.email ? `&email=${encodeURIComponent(subscriber.email)}` : ''}`}
               className="inline-block rounded-lg bg-[#0c372b] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#0c372b]/90"
             >
-              Subscribe – $4 First Month
+              Subscribe – $8/month
             </Link>
           </div>
         </div>
