@@ -1,12 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import InteractiveCTA from "../components/InteractiveCTA";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AuthButtons, FooterSignInButton } from "../components/InteractiveAuth";
 import { SavingsCalculator } from "../components/SavingsCalculator";
+import EmailCaptureModal from "../components/EmailCaptureModal";
 import { track } from "@vercel/analytics";
 
 export default function LPTestPage() {
+  const router = useRouter();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
+  const handleEmailTrialClick = () => {
+    track("lp_email_trial_click", { location: "hero" });
+    setShowEmailModal(true);
+  };
+
+  const handleEmailSuccess = (preferencesUrl: string) => {
+    setShowEmailModal(false);
+    router.push(preferencesUrl);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Seattle Ball Machine Banner - Sticky */}
@@ -55,7 +71,24 @@ export default function LPTestPage() {
               Start playing.
             </h1>
 
-            <InteractiveCTA />
+            {/* Primary CTA - Email Trial */}
+            <div className="flex flex-col items-center gap-3 max-w-md mx-auto">
+              <button
+                onClick={handleEmailTrialClick}
+                className="w-full py-4 px-6 text-lg font-semibold rounded-lg bg-[#0c372b] text-white hover:bg-[#0a2e21] transition-colors"
+              >
+                Get 7 Free Days + Court Alerts
+              </button>
+
+              {/* Secondary CTA - Subscribe */}
+              <Link
+                href="/signup?plan=monthly"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                onClick={() => track("lp_subscribe_click", { location: "hero" })}
+              >
+                Or subscribe now — $8/mo
+              </Link>
+            </div>
 
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mt-8 mb-4 md:text-xl leading-relaxed font-medium">
               Seattle hides unreserved courts overnight. We capture availability
@@ -133,10 +166,24 @@ export default function LPTestPage() {
               <h2 className="text-2xl font-bold text-white mb-6 md:text-3xl">
                 See which courts are open today
               </h2>
-              <InteractiveCTA size="xl" variant="light" />
-              <p className="text-sm text-emerald-100 mt-4 font-medium">
-                $4 for your first month, then $8/month • Cancel anytime
-              </p>
+              <div className="flex flex-col items-center gap-3 max-w-md mx-auto">
+                <button
+                  onClick={() => {
+                    track("lp_email_trial_click", { location: "bottom_cta" });
+                    setShowEmailModal(true);
+                  }}
+                  className="w-full py-4 px-8 text-xl font-semibold rounded-lg bg-white text-[#0c372b] hover:bg-gray-100 transition-colors shadow-lg"
+                >
+                  Get 7 Free Days + Court Alerts
+                </button>
+                <Link
+                  href="/signup?plan=monthly"
+                  className="text-sm font-medium text-emerald-100 hover:text-white transition-colors"
+                  onClick={() => track("lp_subscribe_click", { location: "bottom_cta" })}
+                >
+                  Or subscribe now — $8/mo
+                </Link>
+              </div>
             </div>
           </section>
 
@@ -148,6 +195,13 @@ export default function LPTestPage() {
           </footer>
         </main>
       </div>
+
+      {/* Email Capture Modal */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={handleEmailSuccess}
+      />
     </div>
   );
 }
