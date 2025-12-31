@@ -741,106 +741,68 @@ export const emailTemplates = {
     preferencesUrl: string,
     unsubscribeUrl: string,
     email?: string
-  ) => ({
-    subject: courts.length === 1
-      ? `${courts[0].title} has open slots today!`
-      : `${courts.length} of your courts are open today!`,
-    html: `
+  ) => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    return {
+      subject: `Open Court Notification - ${today}`,
+      html: `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <title>Court Availability Alert</title>
+          <title>Open Court Notification</title>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
-          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
             <tr>
-              <td align="center" style="padding: 20px 0;">
-                <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb; border-radius: 8px;">
+              <td style="padding: 32px; max-width: 600px;">
 
-                  <!-- Header -->
-                  <tr>
-                    <td bgcolor="#0c372b" style="padding: 24px 32px; border-radius: 8px 8px 0 0;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: bold;">
-                        First Serve Seattle
-                      </h1>
-                    </td>
-                  </tr>
+                <!-- Greeting -->
+                <p style="color: #111827; font-size: 16px; margin: 0 0 24px 0;">
+                  Hey! Here are today's open courts:
+                </p>
 
-                  <!-- Savings Banner -->
-                  <tr>
-                    <td bgcolor="#dcfce7" style="padding: 12px 32px;">
-                      <p style="color: #166534; font-size: 14px; font-weight: bold; margin: 0; text-align: center;">
-                        Save $24+ per session vs. 90-min reservations
-                      </p>
-                    </td>
-                  </tr>
+                <!-- Courts List -->
+                ${courts.map(court => `
+                  <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+                    <p style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 4px 0;">
+                      ${court.title}
+                    </p>
+                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
+                      ${court.address}
+                    </p>
+                    <p style="color: #059669; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;">
+                      ${court.slots.join(' · ')}
+                    </p>
+                    <a href="${court.mapsUrl}" style="color: #0c372b; font-size: 14px; text-decoration: none; font-weight: 500;">
+                      Get Directions →
+                    </a>
+                  </div>
+                `).join('')}
 
-                  <!-- Main Content -->
-                  <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #111827; font-size: 22px; margin: 0 0 24px 0;">
-                        Today's Open Courts
-                      </h2>
+                <!-- Trial reminder -->
+                <p style="color: #6b7280; font-size: 14px; margin: 24px 0 16px 0;">
+                  ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left on your free trial.
+                  <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="color: #0c372b; font-weight: 600; text-decoration: none;">
+                    Subscribe for $8/mo
+                  </a> to keep getting alerts.
+                </p>
 
-                      ${courts.map(court => `
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px;">
-                          <tr>
-                            <td style="padding: 16px;">
-                              <h3 style="color: #111827; font-size: 16px; margin: 0 0 4px 0;">
-                                ${court.title}
-                              </h3>
-                              <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
-                                ${court.address}
-                              </p>
-                              <p style="color: #059669; font-size: 14px; font-weight: bold; margin: 0 0 12px 0;">
-                                Available: ${court.slots.join(', ')}
-                              </p>
-                              <a href="${court.mapsUrl}" style="color: #0c372b; font-size: 14px; text-decoration: none;">
-                                Get Directions →
-                              </a>
-                            </td>
-                          </tr>
-                        </table>
-                      `).join('')}
+                <!-- Footer -->
+                <p style="color: #9ca3af; font-size: 12px; margin: 32px 0 0 0; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                  <a href="${preferencesUrl}" style="color: #9ca3af; text-decoration: none;">Manage preferences</a> ·
+                  <a href="${unsubscribeUrl}" style="color: #9ca3af; text-decoration: none;">Unsubscribe</a>
+                </p>
 
-                      <!-- Upgrade Box -->
-                      <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f0fdf4" style="border: 1px solid #bbf7d0; border-radius: 8px; margin-top: 24px;">
-                        <tr>
-                          <td style="padding: 20px;">
-                            <p style="color: #166534; font-size: 14px; font-weight: bold; margin: 0 0 8px 0;">
-                              ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left of your free trial
-                            </p>
-                            <p style="color: #166534; font-size: 14px; margin: 0 0 12px 0;">
-                              Subscribe to keep getting alerts + see ALL courts anytime.
-                            </p>
-                            <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="display: inline-block; background-color: #0c372b; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
-                              Subscribe - $8/month
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-
-                  <!-- Footer -->
-                  <tr>
-                    <td bgcolor="#f9fafb" style="padding: 24px 32px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
-                      <p style="color: #6b7280; font-size: 12px; margin: 0;">
-                        <a href="${preferencesUrl}" style="color: #6b7280;">Manage preferences</a> |
-                        <a href="${unsubscribeUrl}" style="color: #6b7280;">Unsubscribe</a>
-                      </p>
-                    </td>
-                  </tr>
-                </table>
               </td>
             </tr>
           </table>
         </body>
       </html>
     `
-  }),
+    };
+  },
 
   alertTrialExpiring: (subscribeUrl: string) => ({
     subject: 'Your free court alerts expire tomorrow!',
