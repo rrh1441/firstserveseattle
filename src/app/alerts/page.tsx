@@ -18,9 +18,29 @@ interface Park {
   address: string | null;
 }
 
-// Extract park name from court title (e.g., "Alki Playfield Tennis Court 01" -> "Alki Playfield")
+// Extract park name from court title, handling various naming patterns:
+// - "Alki Playfield Tennis Court 01" -> "Alki Playfield"
+// - "Lower Woodland Playfield Upper Court 01" -> "Lower Woodland Playfield Upper Courts"
+// - "Volunteer Park Court 01 - Upper" -> "Volunteer Park Upper Courts"
+// - "Volunteer Park Court 01 - Lower" -> "Volunteer Park Lower Courts"
 function extractParkName(title: string): string {
-  return title.replace(/ Tennis Court \d+$/, '').replace(/ Outdoor Tennis Court \d+$/, '').trim();
+  // Handle "Court XX - Upper/Lower" pattern (Volunteer Park style)
+  const upperLowerMatch = title.match(/^(.+?) Court \d+ - (Upper|Lower)$/);
+  if (upperLowerMatch) {
+    return `${upperLowerMatch[1]} ${upperLowerMatch[2]} Courts`;
+  }
+
+  // Handle "Upper Court XX" pattern (Lower Woodland Upper Courts style)
+  const upperCourtMatch = title.match(/^(.+?) Upper Court \d+$/);
+  if (upperCourtMatch) {
+    return `${upperCourtMatch[1]} Upper Courts`;
+  }
+
+  // Handle standard patterns
+  return title
+    .replace(/ Tennis Court \d+$/, '')
+    .replace(/ Outdoor Tennis Court \d+$/, '')
+    .trim();
 }
 
 // Group courts into parks
