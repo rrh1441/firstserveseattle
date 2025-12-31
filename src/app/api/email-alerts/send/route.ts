@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const FROM_EMAIL = 'Ryan from First Serve Seattle <alerts@firstserveseattle.com>';
+const FROM_EMAIL = '"Ryan from First Serve Seattle" <alerts@firstserveseattle.com>';
 
 interface Court {
   id: number;

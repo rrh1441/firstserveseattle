@@ -742,9 +742,10 @@ export const emailTemplates = {
     unsubscribeUrl: string,
     email?: string
   ) => {
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     return {
-      subject: `Open Court Notification - ${today}`,
+      subject: courts.length === 1
+        ? `${courts[0].title} has open slots today!`
+        : `${courts.length} of your courts are open today!`,
       html: `
       <!DOCTYPE html>
       <html>
