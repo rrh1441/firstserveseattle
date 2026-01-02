@@ -10,55 +10,67 @@ export interface FacilityWithCoords {
   totalCount: number;
 }
 
-// Sample coordinates for Seattle tennis facilities
-// These are hardcoded for now - in production, store in database
+// Coordinates for Seattle tennis facilities
 const FACILITY_COORDS: Record<string, { lat: number; lon: number }> = {
   // North Seattle
   "Lower Woodland Playfield": { lat: 47.6686, lon: -122.3426 },
-  "Lower Woodland Playfield Upper Courts": { lat: 47.6686, lon: -122.3426 },
-  "Green Lake Park": { lat: 47.6805, lon: -122.3403 },
+  "Lower Woodland Playfield Upper Courts": { lat: 47.6690, lon: -122.3420 },
+  "Green Lake Park West": { lat: 47.6805, lon: -122.3403 },
   "Bitter Lake Playfield": { lat: 47.7262, lon: -122.3468 },
   "Meadowbrook Playfield": { lat: 47.7049, lon: -122.3086 },
+  "Solstice Park": { lat: 47.7090, lon: -122.3350 },
 
-  // Central Seattle
+  // Central Seattle / Capitol Hill
   "Volunteer Park Upper Courts": { lat: 47.6308, lon: -122.3148 },
   "Volunteer Park Lower Courts": { lat: 47.6302, lon: -122.3148 },
   "Miller Playfield": { lat: 47.6215, lon: -122.3139 },
-  "Bobby Morris Playfield": { lat: 47.6183, lon: -122.3207 },
   "Garfield Playfield": { lat: 47.6145, lon: -122.3090 },
+  "Madison Park": { lat: 47.6340, lon: -122.2820 },
+  "Madrona Playground": { lat: 47.6120, lon: -122.2890 },
+
+  // Queen Anne / Fremont / Wallingford
+  "Gilman Playfield": { lat: 47.6600, lon: -122.3739 },
+  "Wallingford Playfield": { lat: 47.6615, lon: -122.3360 },
+  "Rogers Playfield": { lat: 47.6380, lon: -122.3570 },
+
+  // Ballard / Crown Hill
+  "Soundview Playfield": { lat: 47.6924, lon: -122.3959 },
 
   // West Seattle / Magnolia
   "Magnolia Playfield": { lat: 47.6398, lon: -122.3994 },
+  "Magnolia Park": { lat: 47.6340, lon: -122.4050 },
+  "Discovery Park": { lat: 47.6610, lon: -122.4170 },
   "Alki Playfield": { lat: 47.5766, lon: -122.4097 },
   "Hiawatha Playfield": { lat: 47.5609, lon: -122.3821 },
   "Delridge Playfield": { lat: 47.5555, lon: -122.3632 },
+  "Walt Hundley Playfield": { lat: 47.5480, lon: -122.3870 },
+  "Riverview Playfield": { lat: 47.5430, lon: -122.3590 },
 
-  // South Seattle
+  // South Seattle / Beacon Hill
   "Jefferson Park": { lat: 47.5711, lon: -122.3106 },
+  "Jefferson Park Lid Tennis Court Lower 01": { lat: 47.5700, lon: -122.3090 },
+  "Jefferson Park Lid Tennis Court Lower 02": { lat: 47.5700, lon: -122.3090 },
+  "Jefferson Park Lid Tennis Court Upper 01": { lat: 47.5705, lon: -122.3095 },
+  "Jefferson Park Lid Tennis Court Upper 02": { lat: 47.5705, lon: -122.3095 },
+  "AYTC Outdoor": { lat: 47.5711, lon: -122.3120 },
+  "Beacon Hill Playfield": { lat: 47.5650, lon: -122.3130 },
+  "Dearborn Park": { lat: 47.5880, lon: -122.3150 },
+  "Sam Smith (I90 Lid) Park": { lat: 47.5920, lon: -122.3080 },
+
+  // Rainier Valley / Southeast
   "Rainier Playfield": { lat: 47.5671, lon: -122.2896 },
   "Mount Baker Park": { lat: 47.5789, lon: -122.2876 },
-  "Columbia Park": { lat: 47.5498, lon: -122.2859 },
   "Brighton Playfield": { lat: 47.5464, lon: -122.2809 },
-  "Genesee Park": { lat: 47.5686, lon: -122.2812 },
   "Rainier Beach Playfield": { lat: 47.5136, lon: -122.2646 },
+  "Seward Park": { lat: 47.5520, lon: -122.2660 },
+  "Observatory": { lat: 47.5950, lon: -122.2850 },
 
-  // Queen Anne / Fremont
-  "Gilman Playfield": { lat: 47.6600, lon: -122.3739 },
-
-  // Ballard
-  "Loyal Heights Playfield": { lat: 47.6824, lon: -122.3888 },
-  "Soundview Playfield": { lat: 47.6924, lon: -122.3959 },
-
-  // Northeast
+  // Northeast Seattle
   "Laurelhurst Playfield": { lat: 47.6631, lon: -122.2747 },
-  "Ravenna Park": { lat: 47.6748, lon: -122.3024 },
-  "View Ridge Playfield": { lat: 47.6854, lon: -122.2750 },
   "Bryant Playground": { lat: 47.6742, lon: -122.2800 },
-  "Magnuson Park": { lat: 47.6850, lon: -122.2587 },
-
-  // Beacon Hill
-  "Georgetown Playfield": { lat: 47.5452, lon: -122.3212 },
-  "Amy Yee Tennis Center": { lat: 47.5711, lon: -122.3120 },
+  "Montlake Playfield": { lat: 47.6400, lon: -122.3040 },
+  "David Rodgers Park": { lat: 47.5720, lon: -122.2880 },
+  "Froula Playground": { lat: 47.5570, lon: -122.2840 },
 };
 
 // Extract park name from court title
