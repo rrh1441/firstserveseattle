@@ -1,5 +1,8 @@
 /* src/app/globals.css */
 
+/* Mapbox GL CSS */
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
 /* Tailwind base, components, utilities */
 @tailwind base;
 @tailwind components;
