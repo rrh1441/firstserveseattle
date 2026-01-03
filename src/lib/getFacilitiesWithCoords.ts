@@ -122,9 +122,38 @@ function extractParkName(title: string): string {
     .trim();
 }
 
-// Check if a court has any availability today
-function hasAvailability(court: TennisCourt): boolean {
-  return court.parsed_intervals.length > 0;
+// Get today's date in the format used by parsed_intervals (e.g., "2025-01-02")
+function getTodayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Convert time string to minutes since midnight
+function timeToMinutes(timeStr: string): number {
+  const [clock, ap] = timeStr.toUpperCase().split(" ");
+  const [h, m] = clock.split(":").map(Number);
+  return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
+}
+
+// Check if a court has any availability TODAY within display hours (6am-10pm)
+function hasAvailabilityToday(court: TennisCourt): boolean {
+  const today = getTodayDateString();
+  const displayStart = 6 * 60;  // 6am in minutes
+  const displayEnd = 22 * 60;   // 10pm in minutes
+
+  return court.parsed_intervals.some((interval) => {
+    // Check if interval is for today
+    if (!interval.date.startsWith(today)) return false;
+
+    // Check if interval overlaps with display hours
+    const intervalStart = timeToMinutes(interval.start);
+    const intervalEnd = timeToMinutes(interval.end);
+
+    return intervalStart < displayEnd && intervalEnd > displayStart;
+  });
 }
 
 // Find matching coordinates for a facility name
@@ -179,7 +208,7 @@ export async function getFacilitiesWithCoords(): Promise<FacilityWithCoords[]> {
 
     // Only include facilities with known coordinates
     if (coords) {
-      const availableCount = data.courts.filter(hasAvailability).length;
+      const availableCount = data.courts.filter(hasAvailabilityToday).length;
 
       facilities.push({
         name: getDisplayName(name),
