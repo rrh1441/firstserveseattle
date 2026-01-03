@@ -8,6 +8,7 @@ export interface FacilityWithCoords {
   courts: TennisCourt[];
   availableCount: number;
   totalCount: number;
+  availableHours: number; // Total court-hours available today (7am-7pm)
 }
 
 // Precise coordinates for Seattle tennis facilities
@@ -140,11 +141,13 @@ function timeToMinutes(timeStr: string): number {
   return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
 }
 
-// Check if a court has any availability TODAY within display hours (6am-10pm)
+// Display hours for availability calculation
+const DISPLAY_START_MINUTES = 7 * 60;  // 7am in minutes
+const DISPLAY_END_MINUTES = 19 * 60;   // 7pm in minutes
+
+// Check if a court has any availability TODAY within display hours (7am-7pm)
 function hasAvailabilityToday(court: TennisCourt): boolean {
   const today = getTodayDateString();
-  const displayStart = 6 * 60;  // 6am in minutes
-  const displayEnd = 22 * 60;   // 10pm in minutes
 
   return court.parsed_intervals.some((interval) => {
     // Check if interval is for today
@@ -154,8 +157,44 @@ function hasAvailabilityToday(court: TennisCourt): boolean {
     const intervalStart = timeToMinutes(interval.start);
     const intervalEnd = timeToMinutes(interval.end);
 
-    return intervalStart < displayEnd && intervalEnd > displayStart;
+    return intervalStart < DISPLAY_END_MINUTES && intervalEnd > DISPLAY_START_MINUTES;
   });
+}
+
+// Minimum useful booking duration (60 minutes)
+const MIN_USEFUL_DURATION_MINUTES = 60;
+
+// Calculate total available hours for a court TODAY within display hours (7am-7pm)
+// Only counts intervals that are at least 60 minutes (useful for actual play)
+function getAvailableHoursForCourt(court: TennisCourt): number {
+  const today = getTodayDateString();
+  let totalMinutes = 0;
+
+  for (const interval of court.parsed_intervals) {
+    // Only count today's intervals
+    if (!interval.date.startsWith(today)) continue;
+
+    const intervalStart = timeToMinutes(interval.start);
+    const intervalEnd = timeToMinutes(interval.end);
+
+    // Clamp interval to display hours (7am-7pm)
+    const clampedStart = Math.max(intervalStart, DISPLAY_START_MINUTES);
+    const clampedEnd = Math.min(intervalEnd, DISPLAY_END_MINUTES);
+
+    const duration = clampedEnd - clampedStart;
+
+    // Only count intervals that are at least 60 minutes
+    if (duration >= MIN_USEFUL_DURATION_MINUTES) {
+      totalMinutes += duration;
+    }
+  }
+
+  return totalMinutes / 60; // Convert to hours
+}
+
+// Calculate total available hours across all courts at a facility
+function getTotalAvailableHours(courts: TennisCourt[]): number {
+  return courts.reduce((total, court) => total + getAvailableHoursForCourt(court), 0);
 }
 
 // Find matching coordinates for a facility name
@@ -211,6 +250,7 @@ export async function getFacilitiesWithCoords(): Promise<FacilityWithCoords[]> {
     // Only include facilities with known coordinates
     if (coords) {
       const availableCount = data.courts.filter(hasAvailabilityToday).length;
+      const availableHours = getTotalAvailableHours(data.courts);
 
       facilities.push({
         name: getDisplayName(name),
@@ -220,6 +260,7 @@ export async function getFacilitiesWithCoords(): Promise<FacilityWithCoords[]> {
         courts: data.courts.sort((a, b) => a.title.localeCompare(b.title)),
         availableCount,
         totalCount: data.courts.length,
+        availableHours,
       });
     }
   }
@@ -227,10 +268,10 @@ export async function getFacilitiesWithCoords(): Promise<FacilityWithCoords[]> {
   return facilities.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Get availability status color
+// Get availability status color based on total court-hours available
 export function getAvailabilityColor(facility: FacilityWithCoords): string {
-  const ratio = facility.availableCount / facility.totalCount;
-  if (ratio >= 0.5) return "#10b981"; // emerald-500 (high availability)
-  if (ratio > 0) return "#f97316";    // orange-500 (partial)
-  return "#ef4444";                    // red-500 (none)
+  const hours = facility.availableHours;
+  if (hours >= 8) return "#10b981";   // emerald-500 (high availability: 8+ hours)
+  if (hours >= 2) return "#f97316";   // orange-500 (some availability: 2-8 hours)
+  return "#ef4444";                    // red-500 (low availability: <2 hours)
 }

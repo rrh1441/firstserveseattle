@@ -23,6 +23,7 @@ import {
   LogIn,
   Mail,
   Info,
+  ChevronUp,
 } from "lucide-react";
 
 // Map View imports
@@ -444,7 +445,7 @@ export default function TestCPage() {
                           style={{ backgroundColor: getAvailabilityColor(facility) }}
                         >
                           <span className="text-[10px] font-bold text-white">
-                            {facility.availableCount}/{facility.totalCount}
+                            {Math.round(facility.availableHours)}h
                           </span>
                         </div>
                         <div
@@ -502,7 +503,7 @@ export default function TestCPage() {
                           style={{ backgroundColor: getAvailabilityColor(selectedFacility) }}
                         />
                         <span className="text-gray-600">
-                          {selectedFacility.availableCount} of {selectedFacility.totalCount} courts available
+                          {Math.round(selectedFacility.availableHours)} hrs available · {selectedFacility.totalCount} court{selectedFacility.totalCount !== 1 ? 's' : ''}
                         </span>
                       </div>
                       <div className="space-y-3">
@@ -715,9 +716,10 @@ export default function TestCPage() {
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
         <button
           onClick={() => setShowMenuModal(true)}
-          className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full shadow-lg border-2 border-emerald-500 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
         >
           First Serve Seattle
+          <ChevronUp size={16} className="text-emerald-500" />
         </button>
       </div>
 
