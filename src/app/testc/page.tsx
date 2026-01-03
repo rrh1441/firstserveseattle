@@ -157,13 +157,18 @@ const amenityConfig: Record<AmenityKey, { label: string; icon: React.ReactNode; 
 function facilityMatchesSearch(facility: FacilityWithCoords, searchTerm: string): boolean {
   if (!searchTerm.trim()) return true;
   const search = searchTerm.toLowerCase();
+
+  // Check facility name
   if (facility.name.toLowerCase().includes(search)) return true;
+
+  // Check address
   if (facility.address?.toLowerCase().includes(search)) return true;
-  for (const [neighborhood, keywords] of Object.entries(NEIGHBORHOOD_KEYWORDS)) {
-    if (neighborhood.includes(search)) {
-      if (keywords.some(kw => facility.name.includes(kw))) return true;
-    }
+
+  // Check if any court in this facility matches the neighborhood search
+  for (const court of facility.courts) {
+    if (courtMatchesSearch(court.title, searchTerm)) return true;
   }
+
   return false;
 }
 
@@ -520,6 +525,7 @@ export default function TestCPage() {
 
             {/* Legend */}
             <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Availability</div>
               <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-emerald-500" />
