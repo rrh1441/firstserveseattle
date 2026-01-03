@@ -122,12 +122,14 @@ function extractParkName(title: string): string {
     .trim();
 }
 
-// Get today's date in the format used by parsed_intervals (e.g., "2025-01-02")
+// Get today's date in Pacific Time (format: "2025-01-02")
 function getTodayDateString(): string {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+  // Convert to Pacific Time
+  const pacificDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+  const year = pacificDate.getFullYear();
+  const month = String(pacificDate.getMonth() + 1).padStart(2, "0");
+  const day = String(pacificDate.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
