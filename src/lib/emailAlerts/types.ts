@@ -60,6 +60,7 @@ export interface SubscribeRequest {
   email: string;
   name?: string;
   abGroup?: string;
+  fingerprint?: string;
 }
 
 export interface SubscribeResponse {

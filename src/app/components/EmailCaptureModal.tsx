@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Mail, Bell, Clock, MapPin } from 'lucide-react';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { grantEmailExtension } from '@/lib/shouldShowPaywall';
 import type { SubscribeResponse } from '@/lib/emailAlerts/types';
 
@@ -20,6 +21,21 @@ export default function EmailCaptureModal({
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fingerprint, setFingerprint] = useState<string | null>(null);
+
+  // Initialize fingerprint on mount
+  useEffect(() => {
+    const getFingerprint = async () => {
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        setFingerprint(result.visitorId);
+      } catch (err) {
+        console.error('Failed to get fingerprint:', err);
+      }
+    };
+    getFingerprint();
+  }, []);
 
   if (!isOpen) return null;
 
@@ -36,6 +52,7 @@ export default function EmailCaptureModal({
           email: email.trim().toLowerCase(),
           name: name.trim() || undefined,
           abGroup: localStorage.getItem('abGroup') || undefined,
+          fingerprint: fingerprint || undefined,
         }),
       });
 
