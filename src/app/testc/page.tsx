@@ -713,7 +713,7 @@ export default function TestCPage() {
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
         <button
           onClick={() => setShowMenuModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full shadow-lg border-2 border-emerald-500 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+          className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2 bg-white rounded-lg shadow-lg border border-emerald-500 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
         >
           First Serve Seattle
           <ChevronUp size={16} className="text-emerald-500" />
@@ -722,7 +722,7 @@ export default function TestCPage() {
           href="https://seattleballmachine.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full shadow-lg border-2 border-blue-600 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+          className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2 bg-white rounded-lg shadow-lg border border-blue-600 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
         >
           <Zap size={16} className="text-blue-600" />
           Ball Machine
