@@ -6,8 +6,8 @@ import { List, MapIcon } from "lucide-react";
 
 // List View imports
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
-import { useTrialEligibility } from "@/hooks/useTrialEligibility";
-import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
+// import { useTrialEligibility } from "@/hooks/useTrialEligibility";
+// import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
 import EmailCaptureModal from "@/app/components/EmailCaptureModal";
 import { courtMatchesSearch } from "@/lib/neighborhoodMapping";
 import {
@@ -173,10 +173,10 @@ export default function TestCPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Paywall/trial state
-  const { fingerprint, isEligibleForTrial } = useTrialEligibility();
+  // Paywall/trial state (commented out for now)
+  // const { isEligibleForTrial } = useTrialEligibility();
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  // const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   // Menu modal state
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -218,33 +218,28 @@ export default function TestCPage() {
     }).finally(() => setLoading(false));
   }, []);
 
-  // Check if user has access (not past free days)
-  useEffect(() => {
-    shouldShowPaywall().then((needsPaywall) => {
-      setHasAccess(!needsPaywall);
-    });
-  }, []);
+  // Check if user has access (commented out for now)
+  // useEffect(() => {
+  //   shouldShowPaywall().then((needsPaywall) => {
+  //     setHasAccess(!needsPaywall);
+  //   });
+  // }, []);
 
-  // Handle gated actions (list view, pin clicks)
-  const handleGatedAction = useCallback((action: () => void) => {
-    if (hasAccess) {
-      action();
-      return;
-    }
-
-    // User needs to unlock - check if eligible for trial
-    if (isEligibleForTrial) {
-      setShowEmailModal(true);
-    } else {
-      // Not eligible for trial - go to paid paywall
-      router.push('/paywall');
-    }
-  }, [hasAccess, isEligibleForTrial, router]);
+  // Handle gated actions (commented out for now)
+  // const handleGatedAction = useCallback((action: () => void) => {
+  //   if (hasAccess) {
+  //     action();
+  //     return;
+  //   }
+  //   if (isEligibleForTrial) {
+  //     setShowEmailModal(true);
+  //   } else {
+  //     router.push('/paywall');
+  //   }
+  // }, [hasAccess, isEligibleForTrial, router]);
 
   const handleEmailSuccess = useCallback((preferencesUrl: string) => {
     setShowEmailModal(false);
-    setHasAccess(true);
-    // Navigate to preferences or just close modal
     router.push(preferencesUrl);
   }, [router]);
 
@@ -309,16 +304,14 @@ export default function TestCPage() {
   };
 
   const handleMarkerClick = useCallback((facility: FacilityWithCoords) => {
-    handleGatedAction(() => {
-      setSelectedFacility(facility);
-      setViewState((prev) => ({
-        ...prev,
-        latitude: facility.lat,
-        longitude: facility.lon,
-        zoom: 14,
-      }));
-    });
-  }, [handleGatedAction]);
+    setSelectedFacility(facility);
+    setViewState((prev) => ({
+      ...prev,
+      latitude: facility.lat,
+      longitude: facility.lon,
+      zoom: 14,
+    }));
+  }, []);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -359,7 +352,7 @@ export default function TestCPage() {
               Map
             </button>
             <button
-              onClick={() => handleGatedAction(() => setView("list"))}
+              onClick={() => setView("list")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm"
