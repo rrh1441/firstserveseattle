@@ -710,22 +710,22 @@ export default function TestCPage() {
       </div>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
         <button
           onClick={() => setShowMenuModal(true)}
-          className="flex items-center justify-center gap-1.5 h-10 px-4 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full shadow-lg border-2 border-emerald-500 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
         >
-          Menu
-          <ChevronUp size={16} className="text-gray-500" />
+          First Serve Seattle
+          <ChevronUp size={16} className="text-emerald-500" />
         </button>
         <a
           href="https://seattleballmachine.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 h-10 px-4 bg-blue-600 rounded-full shadow-lg text-sm font-semibold text-white hover:bg-blue-700 hover:shadow-xl transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full shadow-lg border-2 border-blue-600 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
         >
-          <Zap size={16} />
-          Rent Ball Machine
+          <Zap size={16} className="text-blue-600" />
+          Ball Machine
         </a>
       </div>
 
