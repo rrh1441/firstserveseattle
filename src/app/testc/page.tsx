@@ -441,13 +441,9 @@ export default function TestCPage() {
                     <div className="cursor-pointer transition-transform hover:scale-110" title={facility.name}>
                       <div className="relative">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white"
+                          className="w-6 h-6 rounded-full shadow-lg border-2 border-white"
                           style={{ backgroundColor: getAvailabilityColor(facility) }}
-                        >
-                          <span className="text-[10px] font-bold text-white">
-                            {Math.round(facility.availableHours)}h
-                          </span>
-                        </div>
+                        />
                         <div
                           className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0"
                           style={{
@@ -468,50 +464,52 @@ export default function TestCPage() {
                     anchor="bottom"
                     offset={25}
                     closeOnClick={false}
+                    closeButton={false}
                     onClose={() => setSelectedFacility(null)}
                     maxWidth="320px"
                   >
-                    <div className="max-h-[45vh] overflow-y-auto">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-gray-900 text-sm leading-tight">
-                            {selectedFacility.name}
-                          </h3>
-                          {selectedFacility.address && (
-                            <a
-                              href={mapsUrl(selectedFacility)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600 mt-0.5"
-                            >
-                              <MapPin size={10} />
-                              <span className="truncate max-w-[180px]">{selectedFacility.address}</span>
-                              <ExternalLink size={10} />
-                            </a>
-                          )}
-                        </div>
+                    <div>
+                      {/* Header - sticky */}
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3 className="font-bold text-gray-900 text-base leading-tight flex-1">
+                          {selectedFacility.name}
+                        </h3>
                         <button
                           onClick={() => setSelectedFacility(null)}
                           className="p-1 -mr-1 -mt-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
                         >
-                          <X size={16} />
+                          <X size={18} />
                         </button>
                       </div>
-                      <div className="flex items-center gap-2 mb-3 text-xs">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: getAvailabilityColor(selectedFacility) }}
-                        />
-                        <span className="text-gray-600">
-                          {Math.round(selectedFacility.availableHours)} hrs available · {selectedFacility.totalCount} court{selectedFacility.totalCount !== 1 ? 's' : ''}
-                        </span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: getAvailabilityColor(selectedFacility) }}
+                          />
+                          <span className="text-gray-600">
+                            {Math.round(selectedFacility.availableHours)} hrs · {selectedFacility.totalCount} court{selectedFacility.totalCount !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <a
+                          href={mapsUrl(selectedFacility)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-colors"
+                        >
+                          <MapPin size={14} />
+                          Directions
+                        </a>
                       </div>
-                      <div className="space-y-3">
-                        {selectedFacility.courts.map((court) => (
-                          <div key={court.id} className="border-t pt-2 first:border-t-0 first:pt-0">
-                            <MicroTimeline court={court} compact={true} showLabel={true} />
-                          </div>
-                        ))}
+                      {/* Scrollable court list */}
+                      <div className="max-h-[35vh] overflow-y-auto overscroll-contain -mx-2 px-2">
+                        <div className="space-y-2">
+                          {selectedFacility.courts.map((court) => (
+                            <div key={court.id} className="border-t pt-2 first:border-t-0 first:pt-0">
+                              <MicroTimeline court={court} compact={true} showLabel={true} />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </Popup>
