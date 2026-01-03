@@ -268,10 +268,13 @@ export async function getFacilitiesWithCoords(): Promise<FacilityWithCoords[]> {
   return facilities.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Get availability status color based on total court-hours available
+// Get availability status color based on percentage of potential hours
+// Potential hours = courts × 12 hours (7am-7pm window)
 export function getAvailabilityColor(facility: FacilityWithCoords): string {
-  const hours = facility.availableHours;
-  if (hours >= 8) return "#10b981";   // emerald-500 (high availability: 8+ hours)
-  if (hours >= 2) return "#f97316";   // orange-500 (some availability: 2-8 hours)
-  return "#ef4444";                    // red-500 (low availability: <2 hours)
+  const potentialHours = facility.totalCount * 12; // 12 hours per court (7am-7pm)
+  const percentage = potentialHours > 0 ? facility.availableHours / potentialHours : 0;
+
+  if (percentage >= 0.75) return "#10b981";   // emerald-500 (high: >75%)
+  if (percentage >= 0.25) return "#f97316";   // orange-500 (some: 25-75%)
+  return "#ef4444";                            // red-500 (low: <25%)
 }

@@ -523,15 +523,15 @@ export default function TestCPage() {
               <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                  <span>Available</span>
+                  <span>High</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-orange-500" />
-                  <span>Partial</span>
+                  <span>Some</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-3 w-3 rounded-full bg-red-500" />
-                  <span>Booked</span>
+                  <span>Low</span>
                 </div>
               </div>
             </div>
