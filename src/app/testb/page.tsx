@@ -123,6 +123,7 @@ export default function MapViewPage() {
       <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
+        onClick={() => setSelectedFacility(null)}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={MAPBOX_TOKEN}
         style={{ width: "100%", height: "100%" }}
@@ -178,12 +179,13 @@ export default function MapViewPage() {
             offset={25}
             closeOnClick={false}
             onClose={() => setSelectedFacility(null)}
-            maxWidth="340px"
+            maxWidth="320px"
+            className="facility-popup"
           >
-            <div className="max-h-[60vh] overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 mb-3 pr-4">
-                <div>
+            <div className="max-h-[45vh] overflow-y-auto">
+              {/* Header with close button */}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-gray-900 text-sm leading-tight">
                     {selectedFacility.name}
                   </h3>
@@ -195,13 +197,19 @@ export default function MapViewPage() {
                       className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600 mt-0.5"
                     >
                       <MapPin size={10} />
-                      <span className="truncate max-w-[200px]">
+                      <span className="truncate max-w-[180px]">
                         {selectedFacility.address}
                       </span>
                       <ExternalLink size={10} />
                     </a>
                   )}
                 </div>
+                <button
+                  onClick={() => setSelectedFacility(null)}
+                  className="p-1 -mr-1 -mt-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
               {/* Availability summary */}
