@@ -467,7 +467,7 @@ export default function TestCPage() {
                     onClose={() => setSelectedFacility(null)}
                     maxWidth="320px"
                   >
-                    <div>
+                    <div className="min-w-[280px]">
                       {/* Header - sticky */}
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3 className="font-bold text-gray-900 text-base leading-tight flex-1">
