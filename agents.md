@@ -6,23 +6,41 @@
 Compact court availability view showing all courts with:
 - Two horizontal rows per court: morning (6 AM - 2 PM) + evening (3 PM - 10 PM)
 - Small pill segments for each hour, no text inside
-- Colors: `bg-emerald-500` (open), `bg-gray-200` (booked)
+- Colors: `bg-emerald-500` (open), `bg-orange-400` (partial), `bg-gray-200` (booked)
 - Tap interaction shows selected time details
-- Sorted alphabetically by court name
+- Amenity filters (lights, wall, pickleball, ball machine)
+- Favorites with localStorage persistence
+- Sorted: favorites first, then alphabetically
 
 ### /testb - Map View (DONE - Jan 2, 2025)
 Interactive Mapbox map showing tennis court locations with:
-- 39 facilities with precise coordinates
-- Color-coded markers: green (available), orange (partial), red (booked)
-- Badge showing "X/Y" (available/total courts)
+- 39 facilities with precise coordinates (manually verified)
+- Clean display names (e.g., "Alki Courts" instead of "Alki Playfield")
+- Consolidated markers: Jefferson Park (4 courts → 1), Volunteer Park (2 → 1)
+- Color-coded markers: green (≥50% available), orange (partial), red (booked)
+- Badge showing "X/Y" (available/total courts TODAY)
 - Click marker → popup with facility name, address, micro-timelines
 - Search by court name or neighborhood (auto-zooms to results)
-- Click outside popup to dismiss
+- Click outside popup or X button to dismiss
+- Uses Pacific Time for availability (Vercel runs in UTC)
 
 **Files:**
 - `/src/app/testb/page.tsx` - Map view page
-- `/src/lib/getFacilitiesWithCoords.ts` - Data layer with coordinates
-- `/src/app/components/MicroTimeline.tsx` - Reusable timeline component
+- `/src/lib/getFacilitiesWithCoords.ts` - Data layer with coordinates + display names
+- `/src/app/components/MicroTimeline.tsx` - Reusable timeline component (compact mode for popups)
+
+**Environment:**
+- `NEXT_PUBLIC_MAPBOX_TOKEN` - Mapbox public token (pk.xxx)
+
+### /testc - Combined View (DONE - Jan 3, 2025)
+Single page with Map/List toggle:
+- **Default view: Map**
+- Toggle button in header to switch between Map and List
+- Shared search bar works for both views
+- Amenity filters appear only in List view
+- Both views share same data load (courts + facilities fetched once)
+
+**File:** `/src/app/testc/page.tsx`
 
 ---
 
@@ -116,9 +134,9 @@ Email trial user → Subscribe link includes their email:
 ## Next Steps
 
 ### High Priority
-1. **Push new views to main page** - Replace current homepage with:
-   - `/testa` micro-timeline view as default court list
-   - `/testb` map view as alternate view (tab or toggle)
+1. **Push /testc to main page** - Replace current homepage with the combined Map/List view
+   - `/testc` is ready to become the new homepage
+   - Consider URL structure: keep `/testc` as test or move to `/`
 
 2. **Mark conversions** - Update `converted_to_paid = true` in `email_alert_subscribers` when they subscribe (add to Stripe webhook)
 
@@ -146,15 +164,46 @@ Email trial user → Subscribe link includes their email:
    - Which parks/preferences correlate with conversion
    - Email engagement (opens, clicks)
 
-### Test URLs
+---
+
+## Test URLs
+- `/testa` - List view only (micro-timeline)
+- `/testb` - Map view only
+- `/testc` - Combined Map/List with toggle (default: Map) ← **READY FOR PRODUCTION**
 - `/lptest` - Landing page with email trial as primary CTA
 - `/paywalltest` - Paywall test page
 - `/alerts?token=<token>` - Preferences page (need token from DB)
 
-### Environment Variables Needed
+---
+
+## Environment Variables
 ```
+# Mapbox (for map view)
+NEXT_PUBLIC_MAPBOX_TOKEN=pk.xxxxx
+
+# Email alerts
 CRON_SECRET=<random-string>
 GMAIL_CLIENT_ID=<from-google-cloud>
 GMAIL_CLIENT_SECRET=<from-google-cloud>
 GMAIL_REFRESH_TOKEN=<from-oauth-flow>
 ```
+
+---
+
+## Key Files Reference
+
+### Map View
+- `/src/app/testb/page.tsx` - Standalone map view
+- `/src/app/testc/page.tsx` - Combined view with toggle
+- `/src/lib/getFacilitiesWithCoords.ts` - Facility grouping, coordinates, display names
+- `/src/app/components/MicroTimeline.tsx` - Reusable timeline (supports compact mode)
+
+### List View
+- `/src/app/testa/page.tsx` - Standalone list view
+- Uses `getTennisCourts()` from `/src/lib/getTennisCourts.ts`
+- Uses `courtMatchesSearch()` from `/src/lib/neighborhoodMapping.ts`
+
+### QR Codes
+- `/src/app/q/[slug]/page.tsx` - QR redirect handler
+- Looks up facility by slug, redirects with `?court=` param
+- Logs scans to `qr_scans` table
