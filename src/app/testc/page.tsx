@@ -480,16 +480,14 @@ export default function TestCPage() {
                           <X size={18} />
                         </button>
                       </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: getAvailabilityColor(selectedFacility) }}
-                          />
-                          <span className="text-gray-600">
-                            {Math.round(selectedFacility.availableHours)} hrs · {selectedFacility.totalCount} court{selectedFacility.totalCount !== 1 ? 's' : ''}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 text-sm mb-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: getAvailabilityColor(selectedFacility) }}
+                        />
+                        <span className="text-gray-600">
+                          {Math.round(selectedFacility.availableHours)} hrs · {selectedFacility.totalCount} court{selectedFacility.totalCount !== 1 ? 's' : ''}
+                        </span>
                         <a
                           href={mapsUrl(selectedFacility)}
                           target="_blank"
