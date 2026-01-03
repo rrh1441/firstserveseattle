@@ -131,12 +131,58 @@ Email trial user → Subscribe link includes their email:
 
 ---
 
+## Planned: Map-First Redesign
+
+### Overview
+Kill the landing page. Default to the map. Let the product speak for itself.
+
+### New User Flow
+```
+Days 1-3: Full anonymous access (3 actual VIEW days, not calendar)
+    ↓
+    Map view, pin clicks, list view - everything works
+    ↓
+Day 4+ (after 3 view-days): Email capture paywall
+    ↓
+    Triggers on: pin click OR list view toggle
+    ↓
+Email captured → 5 calendar days of access
+    ↓
+    Daily email notifications during this period
+    ↓
+Day 9+ (after 5-day countdown): Paid subscription paywall
+```
+
+### Key Changes
+1. **`/testc` becomes `/`** - Map-first, no landing page explanation needed
+2. **Keep `/about`** - For SEO and anyone who wants context
+3. **Archive current view counter** - Fresh start so all users experience new layout with full trial
+4. **Login always accessible** - Menu modal has Sign In option, easy to find
+5. **Existing user onboarding** - When logged-in users land on new map:
+   - Show brief walkthrough modal ("Welcome to the new First Serve!")
+   - Highlight new features (map view, pin clicks, etc.)
+   - Guide them to set up notifications if they haven't
+   - One-time display, dismissable
+
+### Paywall Trigger Points
+- Pin click on map (wants court details)
+- List view toggle (power user behavior)
+- Both indicate real intent → natural conversion points
+
+### Why This Works
+- "Show don't tell" - map immediately communicates value
+- QR scanning use case is perfect - scan at court, see map zoomed to you, tap pin
+- The map itself is the teaser - colored pins show availability but details require unlock
+
+---
+
 ## Next Steps
 
 ### High Priority
-1. **Push /testc to main page** - Replace current homepage with the combined Map/List view
-   - `/testc` is ready to become the new homepage
-   - Consider URL structure: keep `/testc` as test or move to `/`
+1. **Implement map-first redesign** (see above)
+   - Wire up gating logic on /testc
+   - Update view counter to track actual view-days
+   - Archive existing counters for fresh start
 
 2. **Mark conversions** - Update `converted_to_paid = true` in `email_alert_subscribers` when they subscribe (add to Stripe webhook)
 
