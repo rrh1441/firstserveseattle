@@ -132,14 +132,29 @@ export function MicroTimeline({
     const status = getSlotStatus(court, slot.time);
     const isSelected = activeTime === slot.time;
 
+    // In compact mode, render as non-interactive div
+    if (compact) {
+      return (
+        <div
+          key={slot.time}
+          className={`
+            flex-1 flex items-center justify-center
+            h-6 text-[10px] font-semibold rounded-md
+            ${getSlotColor(status)}
+          `}
+        >
+          {slot.label}
+        </div>
+      );
+    }
+
     return (
       <button
         key={slot.time}
         onClick={() => handleSlotClick(slot)}
         className={`
           flex-1 flex items-center justify-center
-          ${compact ? "h-6 text-[10px]" : "h-7 text-[11px]"}
-          font-semibold rounded-md transition-all
+          h-7 text-[11px] font-semibold rounded-md transition-all
           ${getSlotColor(status)}
           ${isSelected ? "ring-2 ring-offset-1 ring-gray-800" : ""}
         `}
