@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { List, MapIcon } from "lucide-react";
 
 // List View imports
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
+import { useTrialEligibility } from "@/hooks/useTrialEligibility";
+import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
+import EmailCaptureModal from "@/app/components/EmailCaptureModal";
 import { courtMatchesSearch } from "@/lib/neighborhoodMapping";
 import {
   Star,
@@ -16,6 +20,9 @@ import {
   Search,
   X,
   ExternalLink,
+  LogIn,
+  Mail,
+  Info,
 } from "lucide-react";
 
 // Map View imports
@@ -161,9 +168,18 @@ function facilityMatchesSearch(facility: FacilityWithCoords, searchTerm: string)
 }
 
 export default function TestCPage() {
+  const router = useRouter();
   const [view, setView] = useState<ViewMode>("map");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Paywall/trial state
+  const { fingerprint, isEligibleForTrial } = useTrialEligibility();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  // Menu modal state
+  const [showMenuModal, setShowMenuModal] = useState(false);
 
   // List view state
   const [courts, setCourts] = useState<TennisCourt[]>([]);
@@ -201,6 +217,36 @@ export default function TestCPage() {
       setFacilities(facilitiesData);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Check if user has access (not past free days)
+  useEffect(() => {
+    shouldShowPaywall().then((needsPaywall) => {
+      setHasAccess(!needsPaywall);
+    });
+  }, []);
+
+  // Handle gated actions (list view, pin clicks)
+  const handleGatedAction = useCallback((action: () => void) => {
+    if (hasAccess) {
+      action();
+      return;
+    }
+
+    // User needs to unlock - check if eligible for trial
+    if (isEligibleForTrial) {
+      setShowEmailModal(true);
+    } else {
+      // Not eligible for trial - go to paid paywall
+      router.push('/paywall');
+    }
+  }, [hasAccess, isEligibleForTrial, router]);
+
+  const handleEmailSuccess = useCallback((preferencesUrl: string) => {
+    setShowEmailModal(false);
+    setHasAccess(true);
+    // Navigate to preferences or just close modal
+    router.push(preferencesUrl);
+  }, [router]);
 
   // Filtered data
   const filteredCourts = useMemo(() => {
@@ -263,14 +309,16 @@ export default function TestCPage() {
   };
 
   const handleMarkerClick = useCallback((facility: FacilityWithCoords) => {
-    setSelectedFacility(facility);
-    setViewState((prev) => ({
-      ...prev,
-      latitude: facility.lat,
-      longitude: facility.lon,
-      zoom: 14,
-    }));
-  }, []);
+    handleGatedAction(() => {
+      setSelectedFacility(facility);
+      setViewState((prev) => ({
+        ...prev,
+        latitude: facility.lat,
+        longitude: facility.lon,
+        zoom: 14,
+      }));
+    });
+  }, [handleGatedAction]);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -311,7 +359,7 @@ export default function TestCPage() {
               Map
             </button>
             <button
-              onClick={() => setView("list")}
+              onClick={() => handleGatedAction(() => setView("list"))}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -669,6 +717,121 @@ export default function TestCPage() {
           </div>
         )}
       </div>
+
+      {/* Bottom Brand Button */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <button
+          onClick={() => setShowMenuModal(true)}
+          className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+        >
+          First Serve Seattle
+        </button>
+      </div>
+
+      {/* Menu Modal */}
+      {showMenuModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowMenuModal(false)}
+          />
+          <div className="relative bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-slide-up">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900">First Serve Seattle</h2>
+              <button
+                onClick={() => setShowMenuModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  router.push('/login');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <LogIn size={20} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Sign In</p>
+                  <p className="text-sm text-gray-500">Access your account</p>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  setShowEmailModal(true);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Mail size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Get Notified</p>
+                  <p className="text-sm text-gray-500">Email alerts for open courts</p>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  router.push('/paywall');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                  <Star size={20} className="text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Subscribe</p>
+                  <p className="text-sm text-gray-500">Unlock all features</p>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  window.open('https://seattleballmachine.com', '_blank');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Zap size={20} className="text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Ball Machine</p>
+                  <p className="text-sm text-gray-500">Rent a ball machine</p>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  router.push('/about');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Info size={20} className="text-gray-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">About</p>
+                  <p className="text-sm text-gray-500">Learn more about us</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Capture Modal */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={handleEmailSuccess}
+      />
     </div>
   );
 }
