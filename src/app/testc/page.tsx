@@ -130,12 +130,15 @@ const getSlotDescription = (timeStr: string, status: SlotStatus): string => {
   }
 };
 
-const mapsUrl = (c: TennisCourt | FacilityWithCoords) =>
-  "Maps_url" in c && c.Maps_url?.startsWith("http")
-    ? c.Maps_url
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        c.address ?? c.name
-      )}`;
+const mapsUrl = (c: TennisCourt | FacilityWithCoords) => {
+  if ("Maps_url" in c && c.Maps_url?.startsWith("http")) {
+    return c.Maps_url;
+  }
+  const name = "title" in c ? c.title : c.name;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    c.address ?? name
+  )}`;
+};
 
 const amenityConfig: Record<AmenityKey, { label: string; icon: React.ReactNode; color: string; activeColor: string }> = {
   lights: { label: "Lights", icon: <Sun size={14} />, color: "text-amber-500", activeColor: "text-white" },
