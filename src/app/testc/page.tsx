@@ -440,15 +440,15 @@ export default function TestCPage() {
                     <div className="cursor-pointer transition-transform hover:scale-110" title={facility.name}>
                       <div className="relative">
                         <div
-                          className="w-6 h-6 rounded-full shadow-lg border-2 border-white"
+                          className="w-8 h-8 rounded-full shadow-lg border-2 border-white"
                           style={{ backgroundColor: getAvailabilityColor(facility) }}
                         />
                         <div
                           className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0"
                           style={{
-                            borderLeft: "6px solid transparent",
-                            borderRight: "6px solid transparent",
-                            borderTop: `6px solid ${getAvailabilityColor(facility)}`,
+                            borderLeft: "7px solid transparent",
+                            borderRight: "7px solid transparent",
+                            borderTop: `7px solid ${getAvailabilityColor(facility)}`,
                           }}
                         />
                       </div>
@@ -494,10 +494,10 @@ export default function TestCPage() {
                           href={mapsUrl(selectedFacility)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-colors"
+                          className="p-1.5 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-colors"
+                          title="Get directions"
                         >
-                          <MapPin size={14} />
-                          Directions
+                          <MapPin size={16} />
                         </a>
                       </div>
                       {/* Scrollable court list */}

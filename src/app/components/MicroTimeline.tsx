@@ -172,7 +172,7 @@ export function MicroTimeline({
   return (
     <div className={compact ? "space-y-0.5" : "space-y-1"}>
       {showLabel && (
-        <div className="text-xs text-gray-500 truncate mb-1">
+        <div className="text-xs text-gray-900 font-medium truncate mb-1">
           {court.title}
         </div>
       )}
