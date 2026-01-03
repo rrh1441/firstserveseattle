@@ -67,23 +67,6 @@ const TIME_SLOTS = [
   { time: "9:00 PM", label: "9" },
 ];
 
-// Neighborhood mappings for map search
-const NEIGHBORHOOD_KEYWORDS: Record<string, string[]> = {
-  "ballard": ["Soundview"],
-  "beacon hill": ["Beacon Hill", "Jefferson Park", "AYTC", "Dearborn"],
-  "capitol hill": ["Volunteer Park", "Miller"],
-  "central district": ["Garfield", "Madrona"],
-  "fremont": ["Gilman", "Wallingford", "Rogers"],
-  "green lake": ["Green Lake", "Lower Woodland", "Upper Woodland"],
-  "magnolia": ["Magnolia Park", "Magnolia Playfield", "Discovery"],
-  "queen anne": ["Gilman", "Rogers"],
-  "rainier valley": ["Rainier Playfield", "Rainier Beach", "Brighton", "Seward"],
-  "south seattle": ["Rainier", "Brighton", "Seward", "Dearborn"],
-  "university district": ["Ravenna", "Bryant", "Laurelhurst"],
-  "wallingford": ["Wallingford", "Meridian"],
-  "west seattle": ["Alki", "Hiawatha", "Delridge", "Walt Hundley", "Riverview", "Solstice"],
-};
-
 // Helper functions for list view
 const toMin = (t: string) => {
   const [clock, ap] = t.toUpperCase().split(" ");
