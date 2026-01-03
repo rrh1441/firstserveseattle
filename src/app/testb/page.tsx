@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink } from "lucide-react";
+import { MapPin, ExternalLink, Search, X } from "lucide-react";
 import {
   getFacilitiesWithCoords,
   getAvailabilityColor,
@@ -19,17 +19,61 @@ const SEATTLE_CENTER = {
   zoom: 11.5,
 };
 
+// Neighborhood mappings for search
+const NEIGHBORHOOD_KEYWORDS: Record<string, string[]> = {
+  "ballard": ["Soundview"],
+  "beacon hill": ["Beacon Hill", "Jefferson Park", "AYTC", "Dearborn"],
+  "capitol hill": ["Volunteer Park", "Miller"],
+  "central district": ["Garfield", "Madrona"],
+  "fremont": ["Gilman", "Wallingford", "Rogers"],
+  "green lake": ["Green Lake", "Lower Woodland", "Upper Woodland"],
+  "magnolia": ["Magnolia Park", "Magnolia Playfield", "Discovery"],
+  "queen anne": ["Gilman", "Rogers"],
+  "rainier valley": ["Rainier Playfield", "Rainier Beach", "Brighton", "Seward"],
+  "south seattle": ["Rainier", "Brighton", "Seward", "Dearborn"],
+  "university district": ["Ravenna", "Bryant", "Laurelhurst"],
+  "wallingford": ["Wallingford", "Meridian"],
+  "west seattle": ["Alki", "Hiawatha", "Delridge", "Walt Hundley", "Riverview", "Solstice"],
+};
+
+function facilityMatchesSearch(facility: FacilityWithCoords, searchTerm: string): boolean {
+  if (!searchTerm.trim()) return true;
+
+  const search = searchTerm.toLowerCase();
+
+  // Match by facility name
+  if (facility.name.toLowerCase().includes(search)) return true;
+
+  // Match by address
+  if (facility.address?.toLowerCase().includes(search)) return true;
+
+  // Match by neighborhood
+  for (const [neighborhood, keywords] of Object.entries(NEIGHBORHOOD_KEYWORDS)) {
+    if (neighborhood.includes(search)) {
+      if (keywords.some(kw => facility.name.includes(kw))) return true;
+    }
+  }
+
+  return false;
+}
+
 export default function MapViewPage() {
   const [facilities, setFacilities] = useState<FacilityWithCoords[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFacility, setSelectedFacility] = useState<FacilityWithCoords | null>(null);
   const [viewState, setViewState] = useState(SEATTLE_CENTER);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     getFacilitiesWithCoords()
       .then(setFacilities)
       .finally(() => setLoading(false));
   }, []);
+
+  // Filter facilities based on search
+  const filteredFacilities = useMemo(() => {
+    return facilities.filter((f) => facilityMatchesSearch(f, search));
+  }, [facilities, search]);
 
   const handleMarkerClick = useCallback((facility: FacilityWithCoords) => {
     setSelectedFacility(facility);
@@ -86,7 +130,7 @@ export default function MapViewPage() {
         <NavigationControl position="top-right" />
 
         {/* Facility markers */}
-        {facilities.map((facility) => (
+        {filteredFacilities.map((facility) => (
           <Marker
             key={facility.name}
             latitude={facility.lat}
@@ -206,11 +250,36 @@ export default function MapViewPage() {
         </div>
       </div>
 
-      {/* Facility count */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2">
-        <span className="text-sm font-medium text-gray-700">
-          {facilities.length} facilities
-        </span>
+      {/* Search bar */}
+      <div className="absolute top-4 left-4 right-4 sm:right-auto sm:w-80">
+        <div className="bg-white rounded-lg shadow-lg">
+          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Search courts or neighborhoods..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 rounded-lg border-0 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          {/* Result count */}
+          <div className="px-3 py-1.5 border-t text-xs text-gray-500">
+            {filteredFacilities.length} of {facilities.length} facilities
+            {search && ` matching "${search}"`}
+          </div>
+        </div>
       </div>
     </div>
   );
