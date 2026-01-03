@@ -75,6 +75,55 @@ export default function MapViewPage() {
     return facilities.filter((f) => facilityMatchesSearch(f, search));
   }, [facilities, search]);
 
+  // Auto-zoom to fit search results
+  useEffect(() => {
+    if (!search.trim()) {
+      // Reset to Seattle overview when search is cleared
+      setViewState(SEATTLE_CENTER);
+      return;
+    }
+
+    if (filteredFacilities.length === 0) return;
+
+    if (filteredFacilities.length === 1) {
+      // Single result: zoom directly to it
+      const facility = filteredFacilities[0];
+      setViewState({
+        latitude: facility.lat,
+        longitude: facility.lon,
+        zoom: 15,
+      });
+    } else {
+      // Multiple results: fit bounds to show all
+      const lats = filteredFacilities.map((f) => f.lat);
+      const lons = filteredFacilities.map((f) => f.lon);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLon = Math.min(...lons);
+      const maxLon = Math.max(...lons);
+
+      // Calculate center and appropriate zoom
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLon = (minLon + maxLon) / 2;
+      const latDiff = maxLat - minLat;
+      const lonDiff = maxLon - minLon;
+      const maxDiff = Math.max(latDiff, lonDiff);
+
+      // Estimate zoom level based on spread
+      let zoom = 11.5;
+      if (maxDiff < 0.01) zoom = 15;
+      else if (maxDiff < 0.02) zoom = 14;
+      else if (maxDiff < 0.05) zoom = 13;
+      else if (maxDiff < 0.1) zoom = 12;
+
+      setViewState({
+        latitude: centerLat,
+        longitude: centerLon,
+        zoom,
+      });
+    }
+  }, [filteredFacilities, search]);
+
   const handleMarkerClick = useCallback((facility: FacilityWithCoords) => {
     setSelectedFacility(facility);
     // Center map on selected facility
