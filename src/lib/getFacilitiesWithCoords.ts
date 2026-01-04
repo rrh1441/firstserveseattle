@@ -125,13 +125,15 @@ function extractParkName(title: string): string {
 
 // Get today's date in Pacific Time (format: "2025-01-02")
 function getTodayDateString(): string {
-  const now = new Date();
-  // Convert to Pacific Time
-  const pacificDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-  const year = pacificDate.getFullYear();
-  const month = String(pacificDate.getMonth() + 1).padStart(2, "0");
-  const day = String(pacificDate.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  // Use Intl.DateTimeFormat for reliable timezone handling
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  // en-CA gives us YYYY-MM-DD format directly
+  return formatter.format(new Date());
 }
 
 // Convert time string to minutes since midnight

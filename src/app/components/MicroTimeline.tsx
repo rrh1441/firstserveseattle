@@ -34,13 +34,28 @@ export function toMin(t: string): number {
   return ((h % 12) + (ap === "PM" ? 12 : 0)) * 60 + m;
 }
 
-// Get slot availability status
+// Get today's date in Pacific Time (format: "2025-01-02")
+function getTodayDateString(): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(new Date());
+}
+
+// Get slot availability status - only checks TODAY's intervals
 export function getSlotStatus(court: TennisCourt, timeStr: string): SlotStatus {
+  const today = getTodayDateString();
   const slotStart = toMin(timeStr);
   const mid = slotStart + 30;
 
+  // Only consider today's intervals
+  const todayIntervals = court.parsed_intervals.filter(i => i.date === today);
+
   const isFree = (start: number, end: number) =>
-    court.parsed_intervals.some(({ start: s, end: e }) => {
+    todayIntervals.some(({ start: s, end: e }) => {
       const intervalStart = toMin(s);
       const intervalEnd = toMin(e);
       return intervalStart <= start && intervalEnd >= end;
