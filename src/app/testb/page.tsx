@@ -136,9 +136,7 @@ export default function MapViewPage() {
   }, []);
 
   const mapsUrl = (facility: FacilityWithCoords) =>
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      facility.address ?? facility.name
-    )}`;
+    `https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lon}`;
 
   if (!MAPBOX_TOKEN) {
     return (

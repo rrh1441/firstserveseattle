@@ -6,9 +6,8 @@ import { List, MapIcon } from "lucide-react";
 
 // List View imports
 import { getTennisCourts, TennisCourt } from "@/lib/getTennisCourts";
-// import { useTrialEligibility } from "@/hooks/useTrialEligibility";
-// import { shouldShowPaywall } from "@/lib/shouldShowPaywall";
 import EmailCaptureModal from "@/app/components/EmailCaptureModal";
+import WalkthroughModal from "@/app/components/WalkthroughModal";
 import { courtMatchesSearch } from "@/lib/neighborhoodMapping";
 import {
   Star,
@@ -159,16 +158,17 @@ function facilityMatchesSearch(facility: FacilityWithCoords, searchTerm: string)
   return false;
 }
 
-export default function TestCPage() {
+export default function TestDPage() {
   const router = useRouter();
   const [view, setView] = useState<ViewMode>("map");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Paywall/trial state (commented out for now)
-  // const { isEligibleForTrial } = useTrialEligibility();
+  // Walkthrough state - ALWAYS visible for testing
+  const [showWalkthrough, setShowWalkthrough] = useState(true);
+
+  // Email modal state
   const [showEmailModal, setShowEmailModal] = useState(false);
-  // const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   // Menu modal state
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -210,29 +210,26 @@ export default function TestCPage() {
     }).finally(() => setLoading(false));
   }, []);
 
-  // Check if user has access (commented out for now)
-  // useEffect(() => {
-  //   shouldShowPaywall().then((needsPaywall) => {
-  //     setHasAccess(!needsPaywall);
-  //   });
-  // }, []);
-
-  // Handle gated actions (commented out for now)
-  // const handleGatedAction = useCallback((action: () => void) => {
-  //   if (hasAccess) {
-  //     action();
-  //     return;
-  //   }
-  //   if (isEligibleForTrial) {
-  //     setShowEmailModal(true);
-  //   } else {
-  //     router.push('/paywall');
-  //   }
-  // }, [hasAccess, isEligibleForTrial, router]);
-
   const handleEmailSuccess = useCallback((preferencesUrl: string) => {
     setShowEmailModal(false);
     router.push(preferencesUrl);
+  }, [router]);
+
+  const handleSetupNotifications = useCallback(() => {
+    setShowWalkthrough(false);
+    // Check if user has existing email extension with token
+    const extensionData = localStorage.getItem("fss_email_extension");
+    if (extensionData) {
+      try {
+        const { token } = JSON.parse(extensionData);
+        if (token) {
+          router.push(`/alerts?token=${token}`);
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+    // No token, show email capture modal
+    setShowEmailModal(true);
   }, [router]);
 
   // Filtered data
@@ -701,7 +698,7 @@ export default function TestCPage() {
       </div>
 
       {/* Bottom Buttons */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2">
         <button
           onClick={() => setShowMenuModal(true)}
           className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2 bg-white rounded-lg shadow-lg border border-emerald-500 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
@@ -719,6 +716,23 @@ export default function TestCPage() {
           Ball Machine
         </a>
       </div>
+
+      {/* Test button to re-show walkthrough */}
+      <div className="fixed top-20 right-4 z-40">
+        <button
+          onClick={() => setShowWalkthrough(true)}
+          className="px-3 py-1.5 bg-purple-500 text-white text-xs font-semibold rounded-lg shadow-lg hover:bg-purple-600 transition-colors"
+        >
+          Show Walkthrough
+        </button>
+      </div>
+
+      {/* Walkthrough Modal */}
+      <WalkthroughModal
+        isOpen={showWalkthrough}
+        onClose={() => setShowWalkthrough(false)}
+        onSetupNotifications={handleSetupNotifications}
+      />
 
       {/* Menu Modal */}
       {showMenuModal && (
