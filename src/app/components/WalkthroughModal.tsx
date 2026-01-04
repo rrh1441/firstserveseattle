@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapIcon, Bell, X } from "lucide-react";
+import { MapIcon, Bell } from "lucide-react";
 import { useSwipeable } from "react-swipeable";
 
 interface WalkthroughModalProps {
