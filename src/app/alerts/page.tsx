@@ -6,62 +6,10 @@ import Link from 'next/link';
 import { Check, MapPin, Clock, Calendar, Bell, ArrowLeft, Loader2, Search } from 'lucide-react';
 import type { EmailAlertSubscriber } from '@/lib/emailAlerts/types';
 
-interface Court {
-  id: number;
-  title: string;
-  address: string | null;
-}
-
-interface Park {
+interface Facility {
   name: string;
   courtIds: number[];
   address: string | null;
-}
-
-// Extract park name from court title, handling various naming patterns:
-// - "Alki Playfield Tennis Court 01" -> "Alki Playfield"
-// - "Lower Woodland Playfield Upper Court 01" -> "Lower Woodland Playfield Upper Courts"
-// - "Volunteer Park Court 01 - Upper" -> "Volunteer Park Upper Courts"
-// - "Volunteer Park Court 01 - Lower" -> "Volunteer Park Lower Courts"
-function extractParkName(title: string): string {
-  // Handle "Court XX - Upper/Lower" pattern (Volunteer Park style)
-  const upperLowerMatch = title.match(/^(.+?) Court \d+ - (Upper|Lower)$/);
-  if (upperLowerMatch) {
-    return `${upperLowerMatch[1]} ${upperLowerMatch[2]} Courts`;
-  }
-
-  // Handle "Upper Court XX" pattern (Lower Woodland Upper Courts style)
-  const upperCourtMatch = title.match(/^(.+?) Upper Court \d+$/);
-  if (upperCourtMatch) {
-    return `${upperCourtMatch[1]} Upper Courts`;
-  }
-
-  // Handle standard patterns
-  return title
-    .replace(/ Tennis Court \d+$/, '')
-    .replace(/ Outdoor Tennis Court \d+$/, '')
-    .trim();
-}
-
-// Group courts into parks
-function groupCourtsByPark(courts: Court[]): Park[] {
-  const parkMap = new Map<string, Park>();
-
-  for (const court of courts) {
-    const parkName = extractParkName(court.title);
-
-    if (parkMap.has(parkName)) {
-      parkMap.get(parkName)!.courtIds.push(court.id);
-    } else {
-      parkMap.set(parkName, {
-        name: parkName,
-        courtIds: [court.id],
-        address: court.address,
-      });
-    }
-  }
-
-  return Array.from(parkMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const DAYS_OF_WEEK = [
@@ -96,7 +44,7 @@ function AlertsPageContent() {
   const [subscriber, setSubscriber] = useState<Partial<EmailAlertSubscriber> | null>(null);
 
   // Form state
-  const [courts, setCourts] = useState<Court[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [selectedCourts, setSelectedCourts] = useState<number[]>([]);
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [startHour, setStartHour] = useState(6);
@@ -104,37 +52,34 @@ function AlertsPageContent() {
   const [alertHour, setAlertHour] = useState(7);
   const [search, setSearch] = useState('');
 
-  // Group courts into parks
-  const parks = useMemo(() => groupCourtsByPark(courts), [courts]);
-
-  // Filter parks by search
-  const filteredParks = useMemo(() => {
-    if (!search.trim()) return parks;
+  // Filter facilities by search
+  const filteredFacilities = useMemo(() => {
+    if (!search.trim()) return facilities;
     const lower = search.toLowerCase();
-    return parks.filter(park =>
-      park.name.toLowerCase().includes(lower) ||
-      (park.address && park.address.toLowerCase().includes(lower))
+    return facilities.filter(facility =>
+      facility.name.toLowerCase().includes(lower) ||
+      (facility.address && facility.address.toLowerCase().includes(lower))
     );
-  }, [parks, search]);
+  }, [facilities, search]);
 
-  // Check if a park is selected (all its courts are selected)
-  const isParkSelected = (park: Park) => {
-    return park.courtIds.every(id => selectedCourts.includes(id));
+  // Check if a facility is selected (all its courts are selected)
+  const isFacilitySelected = (facility: Facility) => {
+    return facility.courtIds.every(id => selectedCourts.includes(id));
   };
 
-  // Toggle a park (select/deselect all its courts)
-  const handleParkToggle = (park: Park) => {
-    if (isParkSelected(park)) {
-      // Deselect all courts in this park
-      setSelectedCourts(prev => prev.filter(id => !park.courtIds.includes(id)));
+  // Toggle a facility (select/deselect all its courts)
+  const handleFacilityToggle = (facility: Facility) => {
+    if (isFacilitySelected(facility)) {
+      // Deselect all courts in this facility
+      setSelectedCourts(prev => prev.filter(id => !facility.courtIds.includes(id)));
     } else {
-      // Select all courts in this park
-      setSelectedCourts(prev => [...new Set([...prev, ...park.courtIds])]);
+      // Select all courts in this facility
+      setSelectedCourts(prev => [...new Set([...prev, ...facility.courtIds])]);
     }
   };
 
-  // Count selected parks
-  const selectedParksCount = parks.filter(isParkSelected).length;
+  // Count selected facilities
+  const selectedFacilitiesCount = facilities.filter(isFacilitySelected).length;
 
   // Load subscriber preferences and courts
   useEffect(() => {
@@ -163,11 +108,11 @@ function AlertsPageContent() {
         setEndHour(prefData.data.preferred_end_hour ?? 21);
         setAlertHour(prefData.data.alert_hour ?? 7);
 
-        // Fetch courts list
-        const courtsRes = await fetch('/api/courts-list');
-        if (courtsRes.ok) {
-          const courtsData = await courtsRes.json();
-          setCourts(courtsData.courts || []);
+        // Fetch facilities list (grouped to match map pins)
+        const facilitiesRes = await fetch('/api/facilities-list');
+        if (facilitiesRes.ok) {
+          const facilitiesData = await facilitiesRes.json();
+          setFacilities(facilitiesData.facilities || []);
         }
 
         setLoading(false);
@@ -275,14 +220,14 @@ function AlertsPageContent() {
 
         {/* Form sections */}
         <div className="space-y-6">
-          {/* Parks Selection */}
+          {/* Facilities Selection */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="h-5 w-5 text-green-600" />
-              <h2 className="text-lg font-semibold">Which parks do you want alerts for?</h2>
+              <h2 className="text-lg font-semibold">Which facilities do you want alerts for?</h2>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Select the parks near you. Only these will appear in your alert emails.
+              Select the facilities near you. Only these will appear in your alert emails.
             </p>
 
             {/* Search */}
@@ -291,53 +236,53 @@ function AlertsPageContent() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search parks or neighborhoods…"
+                placeholder="Search facilities or neighborhoods…"
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto">
-              {filteredParks.map(park => (
+              {filteredFacilities.map(facility => (
                 <label
-                  key={park.name}
+                  key={facility.name}
                   className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
-                    isParkSelected(park)
+                    isFacilitySelected(facility)
                       ? 'bg-green-50 border border-green-200'
                       : 'hover:bg-gray-50 border border-transparent'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={isParkSelected(park)}
-                    onChange={() => handleParkToggle(park)}
+                    checked={isFacilitySelected(facility)}
+                    onChange={() => handleFacilityToggle(facility)}
                     className="sr-only"
                   />
                   <div
                     className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                      isParkSelected(park)
+                      isFacilitySelected(facility)
                         ? 'bg-green-600 border-green-600'
                         : 'border-gray-300'
                     }`}
                   >
-                    {isParkSelected(park) && (
+                    {isFacilitySelected(facility) && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-sm font-medium block">{park.name}</span>
-                    <span className="text-xs text-gray-500">{park.courtIds.length} court{park.courtIds.length !== 1 ? 's' : ''}</span>
+                    <span className="text-sm font-medium block">{facility.name}</span>
+                    <span className="text-xs text-gray-500">{facility.courtIds.length} court{facility.courtIds.length !== 1 ? 's' : ''}</span>
                   </div>
                 </label>
               ))}
             </div>
-            {parks.length === 0 && (
-              <p className="text-gray-500 text-sm">Loading parks...</p>
+            {facilities.length === 0 && (
+              <p className="text-gray-500 text-sm">Loading facilities...</p>
             )}
-            {parks.length > 0 && filteredParks.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">No parks match your search</p>
+            {facilities.length > 0 && filteredFacilities.length === 0 && (
+              <p className="text-gray-500 text-sm text-center py-4">No facilities match your search</p>
             )}
             <p className="text-xs text-gray-500 mt-3">
-              {selectedParksCount} park{selectedParksCount !== 1 ? 's' : ''} selected ({selectedCourts.length} court{selectedCourts.length !== 1 ? 's' : ''})
+              {selectedFacilitiesCount} facility{selectedFacilitiesCount !== 1 ? 'ies' : ''} selected ({selectedCourts.length} court{selectedCourts.length !== 1 ? 's' : ''})
             </p>
           </div>
 
