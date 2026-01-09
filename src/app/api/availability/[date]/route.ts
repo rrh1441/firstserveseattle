@@ -25,6 +25,32 @@ interface CourtRow {
   ball_machine: boolean | null;
 }
 
+interface HistoryRow {
+  history_id: number;
+  original_court_id: number;
+  snapshot_timestamp: string;
+  title: string | null;
+  facility_type: string | null;
+  address: string | null;
+  available_dates: string | null;
+  google_map_url: string | null;
+  lights: boolean | null;
+  hitting_wall: boolean | null;
+  pickleball_lined: boolean | null;
+  ball_machine: boolean | null;
+}
+
+// Get today's date in Pacific Time
+function getTodayPacific(): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(new Date());
+}
+
 // Precise coordinates for Seattle tennis facilities
 const FACILITY_COORDS: Record<string, { lat: number; lon: number }> = {
   "AYTC Outdoor": { lat: 47.584092, lon: -122.297682 },
@@ -218,28 +244,94 @@ export async function GET(
     );
   }
 
+  const today = getTodayPacific();
+  const isToday = date === today;
+  const isPast = date < today;
+
   try {
-    const { data: courtData, error: courtErr } = await supabase
-      .from("tennis_courts")
-      .select(`
-        id,
-        title,
-        facility_type,
-        address,
-        available_dates,
-        google_map_url,
-        lights,
-        hitting_wall,
-        pickleball_lined,
-        ball_machine
-      `);
+    let courts: CourtRow[] = [];
 
-    if (courtErr) {
-      console.error("[availability] court fetch error:", courtErr);
-      return NextResponse.json({ error: "Failed to fetch courts" }, { status: 500 });
+    if (isToday) {
+      // For today, use current tennis_courts table
+      const { data: courtData, error: courtErr } = await supabase
+        .from("tennis_courts")
+        .select(`
+          id,
+          title,
+          facility_type,
+          address,
+          available_dates,
+          google_map_url,
+          lights,
+          hitting_wall,
+          pickleball_lined,
+          ball_machine
+        `);
+
+      if (courtErr) {
+        console.error("[availability] court fetch error:", courtErr);
+        return NextResponse.json({ error: "Failed to fetch courts" }, { status: 500 });
+      }
+      courts = (courtData ?? []) as CourtRow[];
+    } else if (isPast) {
+      // For past dates, use tennis_courts_history table
+      // Query snapshots from that date (using snapshot_timestamp)
+      const startOfDay = `${date}T00:00:00.000Z`;
+      const endOfDay = `${date}T23:59:59.999Z`;
+
+      const { data: historyData, error: historyErr } = await supabase
+        .from("tennis_courts_history")
+        .select(`
+          history_id,
+          original_court_id,
+          snapshot_timestamp,
+          title,
+          facility_type,
+          address,
+          available_dates,
+          google_map_url,
+          lights,
+          hitting_wall,
+          pickleball_lined,
+          ball_machine
+        `)
+        .gte("snapshot_timestamp", startOfDay)
+        .lte("snapshot_timestamp", endOfDay);
+
+      if (historyErr) {
+        console.error("[availability] history fetch error:", historyErr);
+        return NextResponse.json({ error: "Failed to fetch historical data" }, { status: 500 });
+      }
+
+      // Convert history rows to court rows format
+      // If multiple snapshots exist for a court on that day, use the latest one
+      const latestByCourtId = new Map<number, HistoryRow>();
+      for (const row of (historyData ?? []) as HistoryRow[]) {
+        const existing = latestByCourtId.get(row.original_court_id);
+        if (!existing || row.snapshot_timestamp > existing.snapshot_timestamp) {
+          latestByCourtId.set(row.original_court_id, row);
+        }
+      }
+
+      courts = Array.from(latestByCourtId.values()).map((h) => ({
+        id: h.original_court_id,
+        title: h.title,
+        facility_type: h.facility_type,
+        address: h.address,
+        available_dates: h.available_dates,
+        google_map_url: h.google_map_url,
+        lights: h.lights,
+        hitting_wall: h.hitting_wall,
+        pickleball_lined: h.pickleball_lined,
+        ball_machine: h.ball_machine,
+      }));
+    } else {
+      // Future dates not supported
+      return NextResponse.json(
+        { error: "Future dates not available" },
+        { status: 400 }
+      );
     }
-
-    const courts: CourtRow[] = (courtData ?? []) as CourtRow[];
 
     // Group courts by facility
     const facilityMap = new Map<
