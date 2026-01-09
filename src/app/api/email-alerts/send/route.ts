@@ -117,23 +117,27 @@ export async function POST(request: Request): Promise<NextResponse> {
       courtsMap.set(court.id, court);
     }
 
+    // Batch check: Get all subscribers who already received emails today (fixes N+1 query)
+    const todayStart = new Date(ptTime);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const subscriberIds = (subscribers as Subscriber[]).map(s => s.id);
+    const { data: alreadySentLogs } = await supabaseAdmin
+      .from('email_alert_logs')
+      .select('subscriber_id')
+      .eq('email_type', 'daily_alert')
+      .gte('sent_at', todayStart.toISOString())
+      .in('subscriber_id', subscriberIds);
+
+    const alreadySentSet = new Set(alreadySentLogs?.map(log => log.subscriber_id) || []);
+    console.log(`[send-alerts] ${alreadySentSet.size} subscribers already received emails today`);
+
     let sent = 0;
     let skipped = 0;
 
     for (const subscriber of subscribers as Subscriber[]) {
-      // Check if already sent today
-      const todayStart = new Date(ptTime);
-      todayStart.setHours(0, 0, 0, 0);
-
-      const { data: existingLog } = await supabaseAdmin
-        .from('email_alert_logs')
-        .select('id')
-        .eq('subscriber_id', subscriber.id)
-        .eq('email_type', 'daily_alert')
-        .gte('sent_at', todayStart.toISOString())
-        .limit(1);
-
-      if (existingLog && existingLog.length > 0) {
+      // Check if already sent today (using pre-fetched Set instead of N+1 query)
+      if (alreadySentSet.has(subscriber.id)) {
         console.log(`[send-alerts] Skipping ${subscriber.email} - already sent today`);
         skipped++;
         continue;

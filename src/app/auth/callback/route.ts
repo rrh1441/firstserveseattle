@@ -39,25 +39,15 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      // Store Apple provider ID if this is an Apple OAuth user
+      // Get Apple provider ID if this is an Apple OAuth user
       const appleIdentity = data.user.identities?.find(i => i.provider === 'apple')
-      if (appleIdentity?.id) {
-        console.log('🍎 Storing Apple provider ID:', appleIdentity.id)
-        // Update subscriber with Apple provider ID and user_id
-        await supabaseAdmin
-          .from('subscribers')
-          .update({
-            apple_provider_id: appleIdentity.id,
-            user_id: data.user.id,
-          })
-          .eq('email', userEmail)
-      }
+      const appleProviderId = appleIdentity?.id || null
 
-      // If this is signup mode, we need to check if user has completed payment
+      // If this is signup mode, handle trial creation or existing user
       if (mode === 'signup' || redirectTo === '/signup') {
-        console.log('🔄 Checking if Apple user needs to complete payment setup')
-        
-        // Check if user exists in subscribers table (has completed payment)
+        console.log('🔄 Checking if user needs trial setup')
+
+        // Check if user exists in subscribers table
         const { data: subscriber } = await supabase
           .from('subscribers')
           .select('id, status')
@@ -65,39 +55,68 @@ export async function GET(request: NextRequest) {
           .maybeSingle()
 
         if (!subscriber) {
-          console.log('💳 Apple user needs payment setup, creating Stripe checkout with prefilled email')
-          
-          // Create Stripe checkout session with prefilled email and user ID
-          try {
-            const checkoutResponse = await fetch(`${requestUrl.origin}/api/create-checkout-session`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: data.user.email,
-                plan: 'monthly', // default to monthly
-                userId: data.user.id,
-              })
-            })
+          console.log('🆕 New user signup - creating 7-day trial')
 
-            if (checkoutResponse.ok) {
-              const { url } = await checkoutResponse.json()
-              console.log('✅ Redirecting Apple user to Stripe checkout with prefilled email')
-              return NextResponse.redirect(url)
-            } else {
-              console.error('❌ Failed to create checkout session for Apple user')
-              return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
-            }
-          } catch (checkoutError) {
-            console.error('❌ Error creating checkout session:', checkoutError)
-            return NextResponse.redirect(new URL('/signup?apple_user=true&error=checkout_failed', requestUrl.origin))
+          // Calculate trial end date (7 days from now, in epoch seconds)
+          const trialEndDate = new Date()
+          trialEndDate.setDate(trialEndDate.getDate() + 7)
+          const trialEndEpoch = Math.floor(trialEndDate.getTime() / 1000)
+
+          // Create trial subscriber record (include Apple provider ID if present)
+          const insertData: Record<string, unknown> = {
+            user_id: data.user.id,
+            email: data.user.email,
+            status: 'trialing',
+            trial_end: trialEndEpoch,
+            has_card: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }
+          if (appleProviderId) {
+            insertData.apple_provider_id = appleProviderId
+          }
+
+          const { error: insertError } = await supabaseAdmin
+            .from('subscribers')
+            .insert(insertData)
+
+          if (insertError) {
+            console.error('❌ Failed to create trial subscriber:', insertError)
+            return NextResponse.redirect(new URL('/signup?error=trial_creation_failed', requestUrl.origin))
+          }
+
+          console.log('✅ Trial created for user:', data.user.email, 'expires:', trialEndDate.toISOString())
+
+          // Redirect to the app - user now has 7-day trial access
+          return NextResponse.redirect(new URL('/testc', requestUrl.origin))
         } else {
-          console.log('✅ Apple user has payment setup, redirecting to members')
-          // Existing user with payment - redirect to members
-          return NextResponse.redirect(new URL('/members', requestUrl.origin))
+          // Existing user - update Apple provider ID if needed
+          if (appleProviderId) {
+            console.log('🍎 Updating Apple provider ID for existing user')
+            await supabaseAdmin
+              .from('subscribers')
+              .update({
+                apple_provider_id: appleProviderId,
+                user_id: data.user.id,
+              })
+              .eq('email', userEmail)
+          }
+
+          console.log('✅ Existing subscriber found, redirecting to app')
+          return NextResponse.redirect(new URL('/testc', requestUrl.origin))
         }
+      }
+
+      // For login mode (not signup), update Apple provider ID if present
+      if (appleProviderId) {
+        console.log('🍎 Storing Apple provider ID for login')
+        await supabaseAdmin
+          .from('subscribers')
+          .update({
+            apple_provider_id: appleProviderId,
+            user_id: data.user.id,
+          })
+          .eq('email', userEmail)
       }
     }
 

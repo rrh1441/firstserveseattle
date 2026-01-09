@@ -27,11 +27,12 @@ const ANNUAL_ID = useNewAccount
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {
-    const { email, plan, offerId, userId } = (await request.json()) as {
+    const { email, plan, offerId, userId, trialEnd } = (await request.json()) as {
       email?: string;
       plan?: string;
       offerId?: string;
       userId?: string;
+      trialEnd?: number; // Epoch seconds - if provided, billing starts at this date
     };
 
     if (!email || !plan) {
@@ -80,6 +81,15 @@ export async function POST(request: Request) {
         sessionId: cookieStore.get("datafast_session_id")?.value ?? null,
       },
     };
+
+    // If trialEnd is provided (user is subscribing during trial), honor remaining trial
+    // Stripe will collect payment info but won't charge until trial_end
+    if (trialEnd && trialEnd > Math.floor(Date.now() / 1000)) {
+      sessionConfig.subscription_data = {
+        trial_end: trialEnd,
+      };
+      console.log('📅 Setting trial_end for subscription:', new Date(trialEnd * 1000).toISOString());
+    }
 
     // Apply 50% discount for first month if applicable (monthly plans only)
     if (isDiscountOffer && selectedPlan === 'monthly') {

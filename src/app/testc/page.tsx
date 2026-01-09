@@ -268,6 +268,55 @@ function InlineAuthPrompt({
   );
 }
 
+// Trial expired upgrade prompt
+function TrialExpiredPrompt({
+  onUpgradeClick,
+  loading,
+}: {
+  onUpgradeClick: (plan: "monthly" | "annual") => void;
+  loading: boolean;
+}) {
+  return (
+    <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 shadow-sm mt-3">
+      <div className="text-center mb-3">
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-amber-100 rounded-full mb-2">
+          <Clock className="w-5 h-5 text-amber-600" />
+        </div>
+        <h3 className="font-semibold text-gray-900 text-sm">
+          Your trial has ended
+        </h3>
+        <p className="text-xs text-gray-600 mt-0.5">
+          Subscribe to see today&apos;s court availability
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <button
+          onClick={() => onUpgradeClick("annual")}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 px-4 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50"
+        >
+          <Star className="w-4 h-4" />
+          $64/year
+          <span className="text-emerald-200 text-xs font-normal">(save 33%)</span>
+        </button>
+
+        <button
+          onClick={() => onUpgradeClick("monthly")}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          $8/month
+        </button>
+      </div>
+
+      <p className="text-xs text-gray-500 text-center mt-3">
+        Secure checkout with Apple Pay, Google Pay, or card
+      </p>
+    </div>
+  );
+}
+
 function TestCPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -277,7 +326,10 @@ function TestCPageInner() {
   const [user, setUser] = useState<User | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
+  const [trialEndEpoch, setTrialEndEpoch] = useState<number | null>(null);
+  const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   // Data state
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -304,15 +356,26 @@ function TestCPageInner() {
           .single();
 
         if (subscriber) {
-          const isActive = ["active", "trialing", "paid"].includes(subscriber.status);
-          const trialEnd = subscriber.trial_end ? new Date(subscriber.trial_end) : null;
-          const inTrial = trialEnd && trialEnd > new Date();
+          // trial_end is stored as epoch seconds, convert to ms for Date
+          const trialEndMs = subscriber.trial_end ? subscriber.trial_end * 1000 : null;
+          const trialEnd = trialEndMs ? new Date(trialEndMs) : null;
+          const now = new Date();
 
-          setHasAccess(isActive || !!inTrial);
+          // Determine access based on status and trial state
+          const isPaidSubscriber = ["active", "paid"].includes(subscriber.status);
+          const inActiveTrial = subscriber.status === "trialing" && !!trialEnd && trialEnd > now;
+          const trialHasExpired = subscriber.status === "trialing" && !!trialEnd && trialEnd <= now;
 
-          if (inTrial && trialEnd) {
+          setHasAccess(isPaidSubscriber || inActiveTrial);
+          setIsTrialExpired(!!trialHasExpired);
+
+          if (inActiveTrial && trialEnd && subscriber.trial_end) {
             const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
             setTrialDaysRemaining(daysLeft);
+            setTrialEndEpoch(subscriber.trial_end); // Store epoch seconds for checkout
+          } else {
+            setTrialDaysRemaining(null);
+            setTrialEndEpoch(null);
           }
         }
       }
@@ -328,6 +391,8 @@ function TestCPageInner() {
       } else {
         setHasAccess(false);
         setTrialDaysRemaining(null);
+        setTrialEndEpoch(null);
+        setIsTrialExpired(false);
       }
     });
 
@@ -432,6 +497,58 @@ function TestCPageInner() {
     router.push("/login?redirect_to=/testc");
   };
 
+  // For users still in trial - billing starts at trial end
+  const handleUpgradeClick = async (plan: "monthly" | "annual") => {
+    if (!user?.email) return;
+    setUpgradeLoading(true);
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          plan,
+          userId: user.id,
+          trialEnd: trialEndEpoch, // Pass trial end so billing starts then
+        }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error("Failed to create checkout:", err);
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
+
+  // For users with expired trial - billing starts immediately
+  const handleExpiredTrialUpgrade = async (plan: "monthly" | "annual") => {
+    if (!user?.email) return;
+    setUpgradeLoading(true);
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          plan,
+          userId: user.id,
+          // No trialEnd - billing starts immediately
+        }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error("Failed to create checkout:", err);
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
+
   const mapsUrl = (facility: Facility) =>
     `https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lon}`;
 
@@ -483,13 +600,15 @@ function TestCPageInner() {
           {/* Auth status */}
           {user ? (
             <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-gray-600 font-medium">
-                {hasAccess
-                  ? trialDaysRemaining
-                    ? `Trial (${trialDaysRemaining}d)`
-                    : "Subscribed"
-                  : "Expired"}
+              <div className={`w-2 h-2 rounded-full ${isTrialExpired ? "bg-amber-500" : "bg-emerald-500"}`} />
+              <span className={`font-medium ${isTrialExpired ? "text-amber-600" : "text-gray-600"}`}>
+                {isTrialExpired
+                  ? "Trial ended"
+                  : hasAccess
+                    ? trialDaysRemaining
+                      ? `Trial (${trialDaysRemaining}d)`
+                      : "Subscribed"
+                    : "Expired"}
               </span>
             </div>
           ) : (
@@ -646,14 +765,22 @@ function TestCPageInner() {
                 </div>
 
                 {/* Auth prompt for anonymous users */}
-                {isYesterday && (
+                {!user && isYesterday && (
                   <InlineAuthPrompt
                     onAuthClick={handleAuthClick}
                     onLoginClick={handleLoginClick}
                   />
                 )}
 
-                {/* Trial status for authenticated users */}
+                {/* Trial expired prompt */}
+                {isTrialExpired && (
+                  <TrialExpiredPrompt
+                    onUpgradeClick={handleExpiredTrialUpgrade}
+                    loading={upgradeLoading}
+                  />
+                )}
+
+                {/* Trial status for authenticated users in active trial */}
                 {hasAccess && trialDaysRemaining !== null && (
                   <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
                     <div className="text-emerald-700 text-sm font-medium">
@@ -723,7 +850,7 @@ function TestCPageInner() {
             <div className="space-y-2">
               {user ? (
                 <>
-                  <div className="px-4 py-3 bg-gray-50 rounded-xl mb-2">
+                  <div className={`px-4 py-3 rounded-xl mb-2 ${isTrialExpired ? "bg-amber-50 border border-amber-200" : "bg-gray-50"}`}>
                     <p className="text-sm text-gray-600">Signed in as</p>
                     <p className="font-medium text-gray-900 truncate">{user.email}</p>
                     {trialDaysRemaining !== null && (
@@ -731,7 +858,63 @@ function TestCPageInner() {
                         Trial: {trialDaysRemaining} days left
                       </p>
                     )}
+                    {isTrialExpired && (
+                      <p className="text-sm text-amber-600 font-medium mt-1">
+                        Your trial has ended
+                      </p>
+                    )}
                   </div>
+
+                  {/* Upgrade options for expired trial users */}
+                  {isTrialExpired && (
+                    <div className="mb-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">
+                        Subscribe to see today&apos;s availability
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleExpiredTrialUpgrade("monthly")}
+                          disabled={upgradeLoading}
+                          className="flex-1 py-2 px-3 bg-white border border-amber-300 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                        >
+                          $8/mo
+                        </button>
+                        <button
+                          onClick={() => handleExpiredTrialUpgrade("annual")}
+                          disabled={upgradeLoading}
+                          className="flex-1 py-2 px-3 bg-emerald-600 rounded-lg text-sm font-medium text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                        >
+                          $64/yr <span className="text-emerald-200 text-xs">save 33%</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upgrade options for active trial users */}
+                  {trialDaysRemaining !== null && (
+                    <div className="mb-3 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">
+                        Subscribe now — billing starts after trial
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleUpgradeClick("monthly")}
+                          disabled={upgradeLoading}
+                          className="flex-1 py-2 px-3 bg-white border border-emerald-300 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                        >
+                          $8/mo
+                        </button>
+                        <button
+                          onClick={() => handleUpgradeClick("annual")}
+                          disabled={upgradeLoading}
+                          className="flex-1 py-2 px-3 bg-emerald-600 rounded-lg text-sm font-medium text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                        >
+                          $64/yr <span className="text-emerald-200 text-xs">save 33%</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => {
                       setShowMenuModal(false);

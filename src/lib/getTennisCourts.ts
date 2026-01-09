@@ -43,31 +43,34 @@ export interface TennisCourt {
 /* ---------- main fetch ---------- */
 
 export async function getTennisCourts(): Promise<TennisCourt[]> {
-  /* 1 ── base court data (no generics on `.from`) */
-  const { data: courtData, error: courtErr } = await supabase
-    .from("tennis_courts")
-    .select(`
-      id,
-      title,
-      facility_type,
-      address,
-      available_dates,
-      google_map_url,
-      lights,
-      hitting_wall,
-      pickleball_lined,
-      ball_machine
-    `);
+  /* Fetch court data and popularity in parallel for better performance */
+  const [courtResult, popResult] = await Promise.all([
+    supabase
+      .from("tennis_courts")
+      .select(`
+        id,
+        title,
+        facility_type,
+        address,
+        available_dates,
+        google_map_url,
+        lights,
+        hitting_wall,
+        pickleball_lined,
+        ball_machine
+      `),
+    supabase
+      .from("v_court_popularity_7d")
+      .select("court_id, avg_busy_score_7d"),
+  ]);
+
+  const { data: courtData, error: courtErr } = courtResult;
+  const { data: popData, error: popErr } = popResult;
 
   if (courtErr) {
     console.error("[getTennisCourts] court fetch error:", courtErr);
     return [];
   }
-
-  /* 2 ── popularity view */
-  const { data: popData, error: popErr } = await supabase
-    .from("v_court_popularity_7d")
-    .select("court_id, avg_busy_score_7d");
 
   if (popErr) {
     console.error("[getTennisCourts] popularity fetch error:", popErr);
