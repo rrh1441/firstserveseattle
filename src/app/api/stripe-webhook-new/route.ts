@@ -6,24 +6,20 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 import { GmailEmailService as EmailService } from '@/lib/gmail/email-service';
+import { requireEnvWithFallback, redactEmail, cardOnFile } from '@/lib/stripe';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic'; // disables edge caching for this route
 
 // ──────────────────────────────────────────────────────────────────────────
 //  1. Library / client setup - NEW ACCOUNT
 // ──────────────────────────────────────────────────────────────────────────
-// Use fallback to old key if new key not configured yet
-const stripeKey = process.env.STRIPE_SECRET_KEY_NEW || process.env.STRIPE_SECRET_KEY || '';
+const stripeKey = requireEnvWithFallback('STRIPE_SECRET_KEY_NEW', 'STRIPE_SECRET_KEY');
+
 const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as Stripe.LatestApiVersion,
 });
-
-const supa = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 // NEW account price IDs (fallback to old if not configured)
 const MONTHLY_ID = process.env.STRIPE_MONTHLY_PRICE_ID_NEW || 'price_1Qbm96KSaqiJUYkj7SWySbjU';
@@ -32,13 +28,6 @@ const ANNUAL_ID  = process.env.STRIPE_ANNUAL_PRICE_ID_NEW || 'price_1QowMRKSaqiJ
 // ──────────────────────────────────────────────────────────────────────────
 //  2. Helper utilities
 // ──────────────────────────────────────────────────────────────────────────
-/** True if a customer currently has any default payment method. */
-function cardOnFile(cust: Stripe.Customer): boolean {
-  return Boolean(
-    cust.invoice_settings?.default_payment_method || cust.default_source,
-  );
-}
-
 /** Upsert row - update by email first, then by stripe_customer_id */
 async function upsertSubscriber(fields: {
   stripeCustomerId:     string;
@@ -49,7 +38,12 @@ async function upsertSubscriber(fields: {
   hasCard?:             boolean;
   trialEnd?:            number | null;
 }) {
-  console.log('🔄 [NEW ACCOUNT] upsertSubscriber called with:', fields);
+  console.log('🔄 [NEW ACCOUNT] upsertSubscriber:', {
+    stripeCustomerId: fields.stripeCustomerId,
+    hasEmail: !!fields.email,
+    plan: fields.plan,
+    status: fields.status,
+  });
 
   const {
     stripeCustomerId,
@@ -88,22 +82,22 @@ async function upsertSubscriber(fields: {
   if (hasCard !== undefined) updateData.has_card = hasCard;
   if (trialEnd !== undefined) updateData.trial_end = trialEnd;
 
-  console.log('📝 [NEW ACCOUNT] updateData:', updateData);
+  console.log('📝 [NEW ACCOUNT] updateData: customerId=%s, plan=%s, status=%s', stripeCustomerId, plan, status);
 
   // Try to update by email first (from signup)
   if (email) {
-    console.log('🔍 [NEW ACCOUNT] Looking for existing record by email:', email);
-    const { data: existingByEmail, error: emailError } = await supa
+    console.log('🔍 [NEW ACCOUNT] Looking for existing record by email:', redactEmail(email));
+    const { data: existingByEmail, error: emailError } = await supabaseAdmin
       .from('subscribers')
       .select('id')
       .eq('email', email)
       .maybeSingle();
 
-    console.log('📋 [NEW ACCOUNT] Email lookup result:', { existingByEmail, emailError });
+    console.log('📋 [NEW ACCOUNT] Email lookup: found=%s, error=%s', !!existingByEmail, !!emailError);
 
     if (existingByEmail && !emailError) {
       console.log('✅ [NEW ACCOUNT] Found existing record, updating by email');
-      const { error: updateError } = await supa
+      const { error: updateError } = await supabaseAdmin
         .from('subscribers')
         .update(updateData)
         .eq('email', email);
@@ -121,7 +115,7 @@ async function upsertSubscriber(fields: {
 
   // Fallback to upsert by stripe_customer_id
   console.log('🔄 [NEW ACCOUNT] Upserting by stripe_customer_id:', stripeCustomerId);
-  const { error } = await supa
+  const { error } = await supabaseAdmin
     .from('subscribers')
     .upsert(updateData, { onConflict: 'stripe_customer_id' });
 
@@ -158,8 +152,8 @@ export async function POST(req: NextRequest) {
       webhookSecret,
     );
     console.log('✅ [NEW ACCOUNT] Webhook signature verified. Event type:', event.type);
-  } catch (err) {
-    console.warn('❌ [NEW ACCOUNT] Signature verification failed:', err);
+  } catch {
+    console.warn('❌ [NEW ACCOUNT] Webhook signature verification failed');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -200,7 +194,7 @@ export async function POST(req: NextRequest) {
         console.log(`🆕 [NEW WEBHOOK] Checkout completed - Creating subscription:`, {
           subscriptionId: subId,
           customerId: custId,
-          email: customerEmail,
+          email: redactEmail(customerEmail),
           plan: plan,
           status: subscription.status
         });
@@ -219,7 +213,7 @@ export async function POST(req: NextRequest) {
 
         // Send welcome email for new subscriptions
         if (customerEmail && (plan === 'monthly' || plan === 'annual')) {
-          console.log('📧 [NEW ACCOUNT] Sending welcome email to:', customerEmail);
+          console.log('📧 [NEW ACCOUNT] Sending welcome email to:', redactEmail(customerEmail));
           await EmailService.sendWelcomeEmail(customerEmail, plan);
         }
         break;
@@ -261,7 +255,7 @@ export async function POST(req: NextRequest) {
         )) as Stripe.Customer;
 
         console.log(`📝 [NEW WEBHOOK] Upserting subscriber:`, {
-          email: customer.email,
+          email: redactEmail(customer.email ?? ''),
           subscriptionId: sub.id,
           customerId: custId,
           status: sub.status
@@ -309,7 +303,7 @@ export async function POST(req: NextRequest) {
 
         // Send cancellation email
         if (customerEmail) {
-          console.log('📧 [NEW ACCOUNT] Sending cancellation email to:', customerEmail);
+          console.log('📧 [NEW ACCOUNT] Sending cancellation email to:', redactEmail(customerEmail));
           await EmailService.sendCancellationEmail(customerEmail);
         }
         break;
@@ -364,7 +358,7 @@ export async function POST(req: NextRequest) {
         if (customerEmail && inv.billing_reason === 'subscription_cycle' && inv.amount_paid > 0) {
           const subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
           const plan = subscription ? planFromPrice(subscription.items.data[0]?.price.id ?? '') : 'unknown';
-          console.log('📧 [NEW ACCOUNT] Sending payment success email to:', customerEmail);
+          console.log('📧 [NEW ACCOUNT] Sending payment success email to:', redactEmail(customerEmail));
           await EmailService.sendPaymentSuccessEmail(customerEmail, inv.amount_paid, plan);
         }
         break;
@@ -388,7 +382,7 @@ export async function POST(req: NextRequest) {
 
         // Send payment failed email
         if (customerEmail) {
-          console.log('📧 [NEW ACCOUNT] Sending payment failed email to:', customerEmail);
+          console.log('📧 [NEW ACCOUNT] Sending payment failed email to:', redactEmail(customerEmail));
           await EmailService.sendPaymentFailedEmail(customerEmail);
         }
         break;

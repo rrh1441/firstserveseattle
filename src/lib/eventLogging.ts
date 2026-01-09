@@ -14,16 +14,6 @@ export type ConversionIntent =
   | 'ready_to_play' // Opening maps, getting directions
   | 'subscribing';  // In paywall flow
 
-interface EnhancedEventContext {
-  userJourneyStage?: UserJourneyStage;
-  conversionIntent?: ConversionIntent;
-  sessionDepth?: number;
-  timeOnSite?: number;
-  uniqueDays?: number;
-  gateDays?: number;
-  daysUntilPaywall?: number;
-}
-
 // Only log filter events when they're actually changed from defaults
 class FilterEventTracker {
   private static defaultFilters = {
@@ -241,19 +231,4 @@ export {
   ConversionTracker,
 };
 
-// Backward compatibility wrapper for existing code
-export function enhancedLogEvent(
-  event: string, 
-  metadata: Record<string, unknown> = {},
-  context: EnhancedEventContext = {}
-) {
-  // Add enhanced context to all events
-  const enhancedMetadata = {
-    ...metadata,
-    ...context,
-    timestamp: new Date().toISOString(),
-    sessionId: localStorage.getItem('userId'), // For session tracking
-  };
-
-  logEvent(event, enhancedMetadata);
-} 
+// Note: For GTM-integrated event logging, use enhancedLogEvent from '@/lib/enhancedLogEvent'

@@ -1,32 +1,27 @@
 /* app/api/stripe-webhook/route.ts
  *
+ * Webhook handler for ORIGINAL Stripe account.
  * Handles all live-mode Stripe web-hooks and mirrors them into the `subscribers`
- * table.  Fully strict-mode compliant: noImplicitAny, strictNullChecks, etc.
+ * table. Fully strict-mode compliant: noImplicitAny, strictNullChecks, etc.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
 import { GmailEmailService as EmailService } from '@/lib/gmail/email-service';
+import { requireEnv, redactEmail, cardOnFile } from '@/lib/stripe';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic'; // disables edge caching for this route
 
 // ──────────────────────────────────────────────────────────────────────────
 //  1. Library / client setup
 // ──────────────────────────────────────────────────────────────────────────
-// OLD webhook endpoint - ALWAYS use original Stripe account credentials
-// This endpoint is configured in the original Stripe account dashboard
-console.log('🌐 Webhook (OLD endpoint) - Using original Stripe account');
-const stripeKey = process.env.STRIPE_SECRET_KEY!;
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+const stripeKey = requireEnv('STRIPE_SECRET_KEY');
+const webhookSecret = requireEnv('STRIPE_WEBHOOK_SECRET');
 
 const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-01-27.acacia' as Stripe.LatestApiVersion,
 });
-
-const supa = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
 
 // Price IDs for original Stripe account
 const MONTHLY_ID = 'price_1Qbm96KSaqiJUYkj7SWySbjU';
@@ -35,13 +30,6 @@ const ANNUAL_ID = 'price_1QowMRKSaqiJUYkjgeqLADm4';
 // ──────────────────────────────────────────────────────────────────────────
 //  2. Helper utilities
 // ──────────────────────────────────────────────────────────────────────────
-/** True if a customer currently has any default payment method. */
-function cardOnFile(cust: Stripe.Customer): boolean {
-  return Boolean(
-    cust.invoice_settings?.default_payment_method || cust.default_source,
-  );
-}
-
 /** Upsert row - update by user_id first, then email, then stripe_customer_id */
 async function upsertSubscriber(fields: {
   stripeCustomerId:     string;
@@ -53,7 +41,12 @@ async function upsertSubscriber(fields: {
   hasCard?:             boolean;
   trialEnd?:            number | null;
 }) {
-  console.log('🔄 upsertSubscriber called with:', fields);
+  console.log('🔄 upsertSubscriber called:', {
+    stripeCustomerId: fields.stripeCustomerId,
+    hasEmail: !!fields.email,
+    plan: fields.plan,
+    status: fields.status,
+  });
 
   const {
     stripeCustomerId,
@@ -82,12 +75,12 @@ async function upsertSubscriber(fields: {
     updateData.user_id = userId;
   }
 
-  console.log('📝 updateData:', updateData);
+  console.log('📝 updateData: customerId=%s, plan=%s, status=%s', stripeCustomerId, plan, status);
 
   // Try to update by user_id first (most reliable)
   if (userId) {
     console.log('🔍 Looking for existing record by user_id:', userId);
-    const { data: existingByUserId, error: userIdError } = await supa
+    const { data: existingByUserId, error: userIdError } = await supabaseAdmin
       .from('subscribers')
       .select('id')
       .eq('user_id', userId)
@@ -95,7 +88,7 @@ async function upsertSubscriber(fields: {
 
     if (existingByUserId && !userIdError) {
       console.log('✅ Found existing record, updating by user_id');
-      const { error: updateError } = await supa
+      const { error: updateError } = await supabaseAdmin
         .from('subscribers')
         .update(updateData)
         .eq('user_id', userId);
@@ -111,18 +104,18 @@ async function upsertSubscriber(fields: {
 
   // Try to update by email second
   if (email) {
-    console.log('🔍 Looking for existing record by email:', email);
-    const { data: existingByEmail, error: emailError } = await supa
+    console.log('🔍 Looking for existing record by email:', redactEmail(email));
+    const { data: existingByEmail, error: emailError } = await supabaseAdmin
       .from('subscribers')
       .select('id')
       .eq('email', email)
       .maybeSingle();
 
-    console.log('📋 Email lookup result:', { existingByEmail, emailError });
+    console.log('📋 Email lookup result: found=%s, error=%s', !!existingByEmail, !!emailError);
 
     if (existingByEmail && !emailError) {
       console.log('✅ Found existing record, updating by email');
-      const { error: updateError } = await supa
+      const { error: updateError } = await supabaseAdmin
         .from('subscribers')
         .update(updateData)
         .eq('email', email);
@@ -140,7 +133,7 @@ async function upsertSubscriber(fields: {
 
   // Fallback to upsert by stripe_customer_id
   console.log('🔄 Upserting by stripe_customer_id:', stripeCustomerId);
-  const { error } = await supa
+  const { error } = await supabaseAdmin
     .from('subscribers')
     .upsert(updateData, { onConflict: 'stripe_customer_id' });
 
@@ -177,8 +170,8 @@ export async function POST(req: NextRequest) {
       webhookSecret,
     );
     console.log('✅ Webhook signature verified. Event type:', event.type);
-  } catch (err) {
-    console.warn('❌ Signature verification failed:', err);
+  } catch {
+    console.warn('❌ Webhook signature verification failed');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
