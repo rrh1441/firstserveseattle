@@ -15,7 +15,6 @@ import {
   ChevronUp,
   Zap,
   Info,
-  Mail,
   Star,
   ExternalLink,
 } from "lucide-react";

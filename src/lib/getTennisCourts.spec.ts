@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getTennisCourts, TennisCourt, ParsedInterval } from './getTennisCourts'
+import { getTennisCourts } from './getTennisCourts'
 
 // Mock the supabase client
 vi.mock('@/lib/supabaseClient', () => ({
@@ -51,7 +51,7 @@ describe('getTennisCourts', () => {
     const mockFrom = vi.mocked(supabase.from)
 
     // Track call order to verify parallel execution
-    let callOrder: string[] = []
+    const callOrder: string[] = []
 
     mockFrom.mockImplementation((table: string) => {
       callOrder.push(table)
