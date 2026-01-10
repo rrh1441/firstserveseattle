@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ import { ExternalLink, AlertTriangle, X } from 'lucide-react';
 
 import TennisCourtList from '../tennis-courts/components/TennisCourtList';
 import { Button } from '@/components/ui/button';
+import ReAuthModal from '@/app/components/ReAuthModal';
 
 /* ---------- tiny fetcher hits the server-side API, not Supabase ---------- */
 async function fetchMemberStatus(email: string | null | undefined) {
@@ -38,10 +39,32 @@ export default function MembersPage() {
   const [loadingPortal, setLP]      = useState(false);
   const [userEmail, setUserEmail]   = useState<string | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [showReAuthModal, setShowReAuthModal] = useState(false);
+  const [authProvider, setAuthProvider] = useState<'apple' | 'google' | 'email' | null>(null);
 
   const isPrivateRelay = userEmail?.endsWith('@privaterelay.appleid.com') ?? false;
 
   console.log('🏠 Members page component loaded');
+
+  /* ---------------- helper to open billing portal ---------------- */
+  const openBillingPortal = useCallback(async (accessToken: string) => {
+    setLP(true);
+    try {
+      const r = await fetch('/api/create-portal-link', {
+        method : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization : `Bearer ${accessToken}`,
+        },
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const { url } = (await r.json()) as { url: string };
+      window.location.href = url;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Portal error');
+      setLP(false);
+    }
+  }, []);
 
   /* ---------------- session + membership gate ---------------- */
   useEffect(() => {
@@ -59,6 +82,19 @@ export default function MembersPage() {
         setToken(session.access_token);
         setUserEmail(session.user.email ?? null);
 
+        // Detect auth provider from user identities
+        const identities = session.user.identities || [];
+        const appleIdentity = identities.find(i => i.provider === 'apple');
+        const googleIdentity = identities.find(i => i.provider === 'google');
+
+        if (appleIdentity) {
+          setAuthProvider('apple');
+        } else if (googleIdentity) {
+          setAuthProvider('google');
+        } else {
+          setAuthProvider('email');
+        }
+
         console.log('🧪 Checking membership status...');
         const ok = await fetchMemberStatus(session.user.email);
         console.log('📊 Membership status:', ok);
@@ -68,6 +104,15 @@ export default function MembersPage() {
           return;
         }
         console.log('✅ Membership confirmed, showing members content');
+
+        // Check if user just completed re-auth for billing
+        const pendingAction = localStorage.getItem('reauth_pending_action');
+        if (pendingAction === 'billing') {
+          console.log('🔄 Completing pending billing action after re-auth');
+          localStorage.removeItem('reauth_pending_action');
+          // Small delay to ensure state is set
+          setTimeout(() => openBillingPortal(session.access_token), 100);
+        }
       } catch (e) {
         console.error('💥 Error in members page:', e);
         setError(e instanceof Error ? e.message : String(e));
@@ -76,27 +121,19 @@ export default function MembersPage() {
         setChecking(false);
       }
     })();
-  }, [router, supabase]);
+  }, [router, supabase, openBillingPortal]);
 
   /* ---------------- customer-portal handler ------------------ */
-  async function manageSub() {
+  function manageSub() {
     if (!token) { setError('No session'); return; }
-    setLP(true);
-    try {
-      const r = await fetch('/api/create-portal-link', {
-        method : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization : `Bearer ${token}`,
-        },
-      });
-      if (!r.ok) throw new Error(await r.text());
-      const { url } = (await r.json()) as { url: string };
-      window.location.href = url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Portal error');
-    } finally {
-      setLP(false);
+    // Show re-auth modal before allowing access to billing
+    setShowReAuthModal(true);
+  }
+
+  function handleReAuthSuccess() {
+    setShowReAuthModal(false);
+    if (token) {
+      openBillingPortal(token);
     }
   }
 
@@ -115,6 +152,7 @@ export default function MembersPage() {
   }
 
   return (
+    <>
     <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8">
       {/* Private relay warning banner */}
       {isPrivateRelay && !bannerDismissed && (
@@ -196,5 +234,15 @@ export default function MembersPage() {
         </Button>
       </div>
     </div>
+
+    {/* Re-authentication modal for billing actions */}
+    <ReAuthModal
+      open={showReAuthModal}
+      onClose={() => setShowReAuthModal(false)}
+      onSuccess={handleReAuthSuccess}
+      userEmail={userEmail || ''}
+      authProvider={authProvider}
+    />
+    </>
   );
 }
