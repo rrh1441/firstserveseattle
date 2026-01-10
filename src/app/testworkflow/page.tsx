@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, ArrowLeft, Loader2, CreditCard } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -194,120 +194,17 @@ function facilityMatchesSearch(facility: Facility, searchTerm: string): boolean 
   return false;
 }
 
-// Auth prompt component - inline auth options
-function InlineAuthPrompt({
-  onGoogleAuth,
-  onAppleAuth,
-  onEmailAuth,
-  lastLoginMethod
-}: {
-  onGoogleAuth: () => void;
-  onAppleAuth: () => void;
-  onEmailAuth: () => void;
-  lastLoginMethod: string | null;
-}) {
-  // If they've logged in before, show a streamlined view
-  if (lastLoginMethod === 'google') {
-    return (
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-600 text-center mb-2">Welcome back!</p>
-        <button
-          onClick={onGoogleAuth}
-          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
-        <button onClick={onAppleAuth} className="w-full mt-2 text-xs text-gray-500 hover:text-gray-700">
-          Use Apple instead
-        </button>
-      </div>
-    );
-  }
-
-  if (lastLoginMethod === 'apple') {
-    return (
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-600 text-center mb-2">Welcome back!</p>
-        <button
-          onClick={onAppleAuth}
-          className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-          </svg>
-          Continue with Apple
-        </button>
-        <button onClick={onGoogleAuth} className="w-full mt-2 text-xs text-gray-500 hover:text-gray-700">
-          Use Google instead
-        </button>
-      </div>
-    );
-  }
-
-  // New user - show all options
-  return (
-    <div className="mt-3 pt-3 border-t border-gray-200">
-      <p className="text-xs font-medium text-gray-700 mb-2">
-        See today&apos;s availability
-      </p>
-      <div className="space-y-2">
-        <button
-          onClick={onAppleAuth}
-          className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-3 rounded-lg font-medium text-xs hover:bg-gray-800 transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-          </svg>
-          Apple
-        </button>
-        <button
-          onClick={onGoogleAuth}
-          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg font-medium text-xs hover:bg-gray-50 transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Google
-        </button>
-        <button
-          onClick={onEmailAuth}
-          className="w-full text-xs text-gray-500 hover:text-emerald-600 py-1"
-        >
-          Use email instead
-        </button>
-      </div>
-      <p className="text-[10px] text-gray-400 text-center mt-2">
-        Free 7-day trial
-      </p>
-    </div>
-  );
-}
-
-// Auth Modal component - clean slide-up modal for authentication
+// Auth Modal component - clean slide-up modal for email authentication
 function AuthModal({
   open,
   onClose,
-  onGoogleAuth,
-  onAppleAuth,
   supabase,
 }: {
   open: boolean;
   onClose: () => void;
-  onGoogleAuth: () => void;
-  onAppleAuth: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any;
 }) {
-  const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
@@ -344,15 +241,7 @@ function AuthModal({
     }
   };
 
-  const handleBack = () => {
-    setShowEmailForm(false);
-    setEmail("");
-    setError(null);
-    setMagicLinkSent(false);
-  };
-
   const handleClose = () => {
-    setShowEmailForm(false);
     setEmail("");
     setError(null);
     setMagicLinkSent(false);
@@ -369,17 +258,7 @@ function AuthModal({
       />
       <div className="relative bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          {showEmailForm && !magicLinkSent ? (
-            <button
-              onClick={handleBack}
-              className="p-2 -ml-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          ) : (
-            <div />
-          )}
+        <div className="flex items-center justify-end mb-2">
           <button
             onClick={handleClose}
             className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -403,12 +282,12 @@ function AuthModal({
               Click the link in the email to sign in and start your free trial.
             </p>
           </div>
-        ) : showEmailForm ? (
+        ) : (
           /* Email form */
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Sign in with email</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Start your free trial</h2>
             <p className="text-gray-500 text-sm mb-6">
-              We&apos;ll send you a magic link to sign in instantly.
+              7 days free, then $8/month. Cancel anytime.
             </p>
 
             {error && (
@@ -442,59 +321,9 @@ function AuthModal({
                 )}
               </button>
             </form>
-          </div>
-        ) : (
-          /* Main auth options */
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Start your free trial</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              7 days free, then $2.99/month. Cancel anytime.
-            </p>
-
-            <div className="space-y-3">
-              <button
-                onClick={onAppleAuth}
-                className="w-full flex items-center justify-center gap-3 bg-black text-white py-3 px-4 rounded-xl font-semibold text-base hover:bg-gray-800 transition-colors"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                </svg>
-                Continue with Apple
-              </button>
-
-              <button
-                onClick={onGoogleAuth}
-                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold text-base hover:bg-gray-50 transition-colors"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Google
-              </button>
-
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-400">or</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowEmailForm(true)}
-                className="w-full flex items-center justify-center gap-3 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-semibold text-base hover:bg-gray-200 transition-colors"
-              >
-                <Mail size={20} />
-                Continue with email
-              </button>
-            </div>
 
             <p className="text-xs text-gray-400 text-center mt-6">
-              By continuing, you agree to our Terms of Service and Privacy Policy.
+              We&apos;ll send you a link to sign in instantly.
             </p>
           </div>
         )}
@@ -520,15 +349,8 @@ export default function TestWorkflowPage() {
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [lastLoginMethod, setLastLoginMethod] = useState<string | null>(null);
 
   const supabase = createClientComponentClient();
-
-  // Check for last login method on mount
-  useEffect(() => {
-    const method = localStorage.getItem('last_login_method');
-    setLastLoginMethod(method);
-  }, []);
 
   // Check auth state
   useEffect(() => {
@@ -661,30 +483,6 @@ export default function TestWorkflowPage() {
       zoom: 14,
     }));
   }, []);
-
-  const handleGoogleAuth = async () => {
-    localStorage.setItem('last_login_method', 'google');
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow`,
-      },
-    });
-  };
-
-  const handleAppleAuth = async () => {
-    localStorage.setItem('last_login_method', 'apple');
-    await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow`,
-      },
-    });
-  };
-
-  const handleEmailAuth = () => {
-    setShowAuthModal(true);
-  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -1215,8 +1013,6 @@ export default function TestWorkflowPage() {
       <AuthModal
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onGoogleAuth={handleGoogleAuth}
-        onAppleAuth={handleAppleAuth}
         supabase={supabase}
       />
     </div>
