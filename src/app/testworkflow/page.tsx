@@ -482,7 +482,7 @@ export default function TestWorkflowPage() {
             maxWidth="340px"
             className="facility-popup"
           >
-            <div className="max-h-[60vh] overflow-y-auto">
+            <div>
               {/* Header */}
               <div className="mb-2">
                 <h3 className="font-bold text-gray-900 text-sm leading-tight">
@@ -502,40 +502,33 @@ export default function TestWorkflowPage() {
                 )}
               </div>
 
-              {/* Date badge */}
-              <div
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3 ${
-                  isYesterday
-                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                }`}
-              >
-                {isYesterday ? <Clock size={12} /> : <Calendar size={12} />}
-                {isYesterday ? `Yesterday (${dateLabel})` : `Today (${dateLabel})`}
-              </div>
-
-              {/* Availability summary */}
-              <div className="flex items-center gap-2 mb-3 text-xs">
+              {/* Date badge + availability inline */}
+              <div className="flex items-center gap-2 mb-2">
                 <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: selectedFacility.color }}
-                />
-                <span className="text-gray-600">
-                  {selectedFacility.availableCount} of {selectedFacility.totalCount} courts{" "}
-                  {isYesterday ? "were" : "are"} available
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                    isYesterday
+                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  }`}
+                >
+                  {isYesterday ? <Clock size={10} /> : <Calendar size={10} />}
+                  {isYesterday ? "Yesterday" : "Today"}
+                </div>
+                <span className="text-[10px] text-gray-500">
+                  {selectedFacility.availableCount}/{selectedFacility.totalCount} courts available
                 </span>
               </div>
 
-              {/* Court timelines */}
-              <div className="space-y-3">
-                {selectedFacility.courts.slice(0, 3).map((court) => (
+              {/* Court timelines - scrollable area */}
+              <div className="max-h-[35vh] overflow-y-auto space-y-2">
+                {selectedFacility.courts.slice(0, 4).map((court) => (
                   <div key={court.id} className="border-t pt-2 first:border-t-0 first:pt-0">
                     <MiniTimeline court={court} />
                   </div>
                 ))}
-                {selectedFacility.courts.length > 3 && (
-                  <div className="text-xs text-gray-500 text-center">
-                    +{selectedFacility.courts.length - 3} more courts
+                {selectedFacility.courts.length > 4 && (
+                  <div className="text-xs text-gray-500 text-center py-1">
+                    +{selectedFacility.courts.length - 4} more courts
                   </div>
                 )}
               </div>
@@ -550,9 +543,9 @@ export default function TestWorkflowPage() {
 
               {/* Trial status for authenticated users */}
               {hasAccess && trialDaysRemaining !== null && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                  <div className="text-emerald-700 text-sm font-medium">
-                    Trial: {trialDaysRemaining} days remaining
+                <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                  <div className="text-emerald-700 text-xs font-medium">
+                    Trial: {trialDaysRemaining} days left
                   </div>
                 </div>
               )}
@@ -561,22 +554,22 @@ export default function TestWorkflowPage() {
         )}
       </Map>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-3 py-2">
-        <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
-          <div className="flex items-center gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-emerald-500" />
-            <span>Available</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-orange-500" />
-            <span>Partial</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-red-500" />
-            <span>Booked</span>
-          </div>
-        </div>
+      {/* Bottom buttons */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <a
+          href="https://seattleballmachine.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-all"
+        >
+          Ball Machine
+        </a>
+        <button
+          onClick={handleLoginClick}
+          className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+        >
+          First Serve Seattle
+        </button>
       </div>
 
       {/* Search bar */}
