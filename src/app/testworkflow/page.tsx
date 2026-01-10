@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, Info } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -164,16 +164,6 @@ function getDateString(daysOffset: number = 0): string {
   return formatter.format(date);
 }
 
-function formatDateLabel(dateStr: string): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 // Neighborhood search mappings
 const NEIGHBORHOOD_KEYWORDS: Record<string, string[]> = {
   ballard: ["Soundview"],
@@ -262,9 +252,9 @@ export default function TestWorkflowPage() {
   const [search, setSearch] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
-  const [dataDate, setDataDate] = useState<string>("");
   const [view, setView] = useState<ViewMode>("map");
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
+  const [showMenuModal, setShowMenuModal] = useState(false);
 
   const supabase = createClientComponentClient();
 
@@ -323,7 +313,6 @@ export default function TestWorkflowPage() {
 
       // If user has access, show today; otherwise show yesterday
       const dateToFetch = hasAccess ? getDateString(0) : getDateString(-1);
-      setDataDate(dateToFetch);
 
       try {
         const res = await fetch(`/api/availability/${dateToFetch}`);
@@ -421,69 +410,68 @@ export default function TestWorkflowPage() {
   }
 
   const isYesterday = !hasAccess;
-  const dateLabel = formatDateLabel(dataDate);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b shadow-sm px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between gap-3">
           {/* Date badge */}
           <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 ${
               isYesterday
                 ? "bg-amber-50 text-amber-700 border border-amber-200"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
             }`}
           >
             {isYesterday ? <Clock size={14} /> : <Calendar size={14} />}
-            {isYesterday ? "Yesterday" : "Today"} &bull; {dateLabel}
+            {isYesterday ? "Yesterday" : "Today"}
+          </div>
+
+          {/* Search - compact on desktop */}
+          <div className="relative flex-1 max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-9 pr-8 py-2 bg-gray-100 border-0 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* View Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gray-100 rounded-lg p-1 shrink-0">
             <button
               onClick={() => setView("map")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all ${
                 view === "map"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              <MapIcon size={16} />
-              Map
+              <MapIcon size={14} />
+              <span className="hidden sm:inline">Map</span>
             </button>
             <button
               onClick={() => setView("list")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              <List size={16} />
-              List
+              <List size={14} />
+              <span className="hidden sm:inline">List</span>
             </button>
           </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search courts or neighborhoods..."
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-100 border-0 rounded-xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X size={18} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -725,18 +713,73 @@ export default function TestWorkflowPage() {
             href="https://seattleballmachine.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-all"
+            className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
           >
+            <Zap size={16} className="text-blue-500" />
             Ball Machine
           </a>
           <button
-            onClick={handleLoginClick}
-            className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+            onClick={() => setShowMenuModal(true)}
+            className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
           >
             First Serve Seattle
+            <ChevronUp size={16} className="text-emerald-500" />
           </button>
         </div>
       </div>
+
+      {/* Menu Modal */}
+      {showMenuModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowMenuModal(false)}
+          />
+          <div className="relative bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-slide-up">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900">First Serve Seattle</h2>
+              <button
+                onClick={() => setShowMenuModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  handleLoginClick();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <LogIn size={20} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Sign In / Sign Up</p>
+                  <p className="text-sm text-gray-500">Start your free trial</p>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenuModal(false);
+                  router.push('/about');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Info size={20} className="text-gray-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">About</p>
+                  <p className="text-sm text-gray-500">Learn more about us</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
