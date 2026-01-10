@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, Info, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, ArrowLeft, Loader2, CreditCard } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -320,6 +320,9 @@ function AuthModal({
     setLoading(true);
     setError(null);
 
+    // Store last login method for returning user experience
+    localStorage.setItem('last_login_method', 'email');
+
     try {
       const { error: signInError } = await supabase.auth.signInWithOtp({
         email: email.trim(),
@@ -510,6 +513,8 @@ export default function TestWorkflowPage() {
   const [viewState, setViewState] = useState(SEATTLE_CENTER);
   const [search, setSearch] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isTrialExpired, setIsTrialExpired] = useState(false);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>("map");
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
@@ -533,6 +538,8 @@ export default function TestWorkflowPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        setIsAuthenticated(true);
+
         // Check subscription/trial status
         const { data: subscriber } = await supabase
           .from("subscribers")
@@ -541,19 +548,36 @@ export default function TestWorkflowPage() {
           .single();
 
         if (subscriber) {
-          const isActive = ["active", "trialing", "paid"].includes(subscriber.status);
-          const trialEnd = subscriber.trial_end ? new Date(subscriber.trial_end) : null;
-          const inTrial = trialEnd && trialEnd > new Date();
+          const isPaidSubscriber = ["active", "paid"].includes(subscriber.status);
+          // trial_end is stored as epoch seconds, convert to ms
+          const trialEndMs = subscriber.trial_end ? subscriber.trial_end * 1000 : null;
+          const trialEnd = trialEndMs ? new Date(trialEndMs) : null;
+          const now = new Date();
 
-          setHasAccess(isActive || !!inTrial);
+          const inActiveTrial = subscriber.status === "trialing" && !!trialEnd && trialEnd > now;
+          const trialExpired = subscriber.status === "trialing" && !!trialEnd && trialEnd <= now;
 
-          if (inTrial && trialEnd) {
+          setHasAccess(isPaidSubscriber || inActiveTrial);
+          setIsTrialExpired(trialExpired);
+
+          if (inActiveTrial && trialEnd) {
             const daysLeft = Math.ceil(
-              (trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+              (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
             );
             setTrialDaysRemaining(daysLeft);
+          } else {
+            setTrialDaysRemaining(null);
           }
+        } else {
+          // Authenticated but no subscriber record
+          setHasAccess(false);
+          setIsTrialExpired(false);
         }
+      } else {
+        setIsAuthenticated(false);
+        setHasAccess(false);
+        setIsTrialExpired(false);
+        setTrialDaysRemaining(null);
       }
     };
 
@@ -565,7 +589,9 @@ export default function TestWorkflowPage() {
       if (session?.user) {
         checkAuth();
       } else {
+        setIsAuthenticated(false);
         setHasAccess(false);
+        setIsTrialExpired(false);
         setTrialDaysRemaining(null);
       }
     });
@@ -658,6 +684,16 @@ export default function TestWorkflowPage() {
 
   const handleEmailAuth = () => {
     setShowAuthModal(true);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('last_login_method');
+    setIsAuthenticated(false);
+    setHasAccess(false);
+    setIsTrialExpired(false);
+    setTrialDaysRemaining(null);
+    setShowMenuModal(false);
   };
 
   const mapsUrl = (facility: Facility) =>
@@ -866,14 +902,35 @@ export default function TestWorkflowPage() {
                 )}
               </div>
 
-              {/* Auth prompt for non-authenticated users */}
-              {isYesterday && (
-                <InlineAuthPrompt
-                  onGoogleAuth={handleGoogleAuth}
-                  onAppleAuth={handleAppleAuth}
-                  onEmailAuth={handleEmailAuth}
-                  lastLoginMethod={lastLoginMethod}
-                />
+              {/* Contextual CTA based on auth state */}
+              {!hasAccess && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  {isAuthenticated && isTrialExpired ? (
+                    <>
+                      <button
+                        onClick={() => router.push('/signup')}
+                        className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                      >
+                        Upgrade to continue
+                      </button>
+                      <p className="text-[10px] text-gray-400 text-center mt-2">
+                        Your trial has ended
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                      >
+                        See today&apos;s availability
+                      </button>
+                      <p className="text-[10px] text-gray-400 text-center mt-2">
+                        Free 7-day trial
+                      </p>
+                    </>
+                  )}
+                </div>
               )}
 
               {/* Trial status for authenticated users */}
@@ -955,14 +1012,35 @@ export default function TestWorkflowPage() {
                             </div>
                           ))}
 
-                          {/* Auth prompt for non-authenticated users */}
-                          {isYesterday && (
-                            <InlineAuthPrompt
-                              onGoogleAuth={handleGoogleAuth}
-                              onAppleAuth={handleAppleAuth}
-                              onEmailAuth={handleEmailAuth}
-                              lastLoginMethod={lastLoginMethod}
-                            />
+                          {/* Contextual CTA based on auth state */}
+                          {!hasAccess && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              {isAuthenticated && isTrialExpired ? (
+                                <>
+                                  <button
+                                    onClick={() => router.push('/signup')}
+                                    className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                                  >
+                                    Upgrade to continue
+                                  </button>
+                                  <p className="text-[10px] text-gray-400 text-center mt-2">
+                                    Your trial has ended
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => setShowAuthModal(true)}
+                                    className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                                  >
+                                    See today&apos;s availability
+                                  </button>
+                                  <p className="text-[10px] text-gray-400 text-center mt-2">
+                                    Free 7-day trial
+                                  </p>
+                                </>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
@@ -1029,21 +1107,90 @@ export default function TestWorkflowPage() {
               </button>
             </div>
             <div className="space-y-2">
-              <button
-                onClick={() => {
-                  setShowMenuModal(false);
-                  setShowAuthModal(true);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <LogIn size={20} className="text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Sign In / Sign Up</p>
-                  <p className="text-sm text-gray-500">Start your free trial</p>
-                </div>
-              </button>
+              {isAuthenticated ? (
+                hasAccess ? (
+                  /* Authenticated + Active subscription/trial */
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push('/billing');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <CreditCard size={20} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Account</p>
+                        <p className="text-sm text-gray-500">Manage subscription</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <LogOut size={20} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Sign Out</p>
+                        <p className="text-sm text-gray-500">See you next time</p>
+                      </div>
+                    </button>
+                  </>
+                ) : (
+                  /* Authenticated but expired trial or canceled */
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push('/signup');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                        <Zap size={20} className="text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Upgrade</p>
+                        <p className="text-sm text-gray-500">Your trial has ended</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <LogOut size={20} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Sign Out</p>
+                        <p className="text-sm text-gray-500">See you next time</p>
+                      </div>
+                    </button>
+                  </>
+                )
+              ) : (
+                /* Not authenticated */
+                <button
+                  onClick={() => {
+                    setShowMenuModal(false);
+                    setShowAuthModal(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <LogIn size={20} className="text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Sign In / Sign Up</p>
+                    <p className="text-sm text-gray-500">Start your free trial</p>
+                  </div>
+                </button>
+              )}
+
+              {/* About - always shown */}
               <button
                 onClick={() => {
                   setShowMenuModal(false);
