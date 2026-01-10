@@ -207,7 +207,7 @@ function InlineAuthPrompt({
         className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
       >
         <LogIn size={16} />
-        Sign in for today&apos;s availability
+        Get today&apos;s availability
       </button>
       <p className="text-xs text-gray-500 text-center mt-2">
         Free 7-day trial
