@@ -205,7 +205,7 @@ function facilityMatchesSearch(facility: Facility, searchTerm: string): boolean 
   return false;
 }
 
-// Auth prompt component - compact banner
+// Auth prompt component - compact but clear
 function InlineAuthPrompt({
   onAuthClick,
   onLoginClick
@@ -214,22 +214,15 @@ function InlineAuthPrompt({
   onLoginClick: () => void;
 }) {
   return (
-    <div className="pt-3 border-t border-gray-200">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-xs text-gray-600">
-          <span className="font-medium text-gray-900">See today&apos;s times</span> · Free trial
-        </span>
-        <button
-          onClick={onLoginClick}
-          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
-        >
-          Sign in
-        </button>
-      </div>
+    <div className="mt-3 pt-3 border-t border-gray-200">
+      <p className="text-xs text-gray-700 mb-2">
+        <span className="font-semibold">Want today&apos;s availability?</span>{" "}
+        Start a free 7-day trial.
+      </p>
       <div className="flex gap-2">
         <button
           onClick={() => onAuthClick("apple")}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-black text-white py-2 px-3 rounded-lg font-medium text-xs hover:bg-gray-800 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-black text-white py-2.5 px-3 rounded-lg font-medium text-xs hover:bg-gray-800 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
@@ -238,7 +231,7 @@ function InlineAuthPrompt({
         </button>
         <button
           onClick={() => onAuthClick("google")}
-          className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg font-medium text-xs hover:bg-gray-50 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-300 text-gray-700 py-2.5 px-3 rounded-lg font-medium text-xs hover:bg-gray-50 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -249,6 +242,12 @@ function InlineAuthPrompt({
           Google
         </button>
       </div>
+      <button
+        onClick={onLoginClick}
+        className="w-full mt-2 text-xs text-gray-500 hover:text-emerald-600"
+      >
+        Already have an account? Sign in
+      </button>
     </div>
   );
 }
@@ -485,30 +484,22 @@ export default function TestWorkflowPage() {
           >
             <div className="max-h-[60vh] overflow-y-auto">
               {/* Header */}
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight">
-                    {selectedFacility.name}
-                  </h3>
-                  {selectedFacility.address && (
-                    <a
-                      href={mapsUrl(selectedFacility)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600 mt-0.5"
-                    >
-                      <MapPin size={10} />
-                      <span className="truncate max-w-[180px]">{selectedFacility.address}</span>
-                      <ExternalLink size={10} />
-                    </a>
-                  )}
-                </div>
-                <button
-                  onClick={() => setSelectedFacility(null)}
-                  className="p-1 -mr-1 -mt-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
-                >
-                  <X size={16} />
-                </button>
+              <div className="mb-2">
+                <h3 className="font-bold text-gray-900 text-sm leading-tight">
+                  {selectedFacility.name}
+                </h3>
+                {selectedFacility.address && (
+                  <a
+                    href={mapsUrl(selectedFacility)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600 mt-0.5"
+                  >
+                    <MapPin size={10} />
+                    <span className="truncate max-w-[200px]">{selectedFacility.address}</span>
+                    <ExternalLink size={10} />
+                  </a>
+                )}
               </div>
 
               {/* Date badge */}
