@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { User } from "@supabase/supabase-js";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -252,6 +251,8 @@ function InlineAuthPrompt({
   );
 }
 
+type ViewMode = "map" | "list";
+
 export default function TestWorkflowPage() {
   const router = useRouter();
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -259,10 +260,11 @@ export default function TestWorkflowPage() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [viewState, setViewState] = useState(SEATTLE_CENTER);
   const [search, setSearch] = useState("");
-  const [user, setUser] = useState<User | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [dataDate, setDataDate] = useState<string>("");
+  const [view, setView] = useState<ViewMode>("map");
+  const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
 
   const supabase = createClientComponentClient();
 
@@ -272,7 +274,6 @@ export default function TestWorkflowPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setUser(user);
 
       if (user) {
         // Check subscription/trial status
@@ -304,7 +305,6 @@ export default function TestWorkflowPage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
       if (session?.user) {
         checkAuth();
       } else {
@@ -424,8 +424,74 @@ export default function TestWorkflowPage() {
   const dateLabel = formatDateLabel(dataDate);
 
   return (
-    <div className="h-screen w-full relative">
-      <Map
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm px-4 py-3">
+        <div className="flex items-center justify-between mb-3">
+          {/* Date badge */}
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+              isYesterday
+                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+            }`}
+          >
+            {isYesterday ? <Clock size={14} /> : <Calendar size={14} />}
+            {isYesterday ? "Yesterday" : "Today"} &bull; {dateLabel}
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setView("map")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                view === "map"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <MapIcon size={16} />
+              Map
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                view === "list"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <List size={16} />
+              List
+            </button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search courts or neighborhoods..."
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-100 border-0 rounded-xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden relative">
+        {view === "map" ? (
+          /* ===== MAP VIEW ===== */
+          <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onClick={() => setSelectedFacility(null)}
@@ -553,88 +619,123 @@ export default function TestWorkflowPage() {
           </Popup>
         )}
       </Map>
-
-      {/* Bottom buttons */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        <a
-          href="https://seattleballmachine.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-3 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-all"
-        >
-          Ball Machine
-        </a>
-        <button
-          onClick={handleLoginClick}
-          className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-        >
-          First Serve Seattle
-        </button>
-      </div>
-
-      {/* Search bar */}
-      <div className="absolute top-4 left-4 right-4 sm:right-auto sm:w-80">
-        <div className="bg-white rounded-lg shadow-lg">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search courts or neighborhoods..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 rounded-lg border-0 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-          {/* Result count + date indicator */}
-          <div className="px-3 py-1.5 border-t text-xs text-gray-500 flex justify-between items-center">
-            <span>
-              {filteredFacilities.length} of {facilities.length} facilities
-              {search && ` matching "${search}"`}
-            </span>
-            <span
-              className={`font-medium ${isYesterday ? "text-amber-600" : "text-emerald-600"}`}
-            >
-              {isYesterday ? "Yesterday" : "Today"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Header with auth status */}
-      <div className="absolute top-4 right-4 hidden sm:block">
-        {user ? (
-          <div className="bg-white rounded-lg shadow-lg px-3 py-2 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs text-gray-600">
-              {hasAccess
-                ? trialDaysRemaining
-                  ? `Trial (${trialDaysRemaining}d)`
-                  : "Subscribed"
-                : "Expired"}
-            </span>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="text-xs text-gray-400 hover:text-gray-600 ml-2"
-            >
-              Sign out
-            </button>
-          </div>
         ) : (
+          /* ===== LIST VIEW ===== */
+          <div className="h-full overflow-y-auto px-4 py-4 pb-20">
+            <p className="text-xs font-medium text-gray-500 mb-3">
+              {filteredFacilities.length} facilities
+              {search && ` matching "${search}"`}
+            </p>
+
+            {filteredFacilities.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400 font-medium">No facilities found</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredFacilities.map((facility) => {
+                  const isExpanded = expandedFacility === facility.name;
+                  return (
+                    <div
+                      key={facility.name}
+                      className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden"
+                    >
+                      {/* Facility header */}
+                      <button
+                        onClick={() => setExpandedFacility(isExpanded ? null : facility.name)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 leading-snug">
+                            {facility.name}
+                          </h3>
+                          {facility.address && (
+                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                              {facility.address}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 ml-2">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                            style={{ backgroundColor: facility.color }}
+                          >
+                            {facility.availableCount}/{facility.totalCount}
+                          </div>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lon}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                          >
+                            <MapPin size={16} className="text-gray-500" />
+                          </a>
+                        </div>
+                      </button>
+
+                      {/* Expanded court list */}
+                      {isExpanded && (
+                        <div className="border-t px-4 py-3 space-y-3">
+                          {facility.courts.map((court) => (
+                            <div key={court.id}>
+                              <div className="text-xs text-gray-700 font-medium mb-1">
+                                {court.title}
+                              </div>
+                              <MiniTimeline court={court} />
+                            </div>
+                          ))}
+
+                          {/* Auth prompt for non-authenticated users */}
+                          {isYesterday && (
+                            <InlineAuthPrompt
+                              onAuthClick={handleAuthClick}
+                              onLoginClick={handleLoginClick}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-4 text-xs font-medium text-gray-500 pt-6 pb-4">
+              <div className="flex items-center gap-1.5">
+                <div className="h-3.5 w-3.5 rounded bg-emerald-500" />
+                <span>Available</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-3.5 w-3.5 rounded bg-orange-400" />
+                <span>Partial</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-3.5 w-3.5 rounded bg-gray-200" />
+                <span>Booked</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom buttons - show on both views */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+          <a
+            href="https://seattleballmachine.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-all"
+          >
+            Ball Machine
+          </a>
           <button
             onClick={handleLoginClick}
-            className="bg-white rounded-lg shadow-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
           >
-            Sign in
+            First Serve Seattle
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
