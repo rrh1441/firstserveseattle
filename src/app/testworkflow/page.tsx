@@ -551,7 +551,7 @@ type AmenityKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine
 const AMENITY_CONFIG: Record<AmenityKey, { label: string; icon: React.ReactNode }> = {
   lights: { label: "Lights", icon: <Lightbulb size={14} /> },
   hitting_wall: { label: "Wall", icon: <Target size={14} /> },
-  pickleball_lined: { label: "Pickleball", icon: <CircleDot size={14} /> },
+  pickleball_lined: { label: "Pickle", icon: <CircleDot size={14} /> },
   ball_machine: { label: "Machine", icon: <Zap size={14} /> },
 };
 
@@ -572,6 +572,7 @@ export default function TestWorkflowPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAppleOnlyUser, setIsAppleOnlyUser] = useState(false);
   const [showAppleBanner, setShowAppleBanner] = useState(true);
+  const [showYesterdayToast, setShowYesterdayToast] = useState(false);
   const [amenityFilters, setAmenityFilters] = useState<Record<AmenityKey, boolean>>({
     lights: false,
     hitting_wall: false,
@@ -746,6 +747,14 @@ export default function TestWorkflowPage() {
     setShowMenuModal(false);
   };
 
+  const handleYesterdayClick = () => {
+    setShowYesterdayToast(true);
+    setTimeout(() => {
+      setShowYesterdayToast(false);
+      setShowAuthModal(true);
+    }, 1500);
+  };
+
   const mapsUrl = (facility: Facility) =>
     `https://www.google.com/maps/search/?api=1&query=${facility.lat},${facility.lon}`;
 
@@ -820,16 +829,20 @@ export default function TestWorkflowPage() {
       <div className="bg-white border-b shadow-sm px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           {/* Date badge */}
-          <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 ${
-              isYesterday
-                ? "bg-amber-50 text-amber-700 border border-amber-200"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-            }`}
-          >
-            {isYesterday ? <Clock size={14} /> : <Calendar size={14} />}
-            {isYesterday ? "Yesterday" : "Today"}
-          </div>
+          {isYesterday ? (
+            <button
+              onClick={handleYesterdayClick}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
+            >
+              <Clock size={14} />
+              Yesterday
+            </button>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Calendar size={14} />
+              Today
+            </div>
+          )}
 
           {/* Search - compact on desktop */}
           <div className="relative flex-1 max-w-xs">
@@ -1203,19 +1216,21 @@ export default function TestWorkflowPage() {
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
           <button
             onClick={() => setShowMenuModal(true)}
-            className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+            className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
           >
-            First Serve Seattle
+            <span className="hidden sm:inline">First Serve Seattle</span>
+            <span className="sm:hidden">First Serve</span>
             <ChevronUp size={16} className="text-emerald-500" />
           </button>
           <a
             href="https://seattleballmachine.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+            className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
           >
             <Zap size={16} className="text-blue-500" />
-            Ball Machine
+            <span className="hidden sm:inline">Ball Machine</span>
+            <span className="sm:hidden">Machine</span>
           </a>
         </div>
       </div>
@@ -1361,6 +1376,16 @@ export default function TestWorkflowPage() {
                 </div>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Yesterday explanation toast */}
+      {showYesterdayToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className="bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+            <Calendar size={16} className="text-emerald-400" />
+            <span className="text-sm font-medium">Sign up to see today&apos;s availability</span>
           </div>
         </div>
       )}
