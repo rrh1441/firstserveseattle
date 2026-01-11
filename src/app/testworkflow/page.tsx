@@ -829,20 +829,18 @@ export default function TestWorkflowPage() {
       <div className="bg-white border-b shadow-sm px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           {/* Date badge */}
-          {isYesterday ? (
-            <button
-              onClick={handleYesterdayClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
-            >
-              <Clock size={14} />
-              Yesterday
-            </button>
-          ) : (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shrink-0 bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <Calendar size={14} />
-              Today
-            </div>
-          )}
+          <button
+            onClick={isYesterday ? handleYesterdayClick : undefined}
+            disabled={!isYesterday}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 transition-colors ${
+              isYesterday
+                ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
+            }`}
+          >
+            {isYesterday ? <Clock size={12} /> : <Calendar size={12} />}
+            {isYesterday ? "Yesterday" : "Today"}
+          </button>
 
           {/* Search - compact on desktop */}
           <div className="relative flex-1 max-w-xs">
