@@ -692,14 +692,11 @@ export default function TestWorkflowPage() {
     return facilities
       .filter((f) => facilityMatchesSearch(f, search))
       .filter((f) => {
-        // Check if ANY court in the facility has ALL selected amenities
-        const activeFilters = (Object.keys(amenityFilters) as AmenityKey[]).filter(
-          (k) => amenityFilters[k]
-        );
-        if (activeFilters.length === 0) return true;
-        // Facility passes if ANY court has ALL selected amenities
+        // A facility passes if ANY of its courts have ALL selected amenities
         return f.courts.some((court) =>
-          activeFilters.every((k) => court[k])
+          (Object.keys(amenityFilters) as AmenityKey[]).every(
+            (k) => !amenityFilters[k] || court[k]
+          )
         );
       });
   }, [facilities, search, amenityFilters]);
@@ -902,8 +899,7 @@ export default function TestWorkflowPage() {
                   {label}
                 </button>
               );
-            }
-          )}
+            })}
           {/* Clear filters button - only show when filters are active */}
           {Object.values(amenityFilters).some(Boolean) && (
             <button

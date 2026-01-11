@@ -274,57 +274,79 @@ export async function GET(
       }
       courts = (courtData ?? []) as CourtRow[];
     } else if (isPast) {
-      // For past dates, use tennis_courts_history table
-      // Query snapshots from that date (using snapshot_timestamp)
+      // For past dates, use tennis_courts_history for availability
+      // but fetch current amenities from tennis_courts (amenities are static metadata)
       const startOfDay = `${date}T00:00:00.000Z`;
       const endOfDay = `${date}T23:59:59.999Z`;
 
-      const { data: historyData, error: historyErr } = await supabase
-        .from("tennis_courts_history")
-        .select(`
-          history_id,
-          original_court_id,
-          snapshot_timestamp,
-          title,
-          facility_type,
-          address,
-          available_dates,
-          google_map_url,
-          lights,
-          hitting_wall,
-          pickleball_lined,
-          ball_machine
-        `)
-        .gte("snapshot_timestamp", startOfDay)
-        .lte("snapshot_timestamp", endOfDay);
+      // Run both queries in parallel for performance
+      const [historyResult, amenitiesResult] = await Promise.all([
+        supabase
+          .from("tennis_courts_history")
+          .select(`
+            history_id,
+            original_court_id,
+            snapshot_timestamp,
+            title,
+            facility_type,
+            address,
+            available_dates,
+            google_map_url
+          `)
+          .gte("snapshot_timestamp", startOfDay)
+          .lte("snapshot_timestamp", endOfDay),
+        supabase
+          .from("tennis_courts")
+          .select("id, lights, hitting_wall, pickleball_lined, ball_machine"),
+      ]);
 
-      if (historyErr) {
-        console.error("[availability] history fetch error:", historyErr);
+      if (historyResult.error) {
+        console.error("[availability] history fetch error:", historyResult.error);
         return NextResponse.json({ error: "Failed to fetch historical data" }, { status: 500 });
+      }
+
+      if (amenitiesResult.error) {
+        console.error("[availability] amenities fetch error:", amenitiesResult.error);
+        return NextResponse.json({ error: "Failed to fetch amenities" }, { status: 500 });
+      }
+
+      // Build amenities lookup map
+      const amenitiesMap = new Map<number, { lights: boolean; hitting_wall: boolean; pickleball_lined: boolean; ball_machine: boolean }>();
+      for (const row of amenitiesResult.data ?? []) {
+        amenitiesMap.set(row.id, {
+          lights: row.lights ?? false,
+          hitting_wall: row.hitting_wall ?? false,
+          pickleball_lined: row.pickleball_lined ?? false,
+          ball_machine: row.ball_machine ?? false,
+        });
       }
 
       // Convert history rows to court rows format
       // If multiple snapshots exist for a court on that day, use the latest one
       const latestByCourtId = new Map<number, HistoryRow>();
-      for (const row of (historyData ?? []) as HistoryRow[]) {
+      for (const row of (historyResult.data ?? []) as HistoryRow[]) {
         const existing = latestByCourtId.get(row.original_court_id);
         if (!existing || row.snapshot_timestamp > existing.snapshot_timestamp) {
           latestByCourtId.set(row.original_court_id, row);
         }
       }
 
-      courts = Array.from(latestByCourtId.values()).map((h) => ({
-        id: h.original_court_id,
-        title: h.title,
-        facility_type: h.facility_type,
-        address: h.address,
-        available_dates: h.available_dates,
-        google_map_url: h.google_map_url,
-        lights: h.lights,
-        hitting_wall: h.hitting_wall,
-        pickleball_lined: h.pickleball_lined,
-        ball_machine: h.ball_machine,
-      }));
+      // Merge historical availability with current amenities
+      courts = Array.from(latestByCourtId.values()).map((h) => {
+        const amenities = amenitiesMap.get(h.original_court_id);
+        return {
+          id: h.original_court_id,
+          title: h.title,
+          facility_type: h.facility_type,
+          address: h.address,
+          available_dates: h.available_dates,
+          google_map_url: h.google_map_url,
+          lights: amenities?.lights ?? false,
+          hitting_wall: amenities?.hitting_wall ?? false,
+          pickleball_lined: amenities?.pickleball_lined ?? false,
+          ball_machine: amenities?.ball_machine ?? false,
+        };
+      });
     } else {
       // Future dates not supported
       return NextResponse.json(
