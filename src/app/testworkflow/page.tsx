@@ -1210,27 +1210,28 @@ export default function TestWorkflowPage() {
           </div>
         )}
 
-        {/* Bottom buttons - show on both views */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-          <button
-            onClick={() => setShowMenuModal(true)}
-            className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-          >
-            <span className="hidden sm:inline">First Serve Seattle</span>
-            <span className="sm:hidden">First Serve</span>
-            <ChevronUp size={16} className="text-emerald-500" />
-          </button>
-          <a
-            href="https://seattleballmachine.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-          >
-            <Zap size={16} className="text-blue-500" />
-            <span className="hidden sm:inline">Ball Machine</span>
-            <span className="sm:hidden">Machine</span>
-          </a>
         </div>
+
+      {/* Bottom buttons - fixed to viewport bottom */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 pb-safe">
+        <button
+          onClick={() => setShowMenuModal(true)}
+          className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+        >
+          <span className="hidden sm:inline">First Serve Seattle</span>
+          <span className="sm:hidden">First Serve</span>
+          <ChevronUp size={16} className="text-emerald-500" />
+        </button>
+        <a
+          href="https://seattleballmachine.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+        >
+          <Zap size={16} className="text-blue-500" />
+          <span className="hidden sm:inline">Ball Machine</span>
+          <span className="sm:hidden">Machine</span>
+        </a>
       </div>
 
       {/* Menu Modal */}
