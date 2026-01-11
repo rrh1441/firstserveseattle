@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -545,6 +545,16 @@ function AuthModal({
 
 type ViewMode = "map" | "list";
 
+// Amenity filter types
+type AmenityKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
+
+const AMENITY_CONFIG: Record<AmenityKey, { label: string; icon: React.ReactNode }> = {
+  lights: { label: "Lights", icon: <Lightbulb size={14} /> },
+  hitting_wall: { label: "Wall", icon: <Target size={14} /> },
+  pickleball_lined: { label: "Pickleball", icon: <CircleDot size={14} /> },
+  ball_machine: { label: "Machine", icon: <Zap size={14} /> },
+};
+
 export default function TestWorkflowPage() {
   const router = useRouter();
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -562,6 +572,12 @@ export default function TestWorkflowPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isAppleOnlyUser, setIsAppleOnlyUser] = useState(false);
   const [showAppleBanner, setShowAppleBanner] = useState(true);
+  const [amenityFilters, setAmenityFilters] = useState<Record<AmenityKey, boolean>>({
+    lights: false,
+    hitting_wall: false,
+    pickleball_lined: false,
+    ball_machine: false,
+  });
 
   const supabase = createClientComponentClient();
 
@@ -671,10 +687,22 @@ export default function TestWorkflowPage() {
     fetchData();
   }, [hasAccess]);
 
-  // Filter facilities based on search
+  // Filter facilities based on search and amenities
   const filteredFacilities = useMemo(() => {
-    return facilities.filter((f) => facilityMatchesSearch(f, search));
-  }, [facilities, search]);
+    return facilities
+      .filter((f) => facilityMatchesSearch(f, search))
+      .filter((f) => {
+        // Check if ANY court in the facility has ALL selected amenities
+        const activeFilters = (Object.keys(amenityFilters) as AmenityKey[]).filter(
+          (k) => amenityFilters[k]
+        );
+        if (activeFilters.length === 0) return true;
+        // Facility passes if ANY court has ALL selected amenities
+        return f.courts.some((court) =>
+          activeFilters.every((k) => court[k])
+        );
+      });
+  }, [facilities, search, amenityFilters]);
 
   // Auto-zoom to fit search results
   useEffect(() => {
@@ -850,6 +878,49 @@ export default function TestWorkflowPage() {
               <span className="hidden sm:inline">List</span>
             </button>
           </div>
+        </div>
+
+        {/* Amenity Filters */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {(Object.entries(AMENITY_CONFIG) as [AmenityKey, { label: string; icon: React.ReactNode }][]).map(
+            ([key, { label, icon }]) => {
+              const active = amenityFilters[key];
+              return (
+                <button
+                  key={key}
+                  onClick={() =>
+                    setAmenityFilters((prev) => ({ ...prev, [key]: !prev[key] }))
+                  }
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    active
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {icon}
+                  {label}
+                </button>
+              );
+            }
+          )}
+          {/* Clear filters button - only show when filters are active */}
+          {Object.values(amenityFilters).some(Boolean) && (
+            <button
+              onClick={() =>
+                setAmenityFilters({
+                  lights: false,
+                  hitting_wall: false,
+                  pickleball_lined: false,
+                  ball_machine: false,
+                })
+              }
+              className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X size={12} />
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
