@@ -201,13 +201,23 @@ function AuthModal({
   open,
   onClose,
   supabase,
+  initialMode = 'signup',
 }: {
   open: boolean;
   onClose: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any;
+  initialMode?: AuthMode;
 }) {
-  const [mode, setMode] = useState<AuthMode>('signup');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+
+  // Sync mode when initialMode changes (when modal opens with different mode)
+  useEffect(() => {
+    if (open) {
+      setMode(initialMode);
+    }
+  }, [open, initialMode]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -362,9 +372,27 @@ function AuthModal({
           /* ===== SIGN UP MODE ===== */
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-1">Start your free trial</h2>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-gray-500 text-sm mb-4">
               7 days free, then $8/month. Cancel anytime.
             </p>
+
+            {/* Benefits */}
+            <div className="mb-5 p-3 bg-gray-50 rounded-xl">
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                  <span>Every unreserved court across 100+ Seattle locations</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                  <span>Updated daily before the overnight lock</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                  <span>Filter by lights, pickleball lines, practice walls</span>
+                </div>
+              </div>
+            </div>
 
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
@@ -570,6 +598,7 @@ export default function TestWorkflowPage() {
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'signup' | 'signin'>('signup');
   const [isAppleOnlyUser, setIsAppleOnlyUser] = useState(false);
   const [showAppleBanner, setShowAppleBanner] = useState(true);
   const [showYesterdayToast, setShowYesterdayToast] = useState(false);
@@ -827,23 +856,23 @@ export default function TestWorkflowPage() {
 
       {/* Header */}
       <div className="bg-white border-b shadow-sm px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
           {/* Date badge */}
           <button
             onClick={isYesterday ? handleYesterdayClick : undefined}
             disabled={!isYesterday}
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium sm:font-semibold shrink-0 transition-colors ${
               isYesterday
                 ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
             }`}
           >
-            {isYesterday ? <Clock size={12} /> : <Calendar size={12} />}
+            {isYesterday ? <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
             {isYesterday ? "Yesterday" : "Today"}
           </button>
 
-          {/* Search - compact on desktop */}
-          <div className="relative flex-1 max-w-xs">
+          {/* Search */}
+          <div className="relative flex-1 max-w-[200px] sm:max-w-sm">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
@@ -889,7 +918,7 @@ export default function TestWorkflowPage() {
         </div>
 
         {/* Amenity Filters */}
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-3 max-w-4xl mx-auto">
           {(Object.entries(AMENITY_CONFIG) as [AmenityKey, { label: string; icon: React.ReactNode }][]).map(
             ([key, { label, icon }]) => {
               const active = amenityFilters[key];
@@ -1213,24 +1242,22 @@ export default function TestWorkflowPage() {
         </div>
 
       {/* Bottom buttons - fixed to viewport bottom */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 pb-safe">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-40 pb-safe">
         <button
           onClick={() => setShowMenuModal(true)}
-          className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+          className="whitespace-nowrap flex items-center gap-2 px-5 py-3 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
         >
-          <span className="hidden sm:inline">First Serve Seattle</span>
-          <span className="sm:hidden">First Serve</span>
-          <ChevronUp size={16} className="text-emerald-500" />
+          First Serve Seattle
+          <ChevronUp size={18} className="text-emerald-500" />
         </button>
         <a
           href="https://seattleballmachine.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="whitespace-nowrap flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 bg-white rounded-full shadow-lg border border-blue-400 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+          className="whitespace-nowrap flex items-center gap-2 px-5 py-3 bg-white rounded-full shadow-lg border border-blue-400 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
         >
-          <Zap size={16} className="text-blue-500" />
-          <span className="hidden sm:inline">Ball Machine</span>
-          <span className="sm:hidden">Machine</span>
+          <Zap size={18} className="text-blue-500" />
+          Ball Machine
         </a>
       </div>
 
@@ -1243,7 +1270,7 @@ export default function TestWorkflowPage() {
           />
           <div className="relative bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-slide-up">
             {/* Header with value prop */}
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">First Serve Seattle</h2>
                 <p className="text-sm text-gray-500">The only place to see today&apos;s open courts</p>
@@ -1254,24 +1281,6 @@ export default function TestWorkflowPage() {
               >
                 <X size={20} />
               </button>
-            </div>
-
-            {/* About highlights */}
-            <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                  <span>Every unreserved court across 100+ Seattle locations</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                  <span>Updated daily before the overnight lock</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                  <span>Filter by lights, pickleball lines, practice walls</span>
-                </div>
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -1340,22 +1349,41 @@ export default function TestWorkflowPage() {
                   </>
                 )
               ) : (
-                /* Not authenticated */
-                <button
-                  onClick={() => {
-                    setShowMenuModal(false);
-                    setShowAuthModal(true);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <LogIn size={20} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Sign In / Sign Up</p>
-                    <p className="text-sm text-gray-500">Start your free trial</p>
-                  </div>
-                </button>
+                /* Not authenticated - separate Sign Up and Sign In */
+                <>
+                  <button
+                    onClick={() => {
+                      setShowMenuModal(false);
+                      setAuthModalMode('signup');
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <Zap size={20} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Sign Up</p>
+                      <p className="text-sm text-gray-500">Start your free trial</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenuModal(false);
+                      setAuthModalMode('signin');
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <LogIn size={20} className="text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Sign In</p>
+                      <p className="text-sm text-gray-500">Already have an account</p>
+                    </div>
+                  </button>
+                </>
               )}
 
               {/* About - always shown */}
@@ -1394,6 +1422,7 @@ export default function TestWorkflowPage() {
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         supabase={supabase}
+        initialMode={authModalMode}
       />
     </div>
   );
