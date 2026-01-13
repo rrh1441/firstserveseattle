@@ -9,9 +9,8 @@ import {
 } from './ui/dialog';
 
 export default function MaintenanceModal() {
-  // Uncomment the line below to show the maintenance modal
-  // const isMaintenanceMode = true;
-  const isMaintenanceMode = false;
+  // Set to false when maintenance is complete
+  const isMaintenanceMode = true;
 
   if (!isMaintenanceMode) return null;
 
@@ -20,18 +19,12 @@ export default function MaintenanceModal() {
       <DialogContent className="sm:max-w-md border-orange-200 bg-orange-50">
         <DialogHeader>
           <DialogTitle className="text-orange-800">
-            🔧 Scheduled Maintenance
+            🔧 Temporarily Down
           </DialogTitle>
           <DialogDescription className="text-orange-700">
-            We apologize for the inconvenience. Our website is currently undergoing scheduled maintenance on July 25, 2025. 
-            Please check back tomorrow as we work to improve your experience.
+            We&apos;re upgrading our database and will be back up shortly. Thanks for your patience!
           </DialogDescription>
         </DialogHeader>
-        <div className="text-center pt-4">
-          <p className="text-sm text-orange-700">
-            Thank you for your understanding!
-          </p>
-        </div>
       </DialogContent>
     </Dialog>
   );
