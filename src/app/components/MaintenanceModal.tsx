@@ -9,8 +9,8 @@ import {
 } from './ui/dialog';
 
 export default function MaintenanceModal() {
-  // Set to false when maintenance is complete
-  const isMaintenanceMode = true;
+  // Set to true to show maintenance modal
+  const isMaintenanceMode = false;
 
   if (!isMaintenanceMode) return null;
 
