@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Basic event counts
-    const { data: eventCounts, error: eventError } = await supabase
+    const { data: eventCounts, error: eventError } = await supabaseAdmin
       .from('event_logs')
       .select('event')
       .gte('timestamp', startDate.toISOString());
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     if (eventError) throw eventError;
 
     // Daily page views
-    const { data: dailyViews, error: dailyError } = await supabase
+    const { data: dailyViews, error: dailyError } = await supabaseAdmin
       .from('event_logs')
       .select('timestamp, event')
       .gte('timestamp', startDate.toISOString())
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     if (dailyError) throw dailyError;
 
     // Conversion funnel
-    const { data: funnelData, error: funnelError } = await supabase
+    const { data: funnelData, error: funnelError } = await supabaseAdmin
       .from('event_logs')
       .select('event, timestamp, metadata')
       .gte('timestamp', startDate.toISOString())

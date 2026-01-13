@@ -1,5 +1,5 @@
 // src/app/api/log-event/route.ts
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing event or timestamp" }, { status: 400 });
     }
 
-    const { error } = await supabase.from("event_logs").insert([
+    const { error } = await supabaseAdmin.from("event_logs").insert([
       {
         event,
         metadata: metadata || {}, // Ensure metadata is at least an empty object
