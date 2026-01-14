@@ -250,9 +250,8 @@ export default function SignUpPage() {
         from_page: 'signup'
       });
       
-      // Everyone gets the 50% off offer (disabled for testing with custom promo codes)
-      // const offerId = 'fifty_percent_off_first_month';
-      const offerId = undefined; // Allow manual promo code entry
+      // Everyone gets the 50% off offer
+      const offerId = 'fifty_percent_off_first_month';
       console.log('🎯 Signup page - offer ID:', offerId);
       
       const response = await fetch('/api/create-checkout-session', {
