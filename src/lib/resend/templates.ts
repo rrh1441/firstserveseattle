@@ -7,9 +7,17 @@ export const emailTemplates = {
         <head>
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Welcome to First Serve Seattle</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; -webkit-text-size-adjust: 100%;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
@@ -197,9 +205,17 @@ export const emailTemplates = {
         <head>
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Payment Received</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; -webkit-text-size-adjust: 100%;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
@@ -374,9 +390,17 @@ export const emailTemplates = {
         <head>
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Payment Failed</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; -webkit-text-size-adjust: 100%;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
@@ -518,9 +542,17 @@ export const emailTemplates = {
         <head>
           <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Subscription Cancelled</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; -webkit-text-size-adjust: 100%;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
@@ -655,9 +687,17 @@ export const emailTemplates = {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Welcome to Court Alerts</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
@@ -752,9 +792,17 @@ export const emailTemplates = {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Open Court Notification</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #ffffff !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff;">
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; color: #111827;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
             <tr>
               <td style="padding: 32px; max-width: 600px;">
@@ -813,9 +861,17 @@ export const emailTemplates = {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <meta name="color-scheme" content="light only" />
+          <meta name="supported-color-schemes" content="light only" />
           <title>Trial Expiring</title>
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
+            }
+          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827;">
           <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
             <tr>
               <td align="center" style="padding: 20px 0;">
