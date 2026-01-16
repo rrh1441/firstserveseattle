@@ -372,9 +372,9 @@ function AuthModal({
         ) : mode === 'signup' ? (
           /* ===== SIGN UP MODE ===== */
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Start your free trial</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">See Today&apos;s Availability</h2>
             <p className="text-gray-500 text-sm mb-4">
-              7 days free, then $8/month. Cancel anytime.
+              7-day free trial, then $8/month. Cancel anytime.
             </p>
 
             {/* Benefits */}
@@ -605,7 +605,6 @@ export default function TestWorkflowPage() {
   const [authModalMode, setAuthModalMode] = useState<'signup' | 'signin'>('signup');
   const [isAppleOnlyUser, setIsAppleOnlyUser] = useState(false);
   const [showAppleBanner, setShowAppleBanner] = useState(true);
-  const [showYesterdayToast, setShowYesterdayToast] = useState(false);
   const [amenityFilters, setAmenityFilters] = useState<Record<AmenityKey, boolean>>({
     lights: false,
     hitting_wall: false,
@@ -805,11 +804,8 @@ export default function TestWorkflowPage() {
   };
 
   const handleYesterdayClick = () => {
-    setShowYesterdayToast(true);
-    setTimeout(() => {
-      setShowYesterdayToast(false);
-      setShowAuthModal(true);
-    }, 1500);
+    setAuthModalMode('signup');
+    setShowAuthModal(true);
   };
 
   const mapsUrl = (facility: Facility) =>
@@ -1417,7 +1413,7 @@ export default function TestWorkflowPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">Sign Up</p>
-                      <p className="text-sm text-gray-500">Start your free trial</p>
+                      <p className="text-sm text-gray-500">See today&apos;s availability</p>
                     </div>
                   </button>
                   <button
@@ -1456,16 +1452,6 @@ export default function TestWorkflowPage() {
                 </div>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Yesterday explanation toast */}
-      {showYesterdayToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
-          <div className="bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
-            <Calendar size={16} className="text-emerald-400" />
-            <span className="text-sm font-medium">Sign up to see today&apos;s availability</span>
           </div>
         </div>
       )}
