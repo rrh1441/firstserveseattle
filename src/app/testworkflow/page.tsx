@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -31,6 +31,7 @@ interface Court {
   hitting_wall: boolean;
   pickleball_lined: boolean;
   ball_machine: boolean;
+  avg_busy_score_7d: number | null;
 }
 
 interface Facility {
@@ -576,6 +577,9 @@ type ViewMode = "map" | "list";
 // Amenity filter types
 type AmenityKey = "lights" | "hitting_wall" | "pickleball_lined" | "ball_machine";
 
+// Walk-on filter type
+type PopFilter = "walk" | "low" | null;
+
 const AMENITY_CONFIG: Record<AmenityKey, { label: string; icon: React.ReactNode }> = {
   lights: { label: "Lights", icon: <Lightbulb size={14} /> },
   hitting_wall: { label: "Wall", icon: <Target size={14} /> },
@@ -608,6 +612,7 @@ export default function TestWorkflowPage() {
     pickleball_lined: false,
     ball_machine: false,
   });
+  const [popFilter, setPopFilter] = useState<PopFilter>(null);
 
   const supabase = createClientComponentClient();
 
@@ -717,7 +722,19 @@ export default function TestWorkflowPage() {
     fetchData();
   }, [hasAccess]);
 
-  // Filter facilities based on search and amenities
+  // Calculate median busy score for "Easy walk-on" filter
+  const medianBusyScore = useMemo(() => {
+    const scores = facilities
+      .flatMap((f) => f.courts)
+      .map((c) => c.avg_busy_score_7d)
+      .filter((s): s is number => s !== null && s > 0)
+      .sort((a, b) => a - b);
+    if (scores.length === 0) return 0;
+    const mid = Math.floor(scores.length / 2);
+    return scores.length % 2 ? scores[mid] : (scores[mid - 1] + scores[mid]) / 2;
+  }, [facilities]);
+
+  // Filter facilities based on search, amenities, and walk-on filters
   const filteredFacilities = useMemo(() => {
     return facilities
       .filter((f) => facilityMatchesSearch(f, search))
@@ -728,8 +745,19 @@ export default function TestWorkflowPage() {
             (k) => !amenityFilters[k] || court[k]
           )
         );
+      })
+      .filter((f) => {
+        // Walk-on filter: facility passes if ANY of its courts match the criteria
+        if (popFilter === null) return true;
+        return f.courts.some((court) => {
+          const score = court.avg_busy_score_7d;
+          if (popFilter === "walk") return score === 0;
+          // "low" = Easy walk-on: score above median (less busy than average)
+          if (score === null || score === 0) return false;
+          return score > medianBusyScore;
+        });
       });
-  }, [facilities, search, amenityFilters]);
+  }, [facilities, search, amenityFilters, popFilter, medianBusyScore]);
 
   // Auto-zoom to fit search results
   useEffect(() => {
@@ -940,17 +968,42 @@ export default function TestWorkflowPage() {
                 </button>
               );
             })}
+
+          {/* Walk-on filters */}
+          {([
+            ["walk", "Walk-on only", DoorOpen],
+            ["low", "Easy walk-on", Gauge],
+          ] as const).map(([key, label, Icon]) => {
+            const active = popFilter === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setPopFilter(active ? null : key)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  active
+                    ? "bg-blue-100 text-blue-800 border border-blue-300"
+                    : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"
+                }`}
+                aria-pressed={active}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            );
+          })}
+
           {/* Clear filters button - only show when filters are active */}
-          {Object.values(amenityFilters).some(Boolean) && (
+          {(Object.values(amenityFilters).some(Boolean) || popFilter !== null) && (
             <button
-              onClick={() =>
+              onClick={() => {
                 setAmenityFilters({
                   lights: false,
                   hitting_wall: false,
                   pickleball_lined: false,
                   ball_machine: false,
-                })
-              }
+                });
+                setPopFilter(null);
+              }}
               className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
             >
               <X size={12} />

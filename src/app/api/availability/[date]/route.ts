@@ -25,6 +25,11 @@ interface CourtRow {
   ball_machine: boolean | null;
 }
 
+interface PopularityRow {
+  court_id: number;
+  avg_busy_score_7d: number | null;
+}
+
 interface HistoryRow {
   history_id: number;
   original_court_id: number;
@@ -251,6 +256,21 @@ export async function GET(
   try {
     let courts: CourtRow[] = [];
 
+    // Fetch popularity data (same for all dates since it's based on 7-day rolling window)
+    const { data: popData, error: popErr } = await supabase
+      .from("v_court_popularity_7d")
+      .select("court_id, avg_busy_score_7d");
+
+    if (popErr) {
+      console.error("[availability] popularity fetch error:", popErr);
+      // Continue without popularity data - not critical
+    }
+
+    const popMap = new Map<number, number | null>();
+    ((popData ?? []) as PopularityRow[]).forEach(({ court_id, avg_busy_score_7d }) =>
+      popMap.set(court_id, avg_busy_score_7d)
+    );
+
     if (isToday) {
       // For today, use current tennis_courts table
       const { data: courtData, error: courtErr } = await supabase
@@ -367,6 +387,7 @@ export async function GET(
           hitting_wall: boolean;
           pickleball_lined: boolean;
           ball_machine: boolean;
+          avg_busy_score_7d: number | null;
         }>;
         address: string | null;
       }
@@ -384,6 +405,7 @@ export async function GET(
         hitting_wall: court.hitting_wall ?? false,
         pickleball_lined: court.pickleball_lined ?? false,
         ball_machine: court.ball_machine ?? false,
+        avg_busy_score_7d: popMap.get(court.id) ?? null,
       };
 
       if (facilityMap.has(facilityName)) {

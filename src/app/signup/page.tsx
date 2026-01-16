@@ -250,8 +250,7 @@ export default function SignUpPage() {
         from_page: 'signup'
       });
       
-      // Disabled for testing FREEFOREVER promo
-      const offerId = undefined;
+      const offerId = 'fifty_percent_off_first_month';
       console.log('🎯 Signup page - offer ID:', offerId);
       
       const response = await fetch('/api/create-checkout-session', {
