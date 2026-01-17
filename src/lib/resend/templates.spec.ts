@@ -72,9 +72,15 @@ describe('emailTemplates', () => {
       expect(result.html).toContain('Annual')
     })
 
-    it('should include tennis courts link', () => {
+    it('should include courts link', () => {
       const result = emailTemplates.paymentSucceeded('test@example.com', 999, 'monthly')
-      expect(result.html).toContain('https://firstserveseattle.com/tennis-courts')
+      expect(result.html).toContain('https://firstserveseattle.com/courts')
+    })
+
+    it('should include manage subscription link', () => {
+      const result = emailTemplates.paymentSucceeded('test@example.com', 999, 'monthly')
+      expect(result.html).toContain('https://firstserveseattle.com/billing')
+      expect(result.html).toContain('Manage Subscription')
     })
 
     it('should show Paid status', () => {

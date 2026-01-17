@@ -12,9 +12,6 @@ export const emailTemplates = {
           <title>Welcome to First Serve Seattle</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
@@ -22,17 +19,17 @@ export const emailTemplates = {
             <tr>
               <td align="center" style="padding: 20px 0;">
                 <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb;">
-                  
+
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#0c372b" style="padding: 48px 32px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">
+                            <h1 style="color: #ffffff !important; margin: 0; font-size: 32px; font-weight: bold;">
                               First Serve Seattle
                             </h1>
-                            <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px;">
+                            <p style="color: #ffffff !important; margin: 8px 0 0 0; font-size: 16px;">
                               Find Today's Open Courts
                             </p>
                           </td>
@@ -139,7 +136,7 @@ export const emailTemplates = {
                             <table cellpadding="0" cellspacing="0">
                               <tr>
                                 <td bgcolor="#0c372b" style="border-radius: 8px;">
-                                  <a href="https://firstserveseattle.com/login" style="display: block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                  <a href="https://firstserveseattle.com/login" style="display: block; padding: 16px 32px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
                                     Login & View Courts
                                   </a>
                                 </td>
@@ -149,8 +146,8 @@ export const emailTemplates = {
                           <td>
                             <table cellpadding="0" cellspacing="0">
                               <tr>
-                                <td style="border: 2px solid #0c372b; border-radius: 8px;">
-                                  <a href="https://firstserveseattle.com/billing" style="display: block; padding: 14px 30px; color: #0c372b; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                <td style="border: 2px solid #0c372b; border-radius: 8px; background-color: #ffffff;">
+                                  <a href="https://firstserveseattle.com/billing" style="display: block; padding: 14px 30px; color: #0c372b !important; text-decoration: none; font-weight: bold; font-size: 16px;">
                                     Manage Subscription
                                   </a>
                                 </td>
@@ -168,11 +165,11 @@ export const emailTemplates = {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="padding-bottom: 20px;">
-                            <p style="color: #d1d5db; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                            <p style="color: #d1d5db !important; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
                               Need help?
                             </p>
-                            <p style="color: #9ca3af; font-size: 16px; margin: 0;">
-                              Email: <a href="mailto:support@firstserveseattle.com" style="color: #86efac; text-decoration: none;">
+                            <p style="color: #9ca3af !important; font-size: 16px; margin: 0;">
+                              Email: <a href="mailto:support@firstserveseattle.com" style="color: #86efac !important; text-decoration: none;">
                                 support@firstserveseattle.com
                               </a>
                             </p>
@@ -180,7 +177,7 @@ export const emailTemplates = {
                         </tr>
                         <tr>
                           <td style="border-top: 1px solid #374151; padding-top: 20px;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                            <p style="color: #9ca3af !important; font-size: 14px; margin: 0;">
                               © ${new Date().getFullYear()} First Serve Seattle. All rights reserved.
                             </p>
                           </td>
@@ -210,9 +207,6 @@ export const emailTemplates = {
           <title>Payment Received</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
@@ -220,17 +214,17 @@ export const emailTemplates = {
             <tr>
               <td align="center" style="padding: 20px 0;">
                 <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb;">
-                  
+
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#0c372b" style="padding: 48px 32px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">
+                            <h1 style="color: #ffffff !important; margin: 0; font-size: 32px; font-weight: bold;">
                               First Serve Seattle
                             </h1>
-                            <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px;">
+                            <p style="color: #ffffff !important; margin: 8px 0 0 0; font-size: 16px;">
                               Payment Receipt
                             </p>
                           </td>
@@ -334,30 +328,47 @@ export const emailTemplates = {
                         Your subscription is active and you have full access to all court availability features.
                       </p>
                       
-                      <!-- CTA Button -->
+                      <!-- CTA Buttons -->
                       <table cellpadding="0" cellspacing="0">
                         <tr>
-                          <td bgcolor="#0c372b" style="border-radius: 8px;">
-                            <a href="https://firstserveseattle.com/tennis-courts" style="display: block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
-                              Check Court Availability
-                            </a>
+                          <td style="padding-right: 10px;">
+                            <table cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td bgcolor="#0c372b" style="border-radius: 8px;">
+                                  <a href="https://firstserveseattle.com/courts" style="display: block; padding: 16px 32px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    View Courts
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td>
+                            <table cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td style="border: 2px solid #0c372b; border-radius: 8px; background-color: #ffffff;">
+                                  <a href="https://firstserveseattle.com/billing" style="display: block; padding: 14px 30px; color: #0c372b !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    Manage Subscription
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
                           </td>
                         </tr>
                       </table>
                     </td>
                   </tr>
-                  
+
                   <!-- Footer -->
                   <tr>
                     <td bgcolor="#111827" style="padding: 32px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="padding-bottom: 20px;">
-                            <p style="color: #d1d5db; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                            <p style="color: #d1d5db !important; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
                               Need help? Contact us anytime!
                             </p>
-                            <p style="color: #9ca3af; font-size: 16px; margin: 0;">
-                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac; text-decoration: none;">
+                            <p style="color: #9ca3af !important; font-size: 16px; margin: 0;">
+                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac !important; text-decoration: none;">
                                 support@firstserveseattle.com
                               </a>
                             </p>
@@ -365,7 +376,7 @@ export const emailTemplates = {
                         </tr>
                         <tr>
                           <td style="border-top: 1px solid #374151; padding-top: 20px;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                            <p style="color: #9ca3af !important; font-size: 14px; margin: 0;">
                               © ${new Date().getFullYear()} First Serve Seattle. All rights reserved.
                             </p>
                           </td>
@@ -395,9 +406,6 @@ export const emailTemplates = {
           <title>Payment Failed</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
@@ -405,17 +413,17 @@ export const emailTemplates = {
             <tr>
               <td align="center" style="padding: 20px 0;">
                 <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb;">
-                  
+
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#ef4444" style="padding: 48px 32px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">
+                            <h1 style="color: #ffffff !important; margin: 0; font-size: 32px; font-weight: bold;">
                               First Serve Seattle
                             </h1>
-                            <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px;">
+                            <p style="color: #ffffff !important; margin: 8px 0 0 0; font-size: 16px;">
                               Payment Issue
                             </p>
                           </td>
@@ -482,34 +490,47 @@ export const emailTemplates = {
                         </tr>
                       </table>
                       
-                      <!-- CTA Button -->
+                      <!-- CTA Buttons -->
                       <table cellpadding="0" cellspacing="0" style="margin: 32px 0;">
                         <tr>
-                          <td bgcolor="#ef4444" style="border-radius: 8px;">
-                            <a href="${retryUrl}" style="display: block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
-                              Update Payment Method
-                            </a>
+                          <td style="padding-right: 10px;">
+                            <table cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td bgcolor="#ef4444" style="border-radius: 8px;">
+                                  <a href="${retryUrl}" style="display: block; padding: 16px 32px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    Update Payment Method
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                          <td>
+                            <table cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td style="border: 2px solid #0c372b; border-radius: 8px; background-color: #ffffff;">
+                                  <a href="https://firstserveseattle.com/billing" style="display: block; padding: 14px 30px; color: #0c372b !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                                    Manage Subscription
+                                  </a>
+                                </td>
+                              </tr>
+                            </table>
                           </td>
                         </tr>
                       </table>
-                      
-                      <p style="color: #6b7280; font-size: 16px; margin: 24px 0 0 0;">
-                        You can also manage your subscription at any time from your billing portal.
-                      </p>
                     </td>
                   </tr>
-                  
+
                   <!-- Footer -->
                   <tr>
                     <td bgcolor="#111827" style="padding: 32px;">
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="padding-bottom: 20px;">
-                            <p style="color: #d1d5db; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                            <p style="color: #d1d5db !important; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
                               Need help? Contact us immediately!
                             </p>
-                            <p style="color: #9ca3af; font-size: 16px; margin: 0;">
-                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac; text-decoration: none;">
+                            <p style="color: #9ca3af !important; font-size: 16px; margin: 0;">
+                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac !important; text-decoration: none;">
                                 support@firstserveseattle.com
                               </a>
                             </p>
@@ -517,7 +538,7 @@ export const emailTemplates = {
                         </tr>
                         <tr>
                           <td style="border-top: 1px solid #374151; padding-top: 20px;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                            <p style="color: #9ca3af !important; font-size: 14px; margin: 0;">
                               © ${new Date().getFullYear()} First Serve Seattle. All rights reserved.
                             </p>
                           </td>
@@ -547,9 +568,6 @@ export const emailTemplates = {
           <title>Subscription Cancelled</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827; -webkit-text-size-adjust: 100%;">
@@ -564,10 +582,10 @@ export const emailTemplates = {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td>
-                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold;">
+                            <h1 style="color: #ffffff !important; margin: 0; font-size: 32px; font-weight: bold;">
                               First Serve Seattle
                             </h1>
-                            <p style="color: #ffffff; margin: 8px 0 0 0; font-size: 16px;">
+                            <p style="color: #ffffff !important; margin: 8px 0 0 0; font-size: 16px;">
                               Subscription Update
                             </p>
                           </td>
@@ -627,7 +645,7 @@ export const emailTemplates = {
                       <table cellpadding="0" cellspacing="0" style="margin: 32px 0;">
                         <tr>
                           <td bgcolor="#0c372b" style="border-radius: 8px;">
-                            <a href="https://firstserveseattle.com/signup" style="display: block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                            <a href="https://firstserveseattle.com/signup" style="display: block; padding: 16px 32px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
                               Reactivate Subscription
                             </a>
                           </td>
@@ -646,11 +664,11 @@ export const emailTemplates = {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td style="padding-bottom: 20px;">
-                            <p style="color: #d1d5db; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
+                            <p style="color: #d1d5db !important; font-size: 16px; font-weight: bold; margin: 0 0 8px 0;">
                               Thank you for being a member!
                             </p>
-                            <p style="color: #9ca3af; font-size: 16px; margin: 0;">
-                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac; text-decoration: none;">
+                            <p style="color: #9ca3af !important; font-size: 16px; margin: 0;">
+                              <a href="mailto:support@firstserveseattle.com" style="color: #86efac !important; text-decoration: none;">
                                 support@firstserveseattle.com
                               </a>
                             </p>
@@ -658,7 +676,7 @@ export const emailTemplates = {
                         </tr>
                         <tr>
                           <td style="border-top: 1px solid #374151; padding-top: 20px;">
-                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                            <p style="color: #9ca3af !important; font-size: 14px; margin: 0;">
                               © ${new Date().getFullYear()} First Serve Seattle. All rights reserved.
                             </p>
                           </td>
@@ -692,9 +710,6 @@ export const emailTemplates = {
           <title>Welcome to Court Alerts</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827;">
@@ -706,7 +721,7 @@ export const emailTemplates = {
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#0c372b" style="padding: 32px; border-radius: 8px 8px 0 0;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">
+                      <h1 style="color: #ffffff !important; margin: 0; font-size: 24px; font-weight: bold;">
                         First Serve Seattle
                       </h1>
                     </td>
@@ -745,7 +760,7 @@ export const emailTemplates = {
                       <table cellpadding="0" cellspacing="0">
                         <tr>
                           <td bgcolor="#0c372b" style="border-radius: 8px;">
-                            <a href="${preferencesUrl}" style="display: block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                            <a href="${preferencesUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
                               Customize Your Alert Preferences
                             </a>
                           </td>
@@ -753,7 +768,7 @@ export const emailTemplates = {
                       </table>
 
                       <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
-                        Want unlimited access? <a href="https://firstserveseattle.com/signup" style="color: #0c372b; font-weight: bold;">Subscribe now</a> and never miss an open court.
+                        Want unlimited access? <a href="https://firstserveseattle.com/signup" style="color: #0c372b !important; font-weight: bold;">Subscribe now</a> and never miss an open court.
                       </p>
                     </td>
                   </tr>
@@ -797,9 +812,6 @@ export const emailTemplates = {
           <title>Open Court Notification</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #ffffff !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; color: #111827;">
@@ -866,9 +878,6 @@ export const emailTemplates = {
           <title>Trial Expiring</title>
           <style>
             :root { color-scheme: light only; }
-            @media (prefers-color-scheme: dark) {
-              body, table, td, div, p, span { background-color: #f8fafc !important; color: #111827 !important; }
-            }
           </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827;">
@@ -880,7 +889,7 @@ export const emailTemplates = {
                   <!-- Header -->
                   <tr>
                     <td bgcolor="#0c372b" style="padding: 32px; border-radius: 8px 8px 0 0;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">
+                      <h1 style="color: #ffffff !important; margin: 0; font-size: 24px; font-weight: bold;">
                         First Serve Seattle
                       </h1>
                     </td>
@@ -915,7 +924,7 @@ export const emailTemplates = {
                       <table cellpadding="0" cellspacing="0">
                         <tr>
                           <td bgcolor="#0c372b" style="border-radius: 8px;">
-                            <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px;">
+                            <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
                               Subscribe Now - 50% Off First Month
                             </a>
                           </td>
