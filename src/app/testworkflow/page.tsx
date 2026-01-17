@@ -6,7 +6,7 @@ import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
 
 // Seattle center coordinates
 const SEATTLE_CENTER = {
