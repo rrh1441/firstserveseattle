@@ -117,9 +117,6 @@ function getSlotColor(status: SlotStatus): string {
 function MiniTimeline({ court }: { court: Court }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-xs text-gray-700 font-medium truncate mb-1">
-        {court.title}
-      </div>
       {/* Morning row */}
       <div className="flex gap-0.5">
         {TIME_SLOTS.slice(0, 8).map((slot) => {
@@ -1111,6 +1108,17 @@ export default function TestWorkflowPage() {
               <div className="max-h-[35vh] overflow-y-auto space-y-2">
                 {selectedFacility.courts.slice(0, 4).map((court) => (
                   <div key={court.id} className="border-t pt-2 first:border-t-0 first:pt-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-gray-700 font-medium truncate">
+                        {court.title}
+                      </span>
+                      <div className="flex items-center gap-1 text-gray-400">
+                        {court.lights && <Lightbulb size={10} />}
+                        {court.hitting_wall && <Target size={10} />}
+                        {court.pickleball_lined && <CircleDot size={10} />}
+                        {court.ball_machine && <Zap size={10} />}
+                      </div>
+                    </div>
                     <MiniTimeline court={court} />
                   </div>
                 ))}
@@ -1225,8 +1233,16 @@ export default function TestWorkflowPage() {
                         <div className="border-t px-4 py-3 space-y-3">
                           {facility.courts.map((court) => (
                             <div key={court.id}>
-                              <div className="text-xs text-gray-700 font-medium mb-1">
-                                {court.title}
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs text-gray-700 font-medium truncate">
+                                  {court.title}
+                                </span>
+                                <div className="flex items-center gap-1 text-gray-400">
+                                  {court.lights && <Lightbulb size={12} />}
+                                  {court.hitting_wall && <Target size={12} />}
+                                  {court.pickleball_lined && <CircleDot size={12} />}
+                                  {court.ball_machine && <Zap size={12} />}
+                                </div>
                               </div>
                               <MiniTimeline court={court} />
                             </div>
