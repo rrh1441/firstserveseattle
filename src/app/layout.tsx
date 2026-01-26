@@ -82,6 +82,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           strategy="afterInteractive"
         />
 
+        {/* ---------- Google Analytics ------------------------------------ */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-P5W0Z3RHJP"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-P5W0Z3RHJP');
+          `}
+        </Script>
+
         {/* ---------- Main content --------------------------------------- */}
         <main className="flex-grow">{children}</main>
 
