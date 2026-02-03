@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
 import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -190,6 +190,22 @@ function facilityMatchesSearch(facility: Facility, searchTerm: string): boolean 
     }
   }
   return false;
+}
+
+// Convert facility name to URL-friendly slug
+function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .trim();
+}
+
+// Find facility by slug (case-insensitive matching)
+function findFacilityBySlug(facilities: Facility[], slug: string): Facility | undefined {
+  const normalizedSlug = slug.toLowerCase();
+  return facilities.find((f) => toSlug(f.name) === normalizedSlug);
 }
 
 // Auth Modal component - dual mode Sign Up / Sign In
@@ -621,12 +637,14 @@ const AMENITY_CONFIG: Record<AmenityKey, { label: string; icon: React.ReactNode 
   ball_machine: { label: "Machine", icon: <Zap size={14} /> },
 };
 
-export default function TestWorkflowPage() {
+function TestWorkflowContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [viewState, setViewState] = useState(SEATTLE_CENTER);
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false);
   const [search, setSearch] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -754,6 +772,28 @@ export default function TestWorkflowPage() {
 
     fetchData();
   }, [hasAccess]);
+
+  // Handle deep link from QR code - auto-select facility from URL param
+  useEffect(() => {
+    if (deepLinkHandled || loading || facilities.length === 0) return;
+
+    const facilitySlug = searchParams.get("facility");
+    if (!facilitySlug) {
+      setDeepLinkHandled(true);
+      return;
+    }
+
+    const facility = findFacilityBySlug(facilities, facilitySlug);
+    if (facility) {
+      setSelectedFacility(facility);
+      setViewState({
+        latitude: facility.lat,
+        longitude: facility.lon,
+        zoom: 15,
+      });
+    }
+    setDeepLinkHandled(true);
+  }, [facilities, loading, searchParams, deepLinkHandled]);
 
   // Calculate median busy score for "Easy walk-on" filter
   const medianBusyScore = useMemo(() => {
@@ -1507,5 +1547,23 @@ export default function TestWorkflowPage() {
         initialMode={authModalMode}
       />
     </div>
+  );
+}
+
+// Wrap with Suspense for useSearchParams
+export default function TestWorkflowPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-500">Loading courts...</p>
+          </div>
+        </div>
+      }
+    >
+      <TestWorkflowContent />
+    </Suspense>
   );
 }
