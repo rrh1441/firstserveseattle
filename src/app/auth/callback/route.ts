@@ -30,8 +30,16 @@ export async function GET(request: NextRequest) {
     if (data.user) {
       console.log('✅ OAuth user authenticated:', data.user.email)
 
-      // Block Apple's private relay emails - they break login for subscriptions
       const userEmail = data.user.email || ''
+
+      // For link mode, just redirect - user is adding a new auth method to existing account
+      if (mode === 'link') {
+        console.log('🔗 Identity link completed for:', userEmail)
+        return NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
+      }
+
+      // Block Apple's private relay emails - they break login for subscriptions
+      // (Skip this check for link mode - handled above)
       if (userEmail.endsWith('@privaterelay.appleid.com')) {
         console.log('❌ Private relay email detected, blocking signup:', userEmail)
         return NextResponse.redirect(

@@ -13,6 +13,7 @@ import { ExternalLink, AlertTriangle, X } from 'lucide-react';
 import TennisCourtList from '../tennis-courts/components/TennisCourtList';
 import { Button } from '@/components/ui/button';
 import ReAuthModal from '@/app/components/ReAuthModal';
+import AppleMigrationBanner, { useAppleMigrationBanner } from '@/app/components/AppleMigrationBanner';
 
 /* ---------- tiny fetcher hits the server-side API, not Supabase ---------- */
 async function fetchMemberStatus(email: string | null | undefined) {
@@ -41,8 +42,10 @@ export default function MembersPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [showReAuthModal, setShowReAuthModal] = useState(false);
   const [authProvider, setAuthProvider] = useState<'apple' | 'google' | 'email' | null>(null);
+  const { dismissed: appleBannerDismissed, dismiss: dismissAppleBanner } = useAppleMigrationBanner();
 
   const isPrivateRelay = userEmail?.endsWith('@privaterelay.appleid.com') ?? false;
+  const showAppleMigrationBanner = authProvider === 'apple' && !appleBannerDismissed;
 
   console.log('🏠 Members page component loaded');
 
@@ -154,8 +157,13 @@ export default function MembersPage() {
   return (
     <>
     <div className="container mx-auto max-w-4xl bg-white px-4 pt-8 pb-6 md:pt-10 md:pb-8">
-      {/* Private relay warning banner */}
-      {isPrivateRelay && !bannerDismissed && (
+      {/* Apple Sign-In migration banner */}
+      {showAppleMigrationBanner && (
+        <AppleMigrationBanner onDismiss={dismissAppleBanner} />
+      )}
+
+      {/* Private relay warning banner (only show if Apple banner not shown) */}
+      {isPrivateRelay && !bannerDismissed && !showAppleMigrationBanner && (
         <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />

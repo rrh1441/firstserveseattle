@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogIn, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
@@ -193,13 +193,13 @@ function facilityMatchesSearch(facility: Facility, searchTerm: string): boolean 
 }
 
 // Auth Modal component - dual mode Sign Up / Sign In
-type AuthMode = 'signup' | 'signin';
+type AuthMode = 'choice' | 'signup' | 'signin';
 
 function AuthModal({
   open,
   onClose,
   supabase,
-  initialMode = 'signup',
+  initialMode = 'choice',
 }: {
   open: boolean;
   onClose: () => void;
@@ -262,29 +262,43 @@ function AuthModal({
     }
   };
 
-  // Magic Link handler
-  const handleSendMagicLink = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!email.trim()) return;
+  // Email/Password Sign Up handler
+  const handleEmailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password) return;
+
+    // Basic password validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
     localStorage.setItem('last_login_method', 'email');
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithOtp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
+        password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=${mode}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=signup`,
         },
       });
 
-      if (signInError) {
-        setError(signInError.message);
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
 
-      setMagicLinkSent(true);
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        // Email confirmation required
+        setMagicLinkSent(true);
+      } else if (data.session) {
+        // Auto-confirmed, user is logged in - close modal
+        onClose();
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -326,10 +340,12 @@ function AuthModal({
 
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
-    setEmail("");
-    setPassword("");
-    setError(null);
-    setMagicLinkSent(false);
+    if (newMode === 'choice') {
+      setEmail("");
+      setPassword("");
+      setError(null);
+      setMagicLinkSent(false);
+    }
   };
 
   if (!open) return null;
@@ -352,19 +368,39 @@ function AuthModal({
         </div>
 
         {magicLinkSent ? (
-          /* Magic link sent confirmation */
+          /* Email confirmation sent */
           <div className="text-center py-4">
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <Mail size={32} className="text-emerald-600" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">Check your email</h2>
             <p className="text-gray-600 mb-1">
-              We sent a sign-in link to
+              We sent a confirmation link to
             </p>
             <p className="font-medium text-gray-900 mb-4">{email}</p>
             <p className="text-sm text-gray-500">
-              Click the link in the email to sign in.
+              Click the link to confirm your account and start your free trial.
             </p>
+          </div>
+        ) : mode === 'choice' ? (
+          /* ===== INITIAL CHOICE MODE ===== */
+          <div className="text-center py-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">To See Today&apos;s Availability</h2>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setMode('signup')}
+                className="w-full py-3 px-4 bg-emerald-600 text-white rounded-xl font-semibold text-base hover:bg-emerald-700 transition-colors"
+              >
+                Sign Up Free
+              </button>
+              <button
+                onClick={() => setMode('signin')}
+                className="w-full py-3 px-4 bg-white text-gray-700 rounded-xl font-semibold text-base border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Sign In
+              </button>
+            </div>
           </div>
         ) : mode === 'signup' ? (
           /* ===== SIGN UP MODE ===== */
@@ -422,28 +458,38 @@ function AuthModal({
               </div>
             </div>
 
-            {/* Magic Link */}
-            <form onSubmit={handleSendMagicLink}>
+            {/* Email/Password Sign Up */}
+            <form onSubmit={handleEmailSignUp} className="space-y-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Email"
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                autoComplete="email"
+                required
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create password"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                autoComplete="new-password"
                 required
               />
               <button
                 type="submit"
-                disabled={loading || !email.trim()}
-                className="w-full mt-3 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-base hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={loading || !email.trim() || !password}
+                className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold text-base hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Sending...
+                    Creating account...
                   </>
                 ) : (
-                  "Continue with email"
+                  "Create account"
                 )}
               </button>
             </form>
@@ -544,15 +590,6 @@ function AuthModal({
               </button>
             </form>
 
-            {/* Magic link option */}
-            <button
-              onClick={() => email.trim() && handleSendMagicLink()}
-              disabled={loading || !email.trim()}
-              className="w-full mt-2 py-2 text-sm text-emerald-600 font-medium hover:underline disabled:opacity-50 disabled:no-underline"
-            >
-              Send me a magic link instead
-            </button>
-
             <p className="text-sm text-gray-500 text-center mt-4">
               Don&apos;t have an account?{" "}
               <button
@@ -599,7 +636,7 @@ export default function TestWorkflowPage() {
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'signup' | 'signin'>('signup');
+  const [authModalMode, setAuthModalMode] = useState<'choice' | 'signup' | 'signin'>('choice');
   const [isAppleOnlyUser, setIsAppleOnlyUser] = useState(false);
   const [showAppleBanner, setShowAppleBanner] = useState(true);
   const [amenityFilters, setAmenityFilters] = useState<Record<AmenityKey, boolean>>({
@@ -801,7 +838,7 @@ export default function TestWorkflowPage() {
   };
 
   const handleYesterdayClick = () => {
-    setAuthModalMode('signup');
+    setAuthModalMode('choice');
     setShowAuthModal(true);
   };
 
@@ -1147,7 +1184,10 @@ export default function TestWorkflowPage() {
                   ) : (
                     <>
                       <button
-                        onClick={() => setShowAuthModal(true)}
+                        onClick={() => {
+                          setAuthModalMode('choice');
+                          setShowAuthModal(true);
+                        }}
                         className="w-full py-3 px-4 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 transition-all shadow-sm hover:shadow flex items-center justify-center gap-2"
                       >
                         <Calendar size={16} />
@@ -1266,7 +1306,10 @@ export default function TestWorkflowPage() {
                               ) : (
                                 <>
                                   <button
-                                    onClick={() => setShowAuthModal(true)}
+                                    onClick={() => {
+                                      setAuthModalMode('choice');
+                                      setShowAuthModal(true);
+                                    }}
                                     className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
                                   >
                                     See today&apos;s availability
@@ -1419,7 +1462,7 @@ export default function TestWorkflowPage() {
                   <button
                     onClick={() => {
                       setShowMenuModal(false);
-                      setAuthModalMode('signup');
+                      setAuthModalMode('choice');
                       setShowAuthModal(true);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
@@ -1428,24 +1471,8 @@ export default function TestWorkflowPage() {
                       <Zap size={20} className="text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">Sign Up</p>
+                      <p className="font-semibold text-gray-900">Sign Up / Sign In</p>
                       <p className="text-sm text-gray-500">See today&apos;s availability</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowMenuModal(false);
-                      setAuthModalMode('signin');
-                      setShowAuthModal(true);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                      <LogIn size={20} className="text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">Sign In</p>
-                      <p className="text-sm text-gray-500">Already have an account</p>
                     </div>
                   </button>
                 </>
