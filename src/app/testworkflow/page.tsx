@@ -367,21 +367,24 @@ function AuthModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={handleClose}
       />
-      <div className="relative bg-white rounded-t-2xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 pb-8 animate-slide-up">
-        {/* Header */}
-        <div className="flex items-center justify-end mb-2 sticky top-0 bg-white -mt-6 -mx-6 px-6 pt-6 pb-2">
+      <div className="relative bg-white rounded-t-2xl w-full max-w-md p-5 pb-6 animate-slide-up" style={{ maxHeight: '80vh' }}>
+        {/* Close button */}
+        <div className="flex justify-end mb-1">
           <button
             onClick={handleClose}
-            className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
         </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
 
         {magicLinkSent ? (
           /* Email confirmation sent */
@@ -617,6 +620,7 @@ function AuthModal({
             </p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
