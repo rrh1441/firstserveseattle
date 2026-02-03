@@ -860,9 +860,10 @@ function TestWorkflowContent() {
 
   const handleMarkerClick = useCallback((facility: Facility) => {
     setSelectedFacility(facility);
+    // Offset the center slightly south so popup has room above
     setViewState((prev) => ({
       ...prev,
-      latitude: facility.lat,
+      latitude: facility.lat - 0.003,
       longitude: facility.lon,
       zoom: 14,
     }));
@@ -1228,40 +1229,40 @@ function TestWorkflowContent() {
 
               {/* Contextual CTA based on auth state */}
               {!hasAccess && (
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="mt-2 pt-2 border-t border-gray-200">
                   {isAuthenticated && isTrialExpired ? (
-                    <>
-                      <button
-                        onClick={() => router.push('/signup')}
-                        className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
-                      >
-                        Upgrade to continue
-                      </button>
-                      <p className="text-[10px] text-gray-400 text-center mt-2">
-                        Your trial has ended
-                      </p>
-                    </>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push('/signup');
+                      }}
+                      className="w-full py-2 px-3 bg-emerald-600 text-white rounded-lg font-medium text-xs hover:bg-emerald-700 transition-colors"
+                    >
+                      Upgrade to continue
+                    </button>
                   ) : (
                     <>
-                      <p className="text-xs font-medium text-gray-700 text-center mb-2">
-                        To See Today&apos;s Availability
+                      <p className="text-[10px] text-gray-500 text-center mb-1.5">
+                        To see today&apos;s availability
                       </p>
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setAuthModalMode('signup');
                             setShowAuthModal(true);
                           }}
-                          className="flex-1 py-1.5 px-2 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700 transition-colors"
+                          className="flex-1 py-1.5 px-2 bg-emerald-600 text-white rounded text-[11px] font-medium hover:bg-emerald-700 transition-colors"
                         >
                           Sign Up Free
                         </button>
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setAuthModalMode('signin');
                             setShowAuthModal(true);
                           }}
-                          className="flex-1 py-1.5 px-2 bg-white text-gray-600 rounded text-xs font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                          className="flex-1 py-1.5 px-2 bg-gray-100 text-gray-700 rounded text-[11px] font-medium hover:bg-gray-200 transition-colors"
                         >
                           Sign In
                         </button>
