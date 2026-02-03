@@ -860,10 +860,10 @@ function TestWorkflowContent() {
 
   const handleMarkerClick = useCallback((facility: Facility) => {
     setSelectedFacility(facility);
-    // Offset the center slightly south so popup has room above
+    // Offset the center north so marker is in lower half, giving popup room above
     setViewState((prev) => ({
       ...prev,
-      latitude: facility.lat - 0.003,
+      latitude: facility.lat + 0.004,
       longitude: facility.lon,
       zoom: 14,
     }));
