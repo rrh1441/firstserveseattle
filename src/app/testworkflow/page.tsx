@@ -1223,19 +1223,29 @@ function TestWorkflowContent() {
                     </>
                   ) : (
                     <>
-                      <button
-                        onClick={() => {
-                          setAuthModalMode('choice');
-                          setShowAuthModal(true);
-                        }}
-                        className="w-full py-3 px-4 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 transition-all shadow-sm hover:shadow flex items-center justify-center gap-2"
-                      >
-                        <Calendar size={16} />
-                        See today&apos;s availability
-                      </button>
-                      <p className="text-[10px] text-gray-400 text-center mt-2">
-                        Free 7-day trial
+                      <p className="text-sm font-semibold text-gray-900 text-center mb-3">
+                        To See Today&apos;s Availability
                       </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setAuthModalMode('signup');
+                            setShowAuthModal(true);
+                          }}
+                          className="flex-1 py-2.5 px-3 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                        >
+                          Sign Up Free
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAuthModalMode('signin');
+                            setShowAuthModal(true);
+                          }}
+                          className="flex-1 py-2.5 px-3 bg-white text-gray-700 rounded-lg font-semibold text-sm border border-gray-300 hover:bg-gray-50 transition-colors"
+                        >
+                          Sign In
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -1345,18 +1355,29 @@ function TestWorkflowContent() {
                                 </>
                               ) : (
                                 <>
-                                  <button
-                                    onClick={() => {
-                                      setAuthModalMode('choice');
-                                      setShowAuthModal(true);
-                                    }}
-                                    className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
-                                  >
-                                    See today&apos;s availability
-                                  </button>
-                                  <p className="text-[10px] text-gray-400 text-center mt-2">
-                                    Free 7-day trial
+                                  <p className="text-sm font-semibold text-gray-900 text-center mb-3">
+                                    To See Today&apos;s Availability
                                   </p>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setAuthModalMode('signup');
+                                        setShowAuthModal(true);
+                                      }}
+                                      className="flex-1 py-2.5 px-3 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                                    >
+                                      Sign Up Free
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setAuthModalMode('signin');
+                                        setShowAuthModal(true);
+                                      }}
+                                      className="flex-1 py-2.5 px-3 bg-white text-gray-700 rounded-lg font-semibold text-sm border border-gray-300 hover:bg-gray-50 transition-colors"
+                                    >
+                                      Sign In
+                                    </button>
+                                  </div>
                                 </>
                               )}
                             </div>
