@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, ChevronDown, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge, SlidersHorizontal } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
@@ -664,6 +664,7 @@ function TestWorkflowContent() {
     ball_machine: false,
   });
   const [popFilter, setPopFilter] = useState<PopFilter>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const supabase = createClientComponentClient();
 
@@ -953,134 +954,153 @@ function TestWorkflowContent() {
       )}
 
       {/* Header */}
-      <div className="bg-white border-b shadow-sm px-4 py-3">
-        <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
+      <div className="bg-white border-b shadow-sm px-3 py-2">
+        <div className="flex items-center gap-2 max-w-4xl mx-auto">
           {/* Date badge */}
           <button
             onClick={isYesterday ? handleYesterdayClick : undefined}
             disabled={!isYesterday}
-            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium sm:font-semibold shrink-0 transition-colors ${
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 transition-colors ${
               isYesterday
                 ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
             }`}
           >
-            {isYesterday ? <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+            {isYesterday ? <Clock className="w-3 h-3" /> : <Calendar className="w-3 h-3" />}
             {isYesterday ? "Yesterday" : "Today"}
           </button>
 
           {/* Search */}
-          <div className="relative flex-1 max-w-[200px] sm:max-w-sm">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative flex-1 min-w-0">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-full pl-9 pr-8 py-2 bg-gray-100 border-0 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+              className="w-full pl-8 pr-7 py-1.5 bg-gray-100 border-0 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             )}
           </div>
 
+          {/* Filters toggle */}
+          {(() => {
+            const activeCount = Object.values(amenityFilters).filter(Boolean).length + (popFilter ? 1 : 0);
+            return (
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-all ${
+                  activeCount > 0
+                    ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <SlidersHorizontal size={14} />
+                {activeCount > 0 && <span>{activeCount}</span>}
+                {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </button>
+            );
+          })()}
+
           {/* View Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1 shrink-0">
+          <div className="flex bg-gray-100 rounded-lg p-0.5 shrink-0">
             <button
               onClick={() => setView("map")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-all ${
                 view === "map"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <MapIcon size={14} />
-              <span className="hidden sm:inline">Map</span>
             </button>
             <button
               onClick={() => setView("list")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <List size={14} />
-              <span className="hidden sm:inline">List</span>
             </button>
           </div>
         </div>
 
-        {/* Amenity Filters */}
-        <div className="flex flex-wrap gap-2 mt-3 max-w-4xl mx-auto">
-          {(Object.entries(AMENITY_CONFIG) as [AmenityKey, { label: string; icon: React.ReactNode }][]).map(
-            ([key, { label, icon }]) => {
-              const active = amenityFilters[key];
+        {/* Collapsible Filters */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-1.5 mt-2 max-w-4xl mx-auto">
+            {(Object.entries(AMENITY_CONFIG) as [AmenityKey, { label: string; icon: React.ReactNode }][]).map(
+              ([key, { label, icon }]) => {
+                const active = amenityFilters[key];
+                return (
+                  <button
+                    key={key}
+                    onClick={() =>
+                      setAmenityFilters((prev) => ({ ...prev, [key]: !prev[key] }))
+                    }
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                      active
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                );
+              })}
+
+            {/* Walk-on filters */}
+            {([
+              ["walk", "Walk-on", DoorOpen],
+              ["low", "Easy", Gauge],
+            ] as const).map(([key, label, Icon]) => {
+              const active = popFilter === key;
               return (
                 <button
                   key={key}
-                  onClick={() =>
-                    setAmenityFilters((prev) => ({ ...prev, [key]: !prev[key] }))
-                  }
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  onClick={() => setPopFilter(active ? null : key)}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${
                     active
-                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      ? "bg-blue-100 text-blue-800 border border-blue-300"
                       : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"
                   }`}
                   aria-pressed={active}
                 >
-                  {icon}
+                  <Icon size={12} />
                   {label}
                 </button>
               );
             })}
 
-          {/* Walk-on filters */}
-          {([
-            ["walk", "Walk-on only", DoorOpen],
-            ["low", "Easy walk-on", Gauge],
-          ] as const).map(([key, label, Icon]) => {
-            const active = popFilter === key;
-            return (
+            {/* Clear filters button */}
+            {(Object.values(amenityFilters).some(Boolean) || popFilter !== null) && (
               <button
-                key={key}
-                onClick={() => setPopFilter(active ? null : key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  active
-                    ? "bg-blue-100 text-blue-800 border border-blue-300"
-                    : "bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200"
-                }`}
-                aria-pressed={active}
+                onClick={() => {
+                  setAmenityFilters({
+                    lights: false,
+                    hitting_wall: false,
+                    pickleball_lined: false,
+                    ball_machine: false,
+                  });
+                  setPopFilter(null);
+                }}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
               >
-                <Icon size={14} />
-                {label}
+                <X size={12} />
+                Clear
               </button>
-            );
-          })}
-
-          {/* Clear filters button - only show when filters are active */}
-          {(Object.values(amenityFilters).some(Boolean) || popFilter !== null) && (
-            <button
-              onClick={() => {
-                setAmenityFilters({
-                  lights: false,
-                  hitting_wall: false,
-                  pickleball_lined: false,
-                  ball_machine: false,
-                });
-                setPopFilter(null);
-              }}
-              className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <X size={12} />
-              Clear
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -1223,16 +1243,16 @@ function TestWorkflowContent() {
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-semibold text-gray-900 text-center mb-3">
+                      <p className="text-xs font-medium text-gray-700 text-center mb-2">
                         To See Today&apos;s Availability
                       </p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <button
                           onClick={() => {
                             setAuthModalMode('signup');
                             setShowAuthModal(true);
                           }}
-                          className="flex-1 py-2.5 px-3 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                          className="flex-1 py-1.5 px-2 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700 transition-colors"
                         >
                           Sign Up Free
                         </button>
@@ -1241,7 +1261,7 @@ function TestWorkflowContent() {
                             setAuthModalMode('signin');
                             setShowAuthModal(true);
                           }}
-                          className="flex-1 py-2.5 px-3 bg-white text-gray-700 rounded-lg font-semibold text-sm border border-gray-300 hover:bg-gray-50 transition-colors"
+                          className="flex-1 py-1.5 px-2 bg-white text-gray-600 rounded text-xs font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
                         >
                           Sign In
                         </button>
@@ -1355,7 +1375,7 @@ function TestWorkflowContent() {
                                 </>
                               ) : (
                                 <>
-                                  <p className="text-sm font-semibold text-gray-900 text-center mb-3">
+                                  <p className="text-xs font-medium text-gray-700 text-center mb-2">
                                     To See Today&apos;s Availability
                                   </p>
                                   <div className="flex gap-2">
@@ -1364,7 +1384,7 @@ function TestWorkflowContent() {
                                         setAuthModalMode('signup');
                                         setShowAuthModal(true);
                                       }}
-                                      className="flex-1 py-2.5 px-3 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                                      className="flex-1 py-2 px-3 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
                                     >
                                       Sign Up Free
                                     </button>
@@ -1373,7 +1393,7 @@ function TestWorkflowContent() {
                                         setAuthModalMode('signin');
                                         setShowAuthModal(true);
                                       }}
-                                      className="flex-1 py-2.5 px-3 bg-white text-gray-700 rounded-lg font-semibold text-sm border border-gray-300 hover:bg-gray-50 transition-colors"
+                                      className="flex-1 py-2 px-3 bg-white text-gray-600 rounded-lg font-medium text-sm border border-gray-300 hover:bg-gray-50 transition-colors"
                                     >
                                       Sign In
                                     </button>
