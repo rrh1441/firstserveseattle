@@ -1166,26 +1166,7 @@ function TestWorkflowContent() {
             className="facility-popup"
           >
             <div>
-              {/* Header */}
-              <div className="mb-2">
-                <h3 className="font-bold text-gray-900 text-sm leading-tight">
-                  {selectedFacility.name}
-                </h3>
-                {selectedFacility.address && (
-                  <a
-                    href={mapsUrl(selectedFacility)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-emerald-600 mt-0.5"
-                  >
-                    <MapPin size={10} />
-                    <span className="truncate max-w-[200px]">{selectedFacility.address}</span>
-                    <ExternalLink size={10} />
-                  </a>
-                )}
-              </div>
-
-              {/* Date badge + availability inline */}
+              {/* Header - date badge, availability, directions icon */}
               <div className="flex items-center gap-2 mb-2">
                 <div
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
@@ -1197,9 +1178,18 @@ function TestWorkflowContent() {
                   {isYesterday ? <Clock size={10} /> : <Calendar size={10} />}
                   {isYesterday ? "Yesterday" : "Today"}
                 </div>
-                <span className="text-[10px] text-gray-500">
-                  {selectedFacility.availableCount}/{selectedFacility.totalCount} courts available
+                <span className="text-[10px] text-gray-500 flex-1">
+                  {selectedFacility.availableCount}/{selectedFacility.totalCount} available
                 </span>
+                <a
+                  href={mapsUrl(selectedFacility)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                  title="Get directions"
+                >
+                  <ExternalLink size={14} className="text-gray-600" />
+                </a>
               </div>
 
               {/* Court timelines - scrollable area */}
