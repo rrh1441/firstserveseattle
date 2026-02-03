@@ -372,9 +372,9 @@ function AuthModal({
         className="absolute inset-0 bg-black/40"
         onClick={handleClose}
       />
-      <div className="relative bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-slide-up">
+      <div className="relative bg-white rounded-t-2xl w-full max-w-md max-h-[85vh] overflow-y-auto p-6 pb-8 animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-end mb-2">
+        <div className="flex items-center justify-end mb-2 sticky top-0 bg-white -mt-6 -mx-6 px-6 pt-6 pb-2">
           <button
             onClick={handleClose}
             className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
