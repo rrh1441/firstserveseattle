@@ -956,12 +956,12 @@ function TestWorkflowContent() {
 
       {/* Header */}
       <div className="bg-white border-b shadow-sm px-3 py-2">
+        {/* Line 1: Date badge + Search */}
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
-          {/* Date badge */}
           <button
             onClick={isYesterday ? handleYesterdayClick : undefined}
             disabled={!isYesterday}
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium shrink-0 transition-colors ${
               isYesterday
                 ? "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
@@ -971,67 +971,70 @@ function TestWorkflowContent() {
             {isYesterday ? "Yesterday" : "Today"}
           </button>
 
-          {/* Search */}
           <div className="relative flex-1 min-w-0">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="w-full pl-8 pr-7 py-1.5 bg-gray-100 border-0 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+              placeholder="Search courts..."
+              className="w-full pl-9 pr-8 py-2 bg-gray-100 border-0 rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             )}
           </div>
+        </div>
 
-          {/* Filters toggle */}
-          {(() => {
-            const activeCount = Object.values(amenityFilters).filter(Boolean).length + (popFilter ? 1 : 0);
-            return (
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-all ${
-                  activeCount > 0
-                    ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                <SlidersHorizontal size={14} />
-                {activeCount > 0 && <span>{activeCount}</span>}
-                {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              </button>
-            );
-          })()}
-
-          {/* View Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-0.5 shrink-0">
+        {/* Line 2: View toggle + Filters */}
+        <div className="flex items-center justify-between gap-2 max-w-4xl mx-auto mt-2">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
             <button
               onClick={() => setView("map")}
-              className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-all ${
+              className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-all ${
                 view === "map"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <MapIcon size={14} />
+              Map
             </button>
             <button
               onClick={() => setView("list")}
-              className={`flex items-center px-2 py-1 rounded text-xs font-medium transition-all ${
+              className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <List size={14} />
+              List
             </button>
           </div>
+
+          {(() => {
+            const activeCount = Object.values(amenityFilters).filter(Boolean).length + (popFilter ? 1 : 0);
+            return (
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  activeCount > 0
+                    ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <SlidersHorizontal size={14} />
+                Filters
+                {activeCount > 0 && <span className="bg-emerald-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">{activeCount}</span>}
+                {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </button>
+            );
+          })()}
         </div>
 
         {/* Collapsible Filters */}
