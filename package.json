@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "mail-missing-cards": "ts-node --transpile-only scripts/mailMissingCards.ts",
     "monitor-accounts": "ts-node --transpile-only scripts/monitorAccounts.ts",
-    "analyze-courts": "ts-node --transpile-only scripts/analyzeBestTimes.ts"
+    "analyze-courts": "ts-node --transpile-only scripts/analyzeBestTimes.ts",
+    "cleanup-test-users": "ts-node --transpile-only scripts/cleanupTestUsers.ts"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.0.1",
@@ -74,6 +75,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/ui": "^4.0.16",
+    "agent-browser": "^0.8.6",
     "class-variance-authority": "^0.7.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "15.1.9",

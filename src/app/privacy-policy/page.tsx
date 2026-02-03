@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold text-slate-900">Privacy Policy</h1>
                 <p className="text-slate-500">
-                  <strong>Effective Date:</strong> March 1, 2025
+                  <strong>Effective Date:</strong> February 3, 2026
                 </p>
                 <Separator className="my-4" />
               </div>
@@ -21,7 +21,7 @@ const PrivacyPolicy = () => {
                   Simple Apps, LLC (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your
                   privacy. This Privacy Policy outlines how we collect, use, and safeguard your information when you use
                   the First Serve Seattle app (&quot;the App&quot;). By using the App, you agree to the terms of this
-                  Privacy Policy. 
+                  Privacy Policy.
                 </p>
               </div>
 
@@ -42,7 +42,26 @@ const PrivacyPolicy = () => {
                 </ul>
               </Section>
 
-              <Section title="2. How We Use Your Information">
+              <Section title="2. Cookies and Tracking Technologies">
+                <p className="mb-3">We use cookies and similar tracking technologies to enhance your experience:</p>
+                <ul className="list-disc list-outside ml-6 space-y-2">
+                  <li>
+                    <strong>Essential Cookies:</strong> Required for the App to function properly, including
+                    authentication and session management.
+                  </li>
+                  <li>
+                    <strong>Analytics:</strong> We use Google Analytics to collect anonymous usage data, including pages
+                    visited, time spent on the App, and general location (city/region level). This helps us understand
+                    how users interact with the App and improve our services.
+                  </li>
+                  <li>
+                    <strong>Opting Out:</strong> You can disable cookies through your browser settings or use the Google
+                    Analytics opt-out browser add-on. Note that disabling essential cookies may affect App functionality.
+                  </li>
+                </ul>
+              </Section>
+
+              <Section title="3. How We Use Your Information">
                 <p className="mb-3">We use the information collected to:</p>
                 <ul className="list-disc list-outside ml-6 space-y-2">
                   <li>Provide and improve the App&apos;s functionality.</li>
@@ -52,14 +71,15 @@ const PrivacyPolicy = () => {
                 </ul>
               </Section>
 
-              <Section title="3. Data Sharing">
+              <Section title="4. Data Sharing">
                 <p className="mb-3">
                   We do not sell, rent, or share your personal information with third parties for their marketing
                   purposes. However, we may share data with:
                 </p>
                 <ul className="list-disc list-outside ml-6 space-y-2">
                   <li>
-                    <strong>Service Providers:</strong> For payment processing (e.g., Stripe) or analytics.
+                    <strong>Service Providers:</strong> For payment processing (Stripe), analytics (Google Analytics),
+                    and infrastructure services.
                   </li>
                   <li>
                     <strong>Legal Authorities:</strong> When required by law or to protect our legal rights.
@@ -67,7 +87,16 @@ const PrivacyPolicy = () => {
                 </ul>
               </Section>
 
-              <Section title="4. Data Security">
+              <Section title="5. Data Retention">
+                <p className="leading-relaxed">
+                  We retain your personal information for as long as your account is active or as needed to provide you
+                  services. If you request account deletion, we will delete your personal information within 30 days,
+                  except where we are required to retain certain information for legal, accounting, or compliance
+                  purposes.
+                </p>
+              </Section>
+
+              <Section title="6. Data Security">
                 <p className="leading-relaxed">
                   We implement reasonable measures to protect your information from unauthorized access, disclosure, or
                   destruction. However, no security measures are completely secure, and we cannot guarantee absolute
@@ -75,28 +104,64 @@ const PrivacyPolicy = () => {
                 </p>
               </Section>
 
-              <Section title="5. Your Rights">
+              <Section title="7. Your Rights">
                 <ul className="list-disc list-outside ml-6 space-y-2">
                   <li>Access, update, or delete your personal information by contacting us.</li>
                   <li>Opt out of promotional communications.</li>
+                  <li>Request a copy of your data in a portable format.</li>
                 </ul>
               </Section>
 
-              <Section title="6. Third-Party Links">
+              <Section title="8. California Privacy Rights (CCPA)">
+                <p className="mb-3">
+                  If you are a California resident, you have additional rights under the California Consumer Privacy Act:
+                </p>
+                <ul className="list-disc list-outside ml-6 space-y-2">
+                  <li>
+                    <strong>Right to Know:</strong> You may request information about the categories and specific pieces
+                    of personal information we have collected about you.
+                  </li>
+                  <li>
+                    <strong>Right to Delete:</strong> You may request that we delete your personal information, subject
+                    to certain exceptions.
+                  </li>
+                  <li>
+                    <strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising
+                    your privacy rights.
+                  </li>
+                </ul>
+                <p className="mt-3">
+                  To exercise these rights, please contact us at{" "}
+                  <a href="mailto:support@firstserveseattle.com" className="text-blue-600 hover:underline">
+                    support@firstserveseattle.com
+                  </a>
+                  .
+                </p>
+              </Section>
+
+              <Section title="9. Children&apos;s Privacy">
+                <p className="leading-relaxed">
+                  The App is not intended for children under 13 years of age. We do not knowingly collect personal
+                  information from children under 13. If you believe we have collected information from a child under 13,
+                  please contact us immediately so we can delete such information.
+                </p>
+              </Section>
+
+              <Section title="10. Third-Party Links">
                 <p className="leading-relaxed">
                   The App may contain links to third-party websites or services. We are not responsible for the privacy
                   practices of these external sites.
                 </p>
               </Section>
 
-              <Section title="7. Changes to This Privacy Policy">
+              <Section title="11. Changes to This Privacy Policy">
                 <p className="leading-relaxed">
                   We may update this Privacy Policy from time to time. Changes will be posted on this page with an
                   updated effective date.
                 </p>
               </Section>
 
-              <Section title="8. Contact Us">
+              <Section title="12. Contact Us">
                 <p className="mb-3">
                   If you have questions or concerns about this Privacy Policy, please contact us at:
                 </p>
