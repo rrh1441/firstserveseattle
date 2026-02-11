@@ -802,63 +802,72 @@ export const emailTemplates = {
         ? `${courts[0].title} has open slots today!`
         : `${courts.length} of your courts are open today!`,
       html: `
-      <!DOCTYPE html>
-      <html>
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
-          <meta charset="UTF-8" />
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
           <meta name="color-scheme" content="light only" />
           <meta name="supported-color-schemes" content="light only" />
           <title>Open Court Notification</title>
           <style>
             :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, table, td, div, p, a, span { background-color: #ffffff !important; color: #111827 !important; }
+            }
           </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; color: #111827;">
-          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff !important; color: #111827 !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+          <div style="background-color: #ffffff !important;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="background-color: #ffffff !important; min-width: 100% !important;">
             <tr>
-              <td style="padding: 32px; max-width: 600px;">
+              <td style="padding: 24px; background-color: #ffffff !important;">
 
-                <!-- Greeting -->
-                <p style="color: #111827; font-size: 16px; margin: 0 0 24px 0;">
-                  Hey! Here are today's open courts:
-                </p>
+                      <!-- Greeting -->
+                      <p style="color: #111827 !important; font-size: 20px; line-height: 1.5; margin: 0 0 24px 0; background-color: #ffffff !important;">
+                        Hey! Here are today's open courts:
+                      </p>
 
-                <!-- Courts List -->
-                ${courts.map(court => `
-                  <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
-                    <p style="color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 4px 0;">
-                      ${court.title}
-                    </p>
-                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
-                      ${court.address}
-                    </p>
-                    <p style="color: #059669; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;">
-                      ${court.slots.join(' · ')}
-                    </p>
-                    <a href="${court.mapsUrl}" style="color: #0c372b; font-size: 14px; text-decoration: none; font-weight: 500;">
-                      Get Directions →
-                    </a>
-                  </div>
-                `).join('')}
+                      <!-- Courts List -->
+                      ${courts.map(court => `
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px; background-color: #ffffff !important;">
+                          <tr>
+                            <td style="padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; background-color: #ffffff !important;">
+                              <p style="color: #111827 !important; font-size: 22px; font-weight: 600; margin: 0 0 8px 0; background-color: #ffffff !important;">
+                                ${court.title}
+                              </p>
+                              <p style="color: #6b7280 !important; font-size: 17px; line-height: 1.4; margin: 0 0 12px 0; background-color: #ffffff !important;">
+                                ${court.address}
+                              </p>
+                              <p style="color: #059669 !important; font-size: 19px; font-weight: 600; margin: 0 0 12px 0; background-color: #ffffff !important;">
+                                ${court.slots.join(' · ')}
+                              </p>
+                              <a href="${court.mapsUrl}" style="color: #0c372b !important; font-size: 17px; text-decoration: none; font-weight: 500;">
+                                Get Directions →
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                      `).join('')}
 
-                <!-- Trial reminder -->
-                <p style="color: #6b7280; font-size: 14px; margin: 24px 0 16px 0;">
-                  ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left on your free trial.
-                  <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="color: #0c372b; font-weight: 600; text-decoration: none;">
-                    Subscribe for $8/mo
-                  </a> to keep getting alerts.
-                </p>
+                      <!-- Trial reminder -->
+                      <p style="color: #6b7280 !important; font-size: 17px; line-height: 1.5; margin: 24px 0 16px 0; background-color: #ffffff !important;">
+                        ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left on your free trial.
+                        <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="color: #0c372b !important; font-weight: 600; text-decoration: none;">
+                          Subscribe for $8/mo
+                        </a> to keep getting alerts.
+                      </p>
 
-                <!-- Footer -->
-                <p style="color: #9ca3af; font-size: 12px; margin: 32px 0 0 0; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                  <a href="${preferencesUrl}" style="color: #9ca3af; text-decoration: none;">Manage preferences</a> ·
-                  <a href="${unsubscribeUrl}" style="color: #9ca3af; text-decoration: none;">Unsubscribe</a>
-                </p>
+                      <!-- Footer -->
+                      <p style="color: #9ca3af !important; font-size: 15px; line-height: 1.5; margin: 32px 0 0 0; padding-top: 16px; border-top: 1px solid #e5e7eb; background-color: #ffffff !important;">
+                        <a href="${preferencesUrl}" style="color: #9ca3af !important; text-decoration: none;">Manage preferences</a> ·
+                        <a href="${unsubscribeUrl}" style="color: #9ca3af !important; text-decoration: none;">Unsubscribe</a>
+                      </p>
 
               </td>
             </tr>
           </table>
+          </div>
         </body>
       </html>
     `

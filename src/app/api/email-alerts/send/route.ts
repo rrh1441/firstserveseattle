@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { createGmailClient } from '@/lib/gmail/client';
+import { resend } from '@/lib/resend/client';
 import { emailTemplates } from '@/lib/resend/templates';
 
 const supabaseAdmin = createClient(
@@ -192,20 +192,23 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
 
       try {
-        // Get Gmail client
-        const gmail = createGmailClient();
-        if (!gmail) {
-          console.error('[send-alerts] Gmail client not configured');
+        if (!resend) {
+          console.error('[send-alerts] Resend client not configured');
           continue;
         }
 
-        // Send email via Gmail
-        const emailResult = await gmail.sendEmail({
+        // Send email via Resend
+        const { data: emailResult, error: emailError } = await resend.emails.send({
           from: FROM_EMAIL,
           to: subscriber.email,
           subject: emailContent.subject,
           html: emailContent.html,
         });
+
+        if (emailError) {
+          console.error(`[send-alerts] Resend error for ${subscriber.email}:`, emailError);
+          continue;
+        }
 
         // Log the send
         await supabaseAdmin.from('email_alert_logs').insert({
