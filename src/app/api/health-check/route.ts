@@ -386,16 +386,7 @@ async function sendEmailReport(html: string, report: HealthReport): Promise<void
 
 // ─────────────────────────────  HANDLER  ──────────────────────────────
 
-export async function GET(request: Request) {
-  // Verify cron secret (Vercel adds this header)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    // Allow in development or if no secret configured
-    if (process.env.CRON_SECRET && process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  }
-
+export async function GET() {
   console.log('Running daily health check...');
   const alerts: string[] = [];
 
