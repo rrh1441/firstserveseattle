@@ -244,7 +244,8 @@ function AuthModal({
     setError(null);
     localStorage.setItem('last_login_method', 'google');
 
-    const finalRedirect = mode === 'signup' ? '/signup' : '/testworkflow';
+    // Redirect to members area after auth - shows TODAY's data
+    const finalRedirect = '/members-new';
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -268,7 +269,7 @@ function AuthModal({
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=signin`,
+        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/members-new&mode=signin`,
       },
     });
 
@@ -298,7 +299,7 @@ function AuthModal({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=signup`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/members-new&mode=signup`,
         },
       });
 

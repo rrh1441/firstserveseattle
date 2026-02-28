@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
 
           console.log('✅ Trial created for user:', data.user.email, 'expires:', trialEndDate.toISOString())
 
-          // Redirect to the app - user now has 7-day trial access
-          return NextResponse.redirect(new URL('/testc', requestUrl.origin))
+          // Redirect to members area - user now has 7-day trial access and sees TODAY's data
+          return NextResponse.redirect(new URL('/members-new', requestUrl.origin))
         } else {
           // Existing user - update Apple provider ID if needed
           if (appleProviderId) {
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
           }
 
           console.log('✅ Existing subscriber found, redirecting to app')
-          return NextResponse.redirect(new URL('/testc', requestUrl.origin))
+          return NextResponse.redirect(new URL('/members-new', requestUrl.origin))
         }
       }
 
