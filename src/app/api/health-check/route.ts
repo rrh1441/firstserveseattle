@@ -43,6 +43,8 @@ interface StripeMetrics {
   totalMRR: number;
   newCustomers24h: number;
   failedPayments24h: number;
+  cancellations24h: number;
+  trialConversions24h: number;
   trialUsersWithoutCards: number;
 }
 
@@ -57,7 +59,6 @@ interface HealthReport {
   generatedAt: string;
   overallStatus: 'healthy' | 'warning' | 'error';
   courtData: CourtDataHealth;
-  visitors: VisitorAnalytics;
   stripeMetrics: StripeMetrics[];
   emailAlerts: EmailAlertHealth;
   alerts: string[];
@@ -93,10 +94,21 @@ const mailer = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
 
 // ─────────────────────────  HEALTH CHECKS  ────────────────────────────
 
+// Get date in Pacific Time (matches how courts store dates)
+function getDatePacific(daysOffset = 0): string {
+  const date = new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 async function checkCourtDataFreshness(): Promise<CourtDataHealth> {
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const today = getDatePacific(0);
+    const tomorrow = getDatePacific(1);
 
     const { data: courts, error } = await supabaseAdmin
       .from('tennis_courts')
@@ -137,6 +149,7 @@ async function checkCourtDataFreshness(): Promise<CourtDataHealth> {
 
 async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
   try {
+    // Use current time, looking back 24h and 48h
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
@@ -183,9 +196,10 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
   try {
     const yesterday = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
 
-    const [activeSubs, trialingSubs, recentCustomers, recentCharges] = await Promise.all([
+    const [activeSubs, trialingSubs, canceledSubs, recentCustomers, recentCharges] = await Promise.all([
       stripe.subscriptions.list({ status: 'active', limit: 100 }),
       stripe.subscriptions.list({ status: 'trialing', limit: 100 }),
+      stripe.subscriptions.list({ status: 'canceled', limit: 100 }),
       stripe.customers.list({ created: { gte: yesterday }, limit: 100 }),
       stripe.charges.list({ created: { gte: yesterday }, limit: 100 }),
     ]);
@@ -201,6 +215,18 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     });
 
     const failedPayments24h = recentCharges.data.filter(c => c.status === 'failed').length;
+
+    // Cancellations in last 24h
+    const cancellations24h = canceledSubs.data.filter(sub =>
+      sub.canceled_at && sub.canceled_at >= yesterday
+    ).length;
+
+    // Trial conversions: active subs that started as trials and converted in last 24h
+    const trialConversions24h = activeSubs.data.filter(sub => {
+      // Had a trial and trial ended in last 24h (meaning they just converted)
+      const trialEnd = sub.trial_end;
+      return trialEnd && trialEnd >= yesterday && trialEnd <= Math.floor(Date.now() / 1000);
+    }).length;
 
     // Check trial users without cards
     let trialUsersWithoutCards = 0;
@@ -221,6 +247,8 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       monthlyMRR, annualMRR, totalMRR: monthlyMRR + annualMRR,
       newCustomers24h: recentCustomers.data.length,
       failedPayments24h,
+      cancellations24h,
+      trialConversions24h,
       trialUsersWithoutCards,
     };
   } catch (error) {
@@ -228,7 +256,8 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     return {
       accountName, activeSubscriptions: 0, trialingSubscriptions: 0,
       monthlyMRR: 0, annualMRR: 0, totalMRR: 0,
-      newCustomers24h: 0, failedPayments24h: 0, trialUsersWithoutCards: 0,
+      newCustomers24h: 0, failedPayments24h: 0, cancellations24h: 0,
+      trialConversions24h: 0, trialUsersWithoutCards: 0,
     };
   }
 }
@@ -328,15 +357,6 @@ function generateHtmlReport(report: HealthReport): string {
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Visitors (24h) ${badge(report.visitors.status.status)}</div>
-    <div class="grid">
-      <div class="metric"><p class="metric-label">Page Views</p><p class="metric-value">${report.visitors.pageViews24h}</p><p class="metric-sub">${report.visitors.changePercent >= 0 ? '+' : ''}${report.visitors.changePercent.toFixed(0)}% vs yesterday</p></div>
-      <div class="metric"><p class="metric-label">Unique Visitors</p><p class="metric-value">${report.visitors.uniqueVisitors24h}</p></div>
-      <div class="metric"><p class="metric-label">Paywall Hits</p><p class="metric-value">${report.visitors.paywallHits24h}</p></div>
-      <div class="metric"><p class="metric-label">Signups</p><p class="metric-value" style="color:#059669;">${report.visitors.signups24h}</p></div>
-    </div>
-  </div>
 
   ${report.stripeMetrics.map(s => `
   <div class="section">
@@ -345,7 +365,10 @@ function generateHtmlReport(report: HealthReport): string {
       <div class="metric"><p class="metric-label">Active</p><p class="metric-value">${s.activeSubscriptions}</p></div>
       <div class="metric"><p class="metric-label">Trialing</p><p class="metric-value">${s.trialingSubscriptions}</p>${s.trialUsersWithoutCards > 0 ? `<p class="metric-sub" style="color:#f59e0b;">${s.trialUsersWithoutCards} no card</p>` : ''}</div>
       <div class="metric"><p class="metric-label">MRR</p><p class="metric-value" style="color:#059669;">$${s.totalMRR.toFixed(2)}</p></div>
-      <div class="metric"><p class="metric-label">New (24h)</p><p class="metric-value">${s.newCustomers24h}</p>${s.failedPayments24h > 0 ? `<p class="metric-sub" style="color:#ef4444;">${s.failedPayments24h} failed</p>` : ''}</div>
+      <div class="metric"><p class="metric-label">New (24h)</p><p class="metric-value">${s.newCustomers24h}</p></div>
+      <div class="metric"><p class="metric-label">Conversions (24h)</p><p class="metric-value" style="color:#059669;">${s.trialConversions24h}</p></div>
+      <div class="metric"><p class="metric-label">Cancellations (24h)</p><p class="metric-value" style="color:${s.cancellations24h > 0 ? '#ef4444' : '#111827'};">${s.cancellations24h}</p></div>
+      <div class="metric"><p class="metric-label">Failed Payments (24h)</p><p class="metric-value" style="color:${s.failedPayments24h > 0 ? '#ef4444' : '#111827'};">${s.failedPayments24h}</p></div>
     </div>
   </div>
   `).join('')}
@@ -391,9 +414,8 @@ export async function GET() {
   const alerts: string[] = [];
 
   // Run checks
-  const [courtData, visitors, emailAlerts] = await Promise.all([
+  const [courtData, emailAlerts] = await Promise.all([
     checkCourtDataFreshness(),
-    checkVisitorAnalytics(),
     checkEmailAlertHealth(),
   ]);
 
@@ -404,23 +426,24 @@ export async function GET() {
 
   // Collect alerts
   if (courtData.status.status !== 'healthy') alerts.push(`Court Data: ${courtData.status.message}`);
-  if (visitors.status.status !== 'healthy') alerts.push(`Visitors: ${visitors.status.message}`);
   if (emailAlerts.status.status === 'error') alerts.push(`Email Alerts: ${emailAlerts.status.message}`);
   for (const s of stripeMetrics) {
     if (s.failedPayments24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.failedPayments24h} failed payments`);
+    if (s.cancellations24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.cancellations24h} cancellation(s)`);
   }
 
   // Overall status
-  const statuses = [courtData.status.status, visitors.status.status, emailAlerts.status.status];
+  const statuses = [courtData.status.status, emailAlerts.status.status];
   let overallStatus: 'healthy' | 'warning' | 'error' = 'healthy';
   if (statuses.includes('error')) overallStatus = 'error';
   else if (statuses.includes('warning')) overallStatus = 'warning';
+  // Also flag if there are cancellations or failed payments
+  if (stripeMetrics.some(s => s.failedPayments24h > 0)) overallStatus = 'warning';
 
   const report: HealthReport = {
     generatedAt: new Date().toISOString(),
     overallStatus,
     courtData,
-    visitors,
     stripeMetrics,
     emailAlerts,
     alerts,
@@ -434,7 +457,15 @@ export async function GET() {
     status: overallStatus,
     alerts,
     courtData: { total: courtData.totalCourts, fresh: courtData.courtsWithTodayData },
-    visitors: { views: visitors.pageViews24h, signups: visitors.signups24h },
-    stripe: stripeMetrics.map(s => ({ account: s.accountName, mrr: s.totalMRR, active: s.activeSubscriptions })),
+    stripe: stripeMetrics.map(s => ({
+      account: s.accountName,
+      mrr: s.totalMRR,
+      active: s.activeSubscriptions,
+      trialing: s.trialingSubscriptions,
+      conversions24h: s.trialConversions24h,
+      cancellations24h: s.cancellations24h,
+      failedPayments24h: s.failedPayments24h,
+    })),
+    emailAlerts: { subscribers: emailAlerts.activeSubscribers, sent24h: emailAlerts.emailsSent24h },
   });
 }
