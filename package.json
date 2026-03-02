@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.0.1",
+    "@google-analytics/data": "^5.2.1",
     "@napi-rs/canvas": "^0.1.70",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-slot": "^1.1.1",

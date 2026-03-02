@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import nodemailer from 'nodemailer';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
 // ─────────────────────────────  TYPES  ────────────────────────────────
 interface HealthStatus {
@@ -59,6 +60,7 @@ interface HealthReport {
   generatedAt: string;
   overallStatus: 'healthy' | 'warning' | 'error';
   courtData: CourtDataHealth;
+  visitorAnalytics: VisitorAnalytics;
   stripeMetrics: StripeMetrics[];
   emailAlerts: EmailAlertHealth;
   alerts: string[];
@@ -88,6 +90,19 @@ const mailer = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
+  : null;
+
+// Google Analytics Data API client
+// Note: GA4_PROPERTY_ID should be the numeric property ID (not the G-XXXX measurement ID)
+// Find it in GA4 Admin > Property Settings
+const GA_PROPERTY_ID = process.env.GA4_PROPERTY_ID;
+const analyticsDataClient = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY
+  ? new BetaAnalyticsDataClient({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       },
     })
   : null;
@@ -148,35 +163,57 @@ async function checkCourtDataFreshness(): Promise<CourtDataHealth> {
 }
 
 async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
+  // If GA4 is not configured, return a clear message
+  if (!analyticsDataClient || !GA_PROPERTY_ID) {
+    const missing = [];
+    if (!GA_PROPERTY_ID) missing.push('GA4_PROPERTY_ID');
+    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) missing.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+    if (!process.env.GOOGLE_PRIVATE_KEY) missing.push('GOOGLE_PRIVATE_KEY');
+    return {
+      status: { status: 'warning', message: `GA4 not configured - missing: ${missing.join(', ')}` },
+      pageViews24h: 0, uniqueVisitors24h: 0, paywallHits24h: 0, signups24h: 0, previousDayViews: 0, changePercent: 0,
+    };
+  }
+
   try {
-    // Use current time, looking back 24h and 48h
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    // Query GA4 for last 24h metrics
+    const [todayResponse] = await analyticsDataClient.runReport({
+      property: `properties/${GA_PROPERTY_ID}`,
+      dateRanges: [{ startDate: '1daysAgo', endDate: 'today' }],
+      metrics: [
+        { name: 'screenPageViews' },
+        { name: 'activeUsers' },
+      ],
+    });
 
-    const { data: last24h } = await supabaseAdmin
-      .from('event_logs')
-      .select('event, metadata')
-      .gte('timestamp', yesterday.toISOString());
+    // Query GA4 for previous 24h (2 days ago to 1 day ago)
+    const [yesterdayResponse] = await analyticsDataClient.runReport({
+      property: `properties/${GA_PROPERTY_ID}`,
+      dateRanges: [{ startDate: '2daysAgo', endDate: '1daysAgo' }],
+      metrics: [
+        { name: 'screenPageViews' },
+      ],
+    });
 
-    const { data: prev24h } = await supabaseAdmin
-      .from('event_logs')
-      .select('event')
-      .gte('timestamp', twoDaysAgo.toISOString())
-      .lt('timestamp', yesterday.toISOString());
-
-    const pageViews24h = last24h?.filter(e => e.event.includes('page_view')).length || 0;
-    const fingerprints = new Set(last24h?.map(e => (e.metadata as Record<string, unknown>)?.fingerprint).filter(Boolean));
-    const uniqueVisitors24h = fingerprints.size;
-    const paywallHits24h = last24h?.filter(e => e.event === 'courts:paywall_hit').length || 0;
-    const signups24h = last24h?.filter(e => e.event === 'billing:checkout_success_page_view').length || 0;
-    const previousDayViews = prev24h?.filter(e => e.event.includes('page_view')).length || 0;
+    const pageViews24h = parseInt(todayResponse.rows?.[0]?.metricValues?.[0]?.value || '0', 10);
+    const uniqueVisitors24h = parseInt(todayResponse.rows?.[0]?.metricValues?.[1]?.value || '0', 10);
+    const previousDayViews = parseInt(yesterdayResponse.rows?.[0]?.metricValues?.[0]?.value || '0', 10);
 
     const changePercent = previousDayViews > 0 ? ((pageViews24h - previousDayViews) / previousDayViews) * 100 : 0;
 
+    // Paywall and signup tracking still from event_logs (custom events)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const { data: customEvents } = await supabaseAdmin
+      .from('event_logs')
+      .select('event')
+      .gte('timestamp', yesterday.toISOString());
+
+    const paywallHits24h = customEvents?.filter(e => e.event === 'courts:paywall_hit').length || 0;
+    const signups24h = customEvents?.filter(e => e.event === 'billing:checkout_success_page_view').length || 0;
+
     let status: HealthStatus;
     if (pageViews24h === 0) {
-      status = { status: 'error', message: 'No page views in 24h' };
+      status = { status: 'error', message: 'No page views in 24h (GA4)' };
     } else if (changePercent < -50) {
       status = { status: 'warning', message: `Traffic down ${Math.abs(changePercent).toFixed(0)}%` };
     } else {
@@ -185,8 +222,9 @@ async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
 
     return { status, pageViews24h, uniqueVisitors24h, paywallHits24h, signups24h, previousDayViews, changePercent };
   } catch (error) {
+    console.error('GA4 Analytics error:', error);
     return {
-      status: { status: 'error', message: `Failed: ${error}` },
+      status: { status: 'error', message: `GA4 failed: ${error instanceof Error ? error.message : error}` },
       pageViews24h: 0, uniqueVisitors24h: 0, paywallHits24h: 0, signups24h: 0, previousDayViews: 0, changePercent: 0,
     };
   }
@@ -357,6 +395,15 @@ function generateHtmlReport(report: HealthReport): string {
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-title">Traffic (GA4) ${badge(report.visitorAnalytics.status.status)}</div>
+    <div class="grid">
+      <div class="metric"><p class="metric-label">Page Views (24h)</p><p class="metric-value">${report.visitorAnalytics.pageViews24h.toLocaleString()}</p><p class="metric-sub">${report.visitorAnalytics.changePercent >= 0 ? '+' : ''}${report.visitorAnalytics.changePercent.toFixed(0)}% vs prev day</p></div>
+      <div class="metric"><p class="metric-label">Unique Visitors (24h)</p><p class="metric-value">${report.visitorAnalytics.uniqueVisitors24h.toLocaleString()}</p></div>
+      <div class="metric"><p class="metric-label">Paywall Hits (24h)</p><p class="metric-value">${report.visitorAnalytics.paywallHits24h}</p></div>
+      <div class="metric"><p class="metric-label">Signups (24h)</p><p class="metric-value" style="color:#059669;">${report.visitorAnalytics.signups24h}</p></div>
+    </div>
+  </div>
 
   ${report.stripeMetrics.map(s => `
   <div class="section">
@@ -414,8 +461,9 @@ export async function GET() {
   const alerts: string[] = [];
 
   // Run checks
-  const [courtData, emailAlerts] = await Promise.all([
+  const [courtData, visitorAnalytics, emailAlerts] = await Promise.all([
     checkCourtDataFreshness(),
+    checkVisitorAnalytics(),
     checkEmailAlertHealth(),
   ]);
 
@@ -426,6 +474,7 @@ export async function GET() {
 
   // Collect alerts
   if (courtData.status.status !== 'healthy') alerts.push(`Court Data: ${courtData.status.message}`);
+  if (visitorAnalytics.status.status !== 'healthy') alerts.push(`Traffic: ${visitorAnalytics.status.message}`);
   if (emailAlerts.status.status === 'error') alerts.push(`Email Alerts: ${emailAlerts.status.message}`);
   for (const s of stripeMetrics) {
     if (s.failedPayments24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.failedPayments24h} failed payments`);
@@ -433,7 +482,7 @@ export async function GET() {
   }
 
   // Overall status
-  const statuses = [courtData.status.status, emailAlerts.status.status];
+  const statuses = [courtData.status.status, visitorAnalytics.status.status, emailAlerts.status.status];
   let overallStatus: 'healthy' | 'warning' | 'error' = 'healthy';
   if (statuses.includes('error')) overallStatus = 'error';
   else if (statuses.includes('warning')) overallStatus = 'warning';
@@ -444,6 +493,7 @@ export async function GET() {
     generatedAt: new Date().toISOString(),
     overallStatus,
     courtData,
+    visitorAnalytics,
     stripeMetrics,
     emailAlerts,
     alerts,
@@ -457,6 +507,13 @@ export async function GET() {
     status: overallStatus,
     alerts,
     courtData: { total: courtData.totalCourts, fresh: courtData.courtsWithTodayData },
+    traffic: {
+      pageViews24h: visitorAnalytics.pageViews24h,
+      uniqueVisitors24h: visitorAnalytics.uniqueVisitors24h,
+      changePercent: visitorAnalytics.changePercent,
+      paywallHits24h: visitorAnalytics.paywallHits24h,
+      signups24h: visitorAnalytics.signups24h,
+    },
     stripe: stripeMetrics.map(s => ({
       account: s.accountName,
       mrr: s.totalMRR,
