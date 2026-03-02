@@ -90,6 +90,133 @@ src/app/courts/
 - `src/app/courts/page.tsx` (new)
 - Auth callback to redirect to `/courts` instead of `/members`
 
+---
+
+## New Checkout Page
+
+**Problem:** Current `/signup` page is a mess:
+- Hardcodes 50% off offer
+- Has password-based signup (we're going passwordless)
+- Shows Apple button
+- Ugly password requirements UI
+- Too much going on
+
+**Solution:** New clean checkout page for authenticated users.
+
+### When users hit checkout
+
+| User State | How they got here | What they need |
+|------------|-------------------|----------------|
+| Trial user | Clicked "Subscribe" in menu | Plan selection → Stripe |
+| Expired trial | Clicked "Upgrade" CTA | Plan selection → Stripe |
+| Canceled user | Clicked "Reactivate" CTA | Plan selection → Stripe |
+
+**Key insight:** They're already authenticated. No account creation needed.
+
+### New Checkout UI
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    🎾                                │
+│                                                     │
+│         Unlock Today's Court Availability           │
+│                                                     │
+│  ┌───────────────────┐  ┌───────────────────┐      │
+│  │     MONTHLY       │  │      ANNUAL       │      │
+│  │                   │  │    ⭐ Best Value  │      │
+│  │     $8/month      │  │                   │      │
+│  │                   │  │  $64/year         │      │
+│  │  [Select]         │  │  ($5.33/month)    │      │
+│  │                   │  │                   │      │
+│  └───────────────────┘  │  [Select]         │      │
+│                         └───────────────────┘      │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐   │
+│  │  Continue to Payment                    →   │   │
+│  └─────────────────────────────────────────────┘   │
+│                                                     │
+│  ✓ Secure checkout via Stripe                      │
+│  ✓ Cancel anytime                                  │
+│  ✓ Promo codes accepted at checkout                │
+│                                                     │
+│  Signed in as ryan@example.com                     │
+│  Not you? Sign out                                 │
+└─────────────────────────────────────────────────────┘
+```
+
+### Implementation
+
+**New file:** `src/app/checkout/page.tsx`
+
+```tsx
+// Minimal checkout for authenticated users
+export default function CheckoutPage() {
+  const [plan, setPlan] = useState<'monthly' | 'annual'>('monthly');
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        // Not authenticated, redirect to /courts
+        router.push('/courts');
+        return;
+      }
+      setUser(data.user);
+    });
+  }, []);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+
+    // Get trial_end if user is in trial (to honor remaining days)
+    const { data: subscriber } = await supabase
+      .from('subscribers')
+      .select('trial_end')
+      .eq('user_id', user.id)
+      .single();
+
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: user.email,
+        plan,
+        userId: user.id,
+        trialEnd: subscriber?.trial_end, // Honor remaining trial
+        // NO offerId - allows promo codes
+      }),
+    });
+
+    const { url } = await response.json();
+    window.location.href = url;
+  };
+
+  return (
+    // Clean UI as shown above
+  );
+}
+```
+
+### Route Changes
+
+| Old | New | Notes |
+|-----|-----|-------|
+| `/signup` | Keep for now | Legacy, will deprecate |
+| `/checkout` | **NEW** | Clean checkout for auth'd users |
+| CTAs in testworkflow | Point to `/checkout` | Not `/signup` |
+
+### What's different from /signup
+
+| Aspect | Old /signup | New /checkout |
+|--------|-------------|---------------|
+| Account creation | Yes (email/password) | No (already auth'd) |
+| Apple button | Yes | No |
+| 50% off | Hardcoded | No (promo codes via Stripe) |
+| Password requirements | Yes (ugly) | No |
+| Design | Cluttered | Clean, focused |
+| Auth state | Optional | Required (redirects if not) |
+
 ### Phase 2: Update Auth Flow
 
 **AuthModal changes:**
@@ -532,11 +659,15 @@ WHERE email = 'your-test@gmail.com';
 - [ ] Ball Machine link works (opens seattleballmachine.com)
 - [ ] Test on 320px width (iPhone SE)
 
-### Checkout & Promo Codes
-- [ ] Checkout does NOT auto-apply 50% off
-- [ ] Promo code input field is visible
-- [ ] Can enter and apply a valid promo code
-- [ ] Email pre-filled for signed-in users
+### New Checkout Page (/checkout)
+- [ ] `/checkout` requires authentication (redirects to /courts if not)
+- [ ] Shows user's email ("Signed in as...")
+- [ ] Plan selector works (monthly/annual toggle)
+- [ ] "Continue to Payment" goes to Stripe
+- [ ] No 50% off auto-applied
+- [ ] Promo code field visible on Stripe checkout
+- [ ] Trial users: remaining trial days honored
+- [ ] Clean, modern design (not cluttered like old /signup)
 
 ### Court Alerts (Notifications)
 - [ ] Trial users see "Court Alerts" in menu

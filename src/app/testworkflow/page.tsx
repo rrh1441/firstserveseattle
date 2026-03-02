@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/mapbox";
-import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, ChevronDown, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge, SlidersHorizontal } from "lucide-react";
+import { MapPin, ExternalLink, Search, X, Calendar, Clock, List, MapIcon, ChevronUp, ChevronDown, Zap, LogOut, Info, Mail, Loader2, CreditCard, AlertTriangle, CheckCircle, Lightbulb, Target, CircleDot, DoorOpen, Gauge, SlidersHorizontal, Bell } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
@@ -237,6 +237,13 @@ function AuthModal({
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAppleOption, setShowAppleOption] = useState(false);
+
+  // Check if user previously signed in with Apple (show Apple button only for returning Apple users)
+  useEffect(() => {
+    const lastMethod = localStorage.getItem('last_login_method');
+    setShowAppleOption(lastMethod === 'apple');
+  }, []);
 
   // Google OAuth handler
   const handleGoogleSignIn = async () => {
@@ -244,8 +251,8 @@ function AuthModal({
     setError(null);
     localStorage.setItem('last_login_method', 'google');
 
-    // Redirect to members area after auth - shows TODAY's data
-    const finalRedirect = '/members-new';
+    // Redirect back to testworkflow after auth - shows TODAY's data
+    const finalRedirect = '/testworkflow';
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -269,7 +276,7 @@ function AuthModal({
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/members-new&mode=signin`,
+        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=signin`,
       },
     });
 
@@ -553,17 +560,19 @@ function AuthModal({
               Continue with Google
             </button>
 
-            {/* Apple OAuth - Legacy until May 31, 2026 */}
-            <button
-              onClick={handleAppleSignIn}
-              disabled={loading}
-              className="w-full mt-2 flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
-              Continue with Apple
-            </button>
+            {/* Apple OAuth - Only shown for returning Apple users */}
+            {showAppleOption && (
+              <button
+                onClick={handleAppleSignIn}
+                disabled={loading}
+                className="w-full mt-2 flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-black text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                Continue with Apple
+              </button>
+            )}
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -1232,7 +1241,7 @@ function TestWorkflowContent() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push('/signup');
+                        router.push('/checkout');
                       }}
                       className="w-full py-2 px-3 bg-emerald-600 text-white rounded-lg font-medium text-xs hover:bg-emerald-700 transition-colors"
                     >
@@ -1363,7 +1372,7 @@ function TestWorkflowContent() {
                               {isAuthenticated && isTrialExpired ? (
                                 <>
                                   <button
-                                    onClick={() => router.push('/signup')}
+                                    onClick={() => router.push('/checkout')}
                                     className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
                                   >
                                     Upgrade to continue
@@ -1429,24 +1438,15 @@ function TestWorkflowContent() {
 
         </div>
 
-      {/* Bottom buttons - fixed to viewport bottom */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-40 pb-safe">
+      {/* Bottom FAB - single button */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 pb-safe">
         <button
           onClick={() => setShowMenuModal(true)}
-          className="whitespace-nowrap flex items-center gap-2 px-5 py-3 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+          className="flex items-center gap-2 px-5 py-3 bg-white rounded-full shadow-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
         >
           First Serve Seattle
           <ChevronUp size={18} className="text-emerald-500" />
         </button>
-        <a
-          href="https://seattleballmachine.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="whitespace-nowrap flex items-center gap-2 px-5 py-3 bg-white rounded-full shadow-lg border border-blue-400 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-        >
-          <Zap size={18} className="text-blue-500" />
-          Ball Machine
-        </a>
       </div>
 
       {/* Menu Modal */}
@@ -1476,6 +1476,21 @@ function TestWorkflowContent() {
                 hasAccess ? (
                   /* Authenticated + Active subscription/trial */
                   <>
+                    <button
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push('/alerts');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell size={20} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Court Alerts</p>
+                        <p className="text-sm text-gray-500">Get notified of openings</p>
+                      </div>
+                    </button>
                     <button
                       onClick={() => {
                         setShowMenuModal(false);
@@ -1510,7 +1525,7 @@ function TestWorkflowContent() {
                     <button
                       onClick={() => {
                         setShowMenuModal(false);
-                        router.push('/signup');
+                        router.push('/checkout');
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
                     >
@@ -1557,6 +1572,23 @@ function TestWorkflowContent() {
                   </button>
                 </>
               )}
+
+              {/* Ball Machine - always shown */}
+              <a
+                href="https://seattleballmachine.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowMenuModal(false)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-50 transition-colors text-left border border-blue-200 bg-blue-50/50"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Zap size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Seattle Ball Machine</p>
+                  <p className="text-sm text-gray-500">Rent a ball machine nearby</p>
+                </div>
+              </a>
 
               {/* About - always shown */}
               <button
