@@ -29,10 +29,12 @@ interface VisitorAnalytics {
   status: HealthStatus;
   pageViews24h: number;
   uniqueVisitors24h: number;
+  pageViews7d: number;
+  avgDailyViews7d: number;
+  // Funnel metrics
   paywallHits24h: number;
+  checkoutStarts24h: number;
   signups24h: number;
-  previousDayViews: number;
-  changePercent: number;
 }
 
 interface StripeMetrics {
@@ -163,45 +165,43 @@ async function checkCourtDataFreshness(): Promise<CourtDataHealth> {
 }
 
 async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
-  // If GA4 is not configured, return a clear message
+  const emptyResult: VisitorAnalytics = {
+    status: { status: 'healthy', message: 'No data' },
+    pageViews24h: 0, uniqueVisitors24h: 0, pageViews7d: 0, avgDailyViews7d: 0,
+    paywallHits24h: 0, checkoutStarts24h: 0, signups24h: 0,
+  };
+
+  // If GA4 is not configured, return empty (not a warning - just info)
   if (!analyticsDataClient || !GA_PROPERTY_ID) {
-    const missing = [];
-    if (!GA_PROPERTY_ID) missing.push('GA4_PROPERTY_ID');
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) missing.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-    if (!process.env.GOOGLE_PRIVATE_KEY) missing.push('GOOGLE_PRIVATE_KEY');
-    return {
-      status: { status: 'warning', message: `GA4 not configured - missing: ${missing.join(', ')}` },
-      pageViews24h: 0, uniqueVisitors24h: 0, paywallHits24h: 0, signups24h: 0, previousDayViews: 0, changePercent: 0,
-    };
+    return { ...emptyResult, status: { status: 'healthy', message: 'GA4 not configured' } };
   }
 
   try {
-    // Query GA4 for last 24h metrics
-    const [todayResponse] = await analyticsDataClient.runReport({
-      property: `properties/${GA_PROPERTY_ID}`,
-      dateRanges: [{ startDate: '1daysAgo', endDate: 'today' }],
-      metrics: [
-        { name: 'screenPageViews' },
-        { name: 'activeUsers' },
-      ],
-    });
+    // Query GA4 for last 24h and 7d metrics in parallel
+    const [todayResponse, weekResponse] = await Promise.all([
+      analyticsDataClient.runReport({
+        property: `properties/${GA_PROPERTY_ID}`,
+        dateRanges: [{ startDate: '1daysAgo', endDate: 'today' }],
+        metrics: [
+          { name: 'screenPageViews' },
+          { name: 'activeUsers' },
+        ],
+      }),
+      analyticsDataClient.runReport({
+        property: `properties/${GA_PROPERTY_ID}`,
+        dateRanges: [{ startDate: '7daysAgo', endDate: 'today' }],
+        metrics: [
+          { name: 'screenPageViews' },
+        ],
+      }),
+    ]);
 
-    // Query GA4 for previous 24h (2 days ago to 1 day ago)
-    const [yesterdayResponse] = await analyticsDataClient.runReport({
-      property: `properties/${GA_PROPERTY_ID}`,
-      dateRanges: [{ startDate: '2daysAgo', endDate: '1daysAgo' }],
-      metrics: [
-        { name: 'screenPageViews' },
-      ],
-    });
+    const pageViews24h = parseInt(todayResponse[0].rows?.[0]?.metricValues?.[0]?.value || '0', 10);
+    const uniqueVisitors24h = parseInt(todayResponse[0].rows?.[0]?.metricValues?.[1]?.value || '0', 10);
+    const pageViews7d = parseInt(weekResponse[0].rows?.[0]?.metricValues?.[0]?.value || '0', 10);
+    const avgDailyViews7d = Math.round(pageViews7d / 7);
 
-    const pageViews24h = parseInt(todayResponse.rows?.[0]?.metricValues?.[0]?.value || '0', 10);
-    const uniqueVisitors24h = parseInt(todayResponse.rows?.[0]?.metricValues?.[1]?.value || '0', 10);
-    const previousDayViews = parseInt(yesterdayResponse.rows?.[0]?.metricValues?.[0]?.value || '0', 10);
-
-    const changePercent = previousDayViews > 0 ? ((pageViews24h - previousDayViews) / previousDayViews) * 100 : 0;
-
-    // Paywall and signup tracking still from event_logs (custom events)
+    // Funnel tracking from event_logs (custom events)
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const { data: customEvents } = await supabaseAdmin
       .from('event_logs')
@@ -209,24 +209,21 @@ async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
       .gte('timestamp', yesterday.toISOString());
 
     const paywallHits24h = customEvents?.filter(e => e.event === 'courts:paywall_hit').length || 0;
+    const checkoutStarts24h = customEvents?.filter(e =>
+      e.event === 'billing:checkout_start' || e.event === 'billing:checkout_redirect'
+    ).length || 0;
     const signups24h = customEvents?.filter(e => e.event === 'billing:checkout_success_page_view').length || 0;
 
-    let status: HealthStatus;
-    if (pageViews24h === 0) {
-      status = { status: 'error', message: 'No page views in 24h (GA4)' };
-    } else if (changePercent < -50) {
-      status = { status: 'warning', message: `Traffic down ${Math.abs(changePercent).toFixed(0)}%` };
-    } else {
-      status = { status: 'healthy', message: `${pageViews24h} views (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(0)}%)` };
-    }
+    // Just report metrics - no warnings for traffic changes
+    const status: HealthStatus = {
+      status: 'healthy',
+      message: `${pageViews24h} views today, ${avgDailyViews7d}/day avg`
+    };
 
-    return { status, pageViews24h, uniqueVisitors24h, paywallHits24h, signups24h, previousDayViews, changePercent };
+    return { status, pageViews24h, uniqueVisitors24h, pageViews7d, avgDailyViews7d, paywallHits24h, checkoutStarts24h, signups24h };
   } catch (error) {
     console.error('GA4 Analytics error:', error);
-    return {
-      status: { status: 'error', message: `GA4 failed: ${error instanceof Error ? error.message : error}` },
-      pageViews24h: 0, uniqueVisitors24h: 0, paywallHits24h: 0, signups24h: 0, previousDayViews: 0, changePercent: 0,
-    };
+    return { ...emptyResult, status: { status: 'healthy', message: `GA4 error: ${error instanceof Error ? error.message : 'unknown'}` } };
   }
 }
 
@@ -396,12 +393,12 @@ function generateHtmlReport(report: HealthReport): string {
   </div>
 
   <div class="section">
-    <div class="section-title">Traffic (GA4) ${badge(report.visitorAnalytics.status.status)}</div>
+    <div class="section-title">Traffic (GA4)</div>
     <div class="grid">
-      <div class="metric"><p class="metric-label">Page Views (24h)</p><p class="metric-value">${report.visitorAnalytics.pageViews24h.toLocaleString()}</p><p class="metric-sub">${report.visitorAnalytics.changePercent >= 0 ? '+' : ''}${report.visitorAnalytics.changePercent.toFixed(0)}% vs prev day</p></div>
+      <div class="metric"><p class="metric-label">Page Views (24h)</p><p class="metric-value">${report.visitorAnalytics.pageViews24h.toLocaleString()}</p></div>
       <div class="metric"><p class="metric-label">Unique Visitors (24h)</p><p class="metric-value">${report.visitorAnalytics.uniqueVisitors24h.toLocaleString()}</p></div>
-      <div class="metric"><p class="metric-label">Paywall Hits (24h)</p><p class="metric-value">${report.visitorAnalytics.paywallHits24h}</p></div>
-      <div class="metric"><p class="metric-label">Signups (24h)</p><p class="metric-value" style="color:#059669;">${report.visitorAnalytics.signups24h}</p></div>
+      <div class="metric"><p class="metric-label">7-Day Views</p><p class="metric-value">${report.visitorAnalytics.pageViews7d.toLocaleString()}</p><p class="metric-sub">${report.visitorAnalytics.avgDailyViews7d}/day avg</p></div>
+      <div class="metric"><p class="metric-label">Funnel (24h)</p><p class="metric-value" style="font-size:16px;">Paywall: ${report.visitorAnalytics.paywallHits24h} → Checkout: ${report.visitorAnalytics.checkoutStarts24h} → Signup: ${report.visitorAnalytics.signups24h}</p></div>
     </div>
   </div>
 
@@ -472,17 +469,16 @@ export async function GET() {
   if (oldStripe) stripeMetrics.push(await checkStripeMetrics(oldStripe, 'SimpleApps'));
   if (newStripe) stripeMetrics.push(await checkStripeMetrics(newStripe, 'First Serve Seattle'));
 
-  // Collect alerts
+  // Collect alerts (traffic is info-only, not a warning)
   if (courtData.status.status !== 'healthy') alerts.push(`Court Data: ${courtData.status.message}`);
-  if (visitorAnalytics.status.status !== 'healthy') alerts.push(`Traffic: ${visitorAnalytics.status.message}`);
   if (emailAlerts.status.status === 'error') alerts.push(`Email Alerts: ${emailAlerts.status.message}`);
   for (const s of stripeMetrics) {
     if (s.failedPayments24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.failedPayments24h} failed payments`);
     if (s.cancellations24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.cancellations24h} cancellation(s)`);
   }
 
-  // Overall status
-  const statuses = [courtData.status.status, visitorAnalytics.status.status, emailAlerts.status.status];
+  // Overall status (traffic excluded - it's info only)
+  const statuses = [courtData.status.status, emailAlerts.status.status];
   let overallStatus: 'healthy' | 'warning' | 'error' = 'healthy';
   if (statuses.includes('error')) overallStatus = 'error';
   else if (statuses.includes('warning')) overallStatus = 'warning';
@@ -510,9 +506,13 @@ export async function GET() {
     traffic: {
       pageViews24h: visitorAnalytics.pageViews24h,
       uniqueVisitors24h: visitorAnalytics.uniqueVisitors24h,
-      changePercent: visitorAnalytics.changePercent,
-      paywallHits24h: visitorAnalytics.paywallHits24h,
-      signups24h: visitorAnalytics.signups24h,
+      pageViews7d: visitorAnalytics.pageViews7d,
+      avgDailyViews7d: visitorAnalytics.avgDailyViews7d,
+      funnel: {
+        paywallHits: visitorAnalytics.paywallHits24h,
+        checkoutStarts: visitorAnalytics.checkoutStarts24h,
+        signups: visitorAnalytics.signups24h,
+      },
     },
     stripe: stripeMetrics.map(s => ({
       account: s.accountName,
