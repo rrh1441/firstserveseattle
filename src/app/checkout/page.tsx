@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Check, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { FEATURES } from "@/lib/paywallCopy";
 
 type PlanType = "monthly" | "annual";
 
@@ -199,12 +200,7 @@ export default function CheckoutPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
           <p className="text-sm font-medium text-gray-900 mb-3">What you get:</p>
           <ul className="space-y-2">
-            {[
-              "Real-time court availability",
-              "All 50+ Seattle facilities",
-              "Court alerts & notifications",
-              "Filter by lights, walls & more",
-            ].map((feature) => (
+            {FEATURES.map((feature) => (
               <li key={feature} className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                 {feature}

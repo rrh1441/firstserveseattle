@@ -5,9 +5,9 @@
 export const FEATURES: string[] = [
   "See today's availability for ALL public courts",
   "Filter courts by lights, pickleball lines, hitting walls",
+  "Daily alerts when your favorite courts are free",
   "Save your favorite courts for quick access",
   "Unlimited court checks",
-  "Priority customer support",
 ];
 
 export const HERO_HEADLINES = [
