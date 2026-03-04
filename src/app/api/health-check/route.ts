@@ -126,33 +126,43 @@ async function checkCourtDataFreshness(): Promise<CourtDataHealth> {
   try {
     const today = getDatePacific(0);
     const tomorrow = getDatePacific(1);
+    const now = new Date();
+    // Courts are stale if not updated in the last 25 hours (allows for scraper timing variance)
+    const staleThreshold = new Date(now.getTime() - 25 * 60 * 60 * 1000);
 
     const { data: courts, error } = await supabaseAdmin
       .from('tennis_courts')
-      .select('id, title, available_dates')
-      .not('available_dates', 'is', null);
+      .select('id, title, available_dates, last_updated');
 
     if (error) throw error;
 
     const totalCourts = courts?.length || 0;
     let courtsWithTodayData = 0;
     let courtsWithTomorrowData = 0;
+    let staleCourts = 0;
 
     for (const court of courts || []) {
+      // Check availability coverage (informational)
       if (court.available_dates?.includes(today)) courtsWithTodayData++;
       if (court.available_dates?.includes(tomorrow)) courtsWithTomorrowData++;
+
+      // Use last_updated timestamp to determine freshness (not availability presence)
+      // A court is "stale" only if it hasn't been scraped recently
+      const lastUpdated = court.last_updated ? new Date(court.last_updated) : null;
+      if (!lastUpdated || lastUpdated < staleThreshold) {
+        staleCourts++;
+      }
     }
 
-    const staleCourts = totalCourts - courtsWithTodayData;
     const stalePercent = totalCourts > 0 ? (staleCourts / totalCourts) * 100 : 0;
 
     let status: HealthStatus;
     if (stalePercent > 50) {
-      status = { status: 'error', message: `${stalePercent.toFixed(0)}% of courts have stale data` };
+      status = { status: 'error', message: `${stalePercent.toFixed(0)}% of courts have stale data (not scraped in 25h)` };
     } else if (stalePercent > 20) {
-      status = { status: 'warning', message: `${stalePercent.toFixed(0)}% of courts have stale data` };
+      status = { status: 'warning', message: `${stalePercent.toFixed(0)}% of courts have stale data (not scraped in 25h)` };
     } else {
-      status = { status: 'healthy', message: `${courtsWithTodayData}/${totalCourts} courts have today's data` };
+      status = { status: 'healthy', message: `${totalCourts - staleCourts}/${totalCourts} courts scraped within 25h` };
     }
 
     return { status, totalCourts, courtsWithTodayData, courtsWithTomorrowData, staleCourts };
