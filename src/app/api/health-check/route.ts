@@ -58,6 +58,13 @@ interface EmailAlertHealth {
   totalEmailsSent: number;
 }
 
+interface QrScanMetrics {
+  scans24h: number;
+  scans7d: number;
+  totalScans: number;
+  topFacilities24h: { name: string; count: number }[];
+}
+
 interface HealthReport {
   generatedAt: string;
   overallStatus: 'healthy' | 'warning' | 'error';
@@ -65,6 +72,7 @@ interface HealthReport {
   visitorAnalytics: VisitorAnalytics;
   stripeMetrics: StripeMetrics[];
   emailAlerts: EmailAlertHealth;
+  qrScans: QrScanMetrics;
   alerts: string[];
 }
 
@@ -347,6 +355,53 @@ async function checkEmailAlertHealth(): Promise<EmailAlertHealth> {
   }
 }
 
+async function checkQrScans(): Promise<QrScanMetrics> {
+  try {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [{ count: scans24h }, { count: scans7d }, { count: totalScans }, { data: recentScans }] = await Promise.all([
+      supabaseAdmin
+        .from('qr_scans')
+        .select('*', { count: 'exact', head: true })
+        .gte('scanned_at', yesterday),
+      supabaseAdmin
+        .from('qr_scans')
+        .select('*', { count: 'exact', head: true })
+        .gte('scanned_at', weekAgo),
+      supabaseAdmin
+        .from('qr_scans')
+        .select('*', { count: 'exact', head: true }),
+      supabaseAdmin
+        .from('qr_scans')
+        .select('facility_name')
+        .gte('scanned_at', yesterday),
+    ]);
+
+    // Count scans by facility
+    const facilityCounts: Record<string, number> = {};
+    for (const scan of recentScans || []) {
+      const name = scan.facility_name || 'Unknown';
+      facilityCounts[name] = (facilityCounts[name] || 0) + 1;
+    }
+
+    const topFacilities24h = Object.entries(facilityCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    return {
+      scans24h: scans24h || 0,
+      scans7d: scans7d || 0,
+      totalScans: totalScans || 0,
+      topFacilities24h,
+    };
+  } catch (error) {
+    console.error('QR Scans error:', error);
+    return { scans24h: 0, scans7d: 0, totalScans: 0, topFacilities24h: [] };
+  }
+}
+
 // ─────────────────────────  REPORT GENERATION  ────────────────────────
 
 function generateHtmlReport(report: HealthReport): string {
@@ -435,6 +490,16 @@ function generateHtmlReport(report: HealthReport): string {
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-title">QR Code Scans</div>
+    <div class="grid">
+      <div class="metric"><p class="metric-label">Scans (24h)</p><p class="metric-value">${report.qrScans.scans24h}</p></div>
+      <div class="metric"><p class="metric-label">Scans (7d)</p><p class="metric-value">${report.qrScans.scans7d}</p></div>
+      <div class="metric"><p class="metric-label">Total All-Time</p><p class="metric-value">${report.qrScans.totalScans.toLocaleString()}</p></div>
+      <div class="metric"><p class="metric-label">Top Facilities (24h)</p><p class="metric-value" style="font-size:14px;">${report.qrScans.topFacilities24h.length > 0 ? report.qrScans.topFacilities24h.map(f => `${f.name}: ${f.count}`).join('<br>') : 'No scans'}</p></div>
+    </div>
+  </div>
+
   <div class="footer"><p>First Serve Seattle Health Check</p></div>
 </div>
 </body>
@@ -468,10 +533,11 @@ export async function GET() {
   const alerts: string[] = [];
 
   // Run checks
-  const [courtData, visitorAnalytics, emailAlerts] = await Promise.all([
+  const [courtData, visitorAnalytics, emailAlerts, qrScans] = await Promise.all([
     checkCourtDataFreshness(),
     checkVisitorAnalytics(),
     checkEmailAlertHealth(),
+    checkQrScans(),
   ]);
 
   // Stripe checks
@@ -502,6 +568,7 @@ export async function GET() {
     visitorAnalytics,
     stripeMetrics,
     emailAlerts,
+    qrScans,
     alerts,
   };
 
@@ -534,5 +601,11 @@ export async function GET() {
       failedPayments24h: s.failedPayments24h,
     })),
     emailAlerts: { subscribers: emailAlerts.activeSubscribers, sent24h: emailAlerts.emailsSent24h },
+    qrScans: {
+      scans24h: qrScans.scans24h,
+      scans7d: qrScans.scans7d,
+      totalScans: qrScans.totalScans,
+      topFacilities24h: qrScans.topFacilities24h,
+    },
   });
 }
