@@ -7,28 +7,34 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// GET: Fetch current preferences by token
+// GET: Fetch current preferences by token or email
 export async function GET(request: Request): Promise<NextResponse<PreferencesResponse>> {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
+    const email = searchParams.get('email');
 
-    if (!token) {
+    if (!token && !email) {
       return NextResponse.json(
-        { success: false, error: 'Token is required' },
+        { success: false, error: 'Token or email is required' },
         { status: 400 }
       );
     }
 
-    const { data: subscriber, error } = await supabaseAdmin
-      .from('email_alert_subscribers')
-      .select('*')
-      .eq('unsubscribe_token', token)
-      .single();
+    // Query by token or email
+    let query = supabaseAdmin.from('email_alert_subscribers').select('*');
+
+    if (token) {
+      query = query.eq('unsubscribe_token', token);
+    } else if (email) {
+      query = query.eq('email', email);
+    }
+
+    const { data: subscriber, error } = await query.single();
 
     if (error || !subscriber) {
       return NextResponse.json(
-        { success: false, error: 'Invalid or expired token' },
+        { success: false, error: 'Subscriber not found' },
         { status: 404 }
       );
     }
@@ -61,26 +67,62 @@ export async function GET(request: Request): Promise<NextResponse<PreferencesRes
 // PUT: Update preferences
 export async function PUT(request: Request): Promise<NextResponse<PreferencesResponse>> {
   try {
-    const body: PreferencesRequest = await request.json();
-    const { token, selectedCourts, selectedDays, preferredStartHour, preferredEndHour, alertHour } = body;
+    const body = await request.json();
+    const { token, email, selectedCourts, selectedDays, preferredStartHour, preferredEndHour, alertHour } = body as PreferencesRequest & { email?: string };
 
-    if (!token) {
+    if (!token && !email) {
       return NextResponse.json(
-        { success: false, error: 'Token is required' },
+        { success: false, error: 'Token or email is required' },
         { status: 400 }
       );
     }
 
-    // Validate the token exists
-    const { data: existing, error: fetchError } = await supabaseAdmin
-      .from('email_alert_subscribers')
-      .select('id')
-      .eq('unsubscribe_token', token)
-      .single();
+    // Find subscriber by token or email
+    let query = supabaseAdmin.from('email_alert_subscribers').select('id');
+
+    if (token) {
+      query = query.eq('unsubscribe_token', token);
+    } else if (email) {
+      query = query.eq('email', email);
+    }
+
+    const { data: existing, error: fetchError } = await query.single();
+
+    // If subscriber doesn't exist and we have an email, create one
+    if ((fetchError || !existing) && email) {
+      // Create new subscriber for authenticated user
+      const { randomBytes } = await import('crypto');
+      const unsubscribeToken = randomBytes(32).toString('hex');
+
+      const { data: newSub, error: insertError } = await supabaseAdmin
+        .from('email_alert_subscribers')
+        .insert({
+          email,
+          unsubscribe_token: unsubscribeToken,
+          selected_courts: selectedCourts || [],
+          selected_days: selectedDays || [1, 2, 3, 4, 5],
+          preferred_start_hour: preferredStartHour ?? 6,
+          preferred_end_hour: preferredEndHour ?? 21,
+          alert_hour: alertHour ?? 7,
+          alerts_enabled: true,
+        })
+        .select('id')
+        .single();
+
+      if (insertError || !newSub) {
+        console.error('Error creating subscriber:', insertError);
+        return NextResponse.json(
+          { success: false, error: 'Failed to create alert preferences' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true });
+    }
 
     if (fetchError || !existing) {
       return NextResponse.json(
-        { success: false, error: 'Invalid or expired token' },
+        { success: false, error: 'Subscriber not found' },
         { status: 404 }
       );
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { Check, MapPin, Clock, Calendar, Bell, ArrowLeft, Loader2, Search } from 'lucide-react';
 import type { EmailAlertSubscriber } from '@/lib/emailAlerts/types';
@@ -34,11 +35,13 @@ function formatHour(hour: number): string {
 function AlertsPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const supabase = createClientComponentClient();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Subscriber data
   const [subscriber, setSubscriber] = useState<Partial<EmailAlertSubscriber> | null>(null);
@@ -84,18 +87,44 @@ function AlertsPageContent() {
   // Load subscriber preferences and courts
   useEffect(() => {
     async function loadData() {
-      if (!token) {
-        setError('Missing access token. Please use the link from your email.');
+      // First, check if user is authenticated via Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+
+      let email: string | null = null;
+
+      if (user?.email) {
+        // User is authenticated - use their email
+        email = user.email;
+        setUserEmail(email);
+      } else if (token) {
+        // Fall back to token-based access
+        // Token will be validated by the API
+      } else {
+        setError('Please sign in to manage your court alerts.');
         setLoading(false);
         return;
       }
 
       try {
-        // Fetch preferences
-        const prefRes = await fetch(`/api/email-alerts/preferences?token=${token}`);
+        // Fetch preferences - use email for authenticated users, token for email links
+        const prefRes = email
+          ? await fetch(`/api/email-alerts/preferences?email=${encodeURIComponent(email)}`)
+          : await fetch(`/api/email-alerts/preferences?token=${token}`);
         const prefData = await prefRes.json();
 
         if (!prefData.success) {
+          // For authenticated users with no alert preferences yet, show empty form
+          if (email && prefData.error === 'Subscriber not found') {
+            setSubscriber({ email });
+            // Load facilities and show empty preferences form
+            const facilitiesRes = await fetch('/api/facilities-list');
+            if (facilitiesRes.ok) {
+              const facilitiesData = await facilitiesRes.json();
+              setFacilities(facilitiesData.facilities || []);
+            }
+            setLoading(false);
+            return;
+          }
           setError(prefData.error || 'Failed to load preferences');
           setLoading(false);
           return;
@@ -124,7 +153,7 @@ function AlertsPageContent() {
     }
 
     loadData();
-  }, [token]);
+  }, [token, supabase]);
 
   const handleDayToggle = (day: number) => {
     setSelectedDays(prev =>
@@ -135,7 +164,7 @@ function AlertsPageContent() {
   };
 
   const handleSave = async () => {
-    if (!token) return;
+    if (!token && !userEmail) return;
 
     setSaving(true);
     setError('');
@@ -147,6 +176,7 @@ function AlertsPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
+          email: userEmail, // For authenticated users
           selectedCourts,
           selectedDays,
           preferredStartHour: startHour,
@@ -184,8 +214,8 @@ function AlertsPageContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="max-w-md text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Link href="/" className="text-blue-600 hover:underline">
-            Return to homepage
+          <Link href="/testworkflow" className="text-blue-600 hover:underline">
+            Return to courts
           </Link>
         </div>
       </div>
@@ -198,7 +228,7 @@ function AlertsPageContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/"
+            href="/testworkflow"
             className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -403,10 +433,10 @@ function AlertsPageContent() {
               Subscribe and see availability anytime, not just in emails.
             </p>
             <Link
-              href={`/signup?plan=monthly${subscriber?.email ? `&email=${encodeURIComponent(subscriber.email)}` : ''}`}
+              href="/checkout-test"
               className="inline-block rounded-lg bg-[#0c372b] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#0c372b]/90"
             >
-              Subscribe – $8/month
+              Upgrade Now – $8/month
             </Link>
           </div>
         </div>
