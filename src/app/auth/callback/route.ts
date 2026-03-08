@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
         }
 
         if (!subscriber) {
-          console.log('🆕 New user signup - creating 7-day trial')
+          console.log('🆕 New user signup - creating 5-day trial')
 
-          // Calculate trial end date (7 days from now, in epoch seconds)
+          // Calculate trial end date (5 days from now, in epoch seconds)
           const trialEndDate = new Date()
-          trialEndDate.setDate(trialEndDate.getDate() + 7)
+          trialEndDate.setDate(trialEndDate.getDate() + 5)
           const trialEndEpoch = Math.floor(trialEndDate.getTime() / 1000)
 
           // Create trial subscriber record - use upsert to handle edge cases
@@ -113,8 +113,8 @@ export async function GET(request: NextRequest) {
 
           console.log('✅ Trial created for user:', data.user.email, 'expires:', trialEndDate.toISOString())
 
-          // Redirect to testworkflow - user now has 7-day trial access and sees TODAY's data
-          return NextResponse.redirect(new URL('/testworkflow', requestUrl.origin))
+          // Redirect to testworkflow with welcome flag - user now has 5-day trial access
+          return NextResponse.redirect(new URL('/testworkflow?welcome=true', requestUrl.origin))
         } else {
           // Existing user - update provider IDs and user_id if needed
           const updateData: Record<string, unknown> = {

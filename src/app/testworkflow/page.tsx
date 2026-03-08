@@ -437,7 +437,7 @@ function AuthModal({
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-1">See Today&apos;s Availability</h2>
             <p className="text-gray-500 text-sm mb-4">
-              7-day free trial, then $8/month. Cancel anytime.
+              Free 5-day trial, then $8/month. Cancel anytime.
             </p>
 
             {/* Benefits */}
@@ -683,8 +683,19 @@ function TestWorkflowContent() {
   });
   const [popFilter, setPopFilter] = useState<PopFilter>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const supabase = createClientComponentClient();
+
+  // Check for welcome param (new signup) and show welcome modal
+  useEffect(() => {
+    const welcome = searchParams.get('welcome');
+    if (welcome === 'true') {
+      setShowWelcomeModal(true);
+      // Clean up URL without reload
+      window.history.replaceState({}, '', '/testworkflow');
+    }
+  }, [searchParams]);
 
   // Check if Apple banner was previously dismissed
   useEffect(() => {
@@ -1672,6 +1683,55 @@ function TestWorkflowContent() {
         supabase={supabase}
         initialMode={authModalMode}
       />
+
+      {/* Welcome Modal - shown after new signup */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+              Welcome to First Serve Seattle!
+            </h2>
+
+            <p className="text-gray-600 text-center mb-1">
+              Your <span className="font-semibold text-emerald-600">free 5-day trial</span> has started.
+            </p>
+            <p className="text-gray-500 text-sm text-center mb-6">
+              You now have full access to today&apos;s court availability.
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setShowWelcomeModal(false)}
+                className="w-full py-3 px-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <MapIcon size={18} />
+                View Today&apos;s Courts
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowWelcomeModal(false);
+                  router.push('/alerts');
+                }}
+                className="w-full py-3 px-4 bg-blue-50 text-blue-700 font-semibold rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <Bell size={18} />
+                Set Up Court Alerts
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowWelcomeModal(false);
+                  router.push(CHECKOUT_ROUTE);
+                }}
+                className="w-full py-2.5 px-4 text-gray-500 font-medium hover:text-gray-700 transition-colors text-sm"
+              >
+                Upgrade Now →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
