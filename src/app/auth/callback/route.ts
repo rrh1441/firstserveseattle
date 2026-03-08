@@ -47,20 +47,26 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      // Get Apple provider ID if this is an Apple OAuth user
+      // Get provider IDs from OAuth identities
       const appleIdentity = data.user.identities?.find(i => i.provider === 'apple')
+      const googleIdentity = data.user.identities?.find(i => i.provider === 'google')
       const appleProviderId = appleIdentity?.id || null
+      const googleProviderId = googleIdentity?.id || null
 
       // If this is signup mode, handle trial creation or existing user
       if (mode === 'signup' || redirectTo === '/signup') {
         console.log('🔄 Checking if user needs trial setup')
 
-        // Check if user exists in subscribers table
-        const { data: subscriber } = await supabase
+        // Check if user exists in subscribers table (use admin client to bypass RLS)
+        const { data: subscriber, error: checkError } = await supabaseAdmin
           .from('subscribers')
-          .select('id, status')
+          .select('id, status, user_id')
           .eq('email', data.user.email)
           .maybeSingle()
+
+        if (checkError) {
+          console.error('❌ Error checking subscriber:', checkError)
+        }
 
         if (!subscriber) {
           console.log('🆕 New user signup - creating 7-day trial')
@@ -70,60 +76,78 @@ export async function GET(request: NextRequest) {
           trialEndDate.setDate(trialEndDate.getDate() + 7)
           const trialEndEpoch = Math.floor(trialEndDate.getTime() / 1000)
 
-          // Create trial subscriber record (include Apple provider ID if present)
+          // Create trial subscriber record - use upsert to handle edge cases
           const insertData: Record<string, unknown> = {
             user_id: data.user.id,
             email: data.user.email,
             status: 'trialing',
             trial_end: trialEndEpoch,
             has_card: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
           }
           if (appleProviderId) {
             insertData.apple_provider_id = appleProviderId
           }
+          if (googleProviderId) {
+            insertData.google_provider_id = googleProviderId
+          }
 
+          // Try insert first
           const { error: insertError } = await supabaseAdmin
             .from('subscribers')
             .insert(insertData)
 
           if (insertError) {
-            console.error('❌ Failed to create trial subscriber:', insertError)
-            return NextResponse.redirect(new URL('/signup?error=trial_creation_failed', requestUrl.origin))
+            console.error('❌ Insert failed, trying upsert:', insertError)
+
+            // If insert fails (maybe duplicate user_id), try upsert by email
+            const { error: upsertError } = await supabaseAdmin
+              .from('subscribers')
+              .upsert(insertData, { onConflict: 'email' })
+
+            if (upsertError) {
+              console.error('❌ Upsert also failed:', upsertError)
+              const errorMsg = encodeURIComponent(upsertError.message || insertError.message || 'unknown')
+              return NextResponse.redirect(new URL(`/testworkflow?error=trial_creation_failed&details=${errorMsg}`, requestUrl.origin))
+            }
           }
 
           console.log('✅ Trial created for user:', data.user.email, 'expires:', trialEndDate.toISOString())
 
-          // Redirect to members area - user now has 7-day trial access and sees TODAY's data
-          return NextResponse.redirect(new URL('/members-new', requestUrl.origin))
+          // Redirect to testworkflow - user now has 7-day trial access and sees TODAY's data
+          return NextResponse.redirect(new URL('/testworkflow', requestUrl.origin))
         } else {
-          // Existing user - update Apple provider ID if needed
+          // Existing user - update provider IDs and user_id if needed
+          const updateData: Record<string, unknown> = {
+            user_id: data.user.id,
+          }
           if (appleProviderId) {
-            console.log('🍎 Updating Apple provider ID for existing user')
-            await supabaseAdmin
-              .from('subscribers')
-              .update({
-                apple_provider_id: appleProviderId,
-                user_id: data.user.id,
-              })
-              .eq('email', userEmail)
+            updateData.apple_provider_id = appleProviderId
+          }
+          if (googleProviderId) {
+            updateData.google_provider_id = googleProviderId
           }
 
+          console.log('🔄 Updating existing subscriber with provider info')
+          await supabaseAdmin
+            .from('subscribers')
+            .update(updateData)
+            .eq('email', userEmail)
+
           console.log('✅ Existing subscriber found, redirecting to app')
-          return NextResponse.redirect(new URL('/members-new', requestUrl.origin))
+          return NextResponse.redirect(new URL('/testworkflow', requestUrl.origin))
         }
       }
 
-      // For login mode (not signup), update Apple provider ID if present
-      if (appleProviderId) {
-        console.log('🍎 Storing Apple provider ID for login')
+      // For login mode (not signup), update provider IDs if present
+      if (appleProviderId || googleProviderId) {
+        console.log('🔄 Storing provider IDs for login')
+        const updateData: Record<string, unknown> = { user_id: data.user.id }
+        if (appleProviderId) updateData.apple_provider_id = appleProviderId
+        if (googleProviderId) updateData.google_provider_id = googleProviderId
+
         await supabaseAdmin
           .from('subscribers')
-          .update({
-            apple_provider_id: appleProviderId,
-            user_id: data.user.id,
-          })
+          .update(updateData)
           .eq('email', userEmail)
       }
     }
