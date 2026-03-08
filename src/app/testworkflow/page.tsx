@@ -8,6 +8,9 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
 
+// Checkout route configuration - change to '/checkout' when ready for production
+const CHECKOUT_ROUTE = '/checkout-test';
+
 // Seattle center coordinates
 const SEATTLE_CENTER = {
   latitude: 47.6062,
@@ -663,6 +666,7 @@ function TestWorkflowContent() {
   const [hasAccess, setHasAccess] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
+  const [isTrialing, setIsTrialing] = useState(false); // Active trial (not paid yet)
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
   const [view, setView] = useState<ViewMode>("map");
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
@@ -724,6 +728,7 @@ function TestWorkflowContent() {
 
           setHasAccess(isPaidSubscriber || inActiveTrial);
           setIsTrialExpired(trialExpired);
+          setIsTrialing(inActiveTrial);
 
           if (inActiveTrial && trialEnd) {
             const daysLeft = Math.ceil(
@@ -737,11 +742,13 @@ function TestWorkflowContent() {
           // Authenticated but no subscriber record
           setHasAccess(false);
           setIsTrialExpired(false);
+          setIsTrialing(false);
         }
       } else {
         setIsAuthenticated(false);
         setHasAccess(false);
         setIsTrialExpired(false);
+        setIsTrialing(false);
         setTrialDaysRemaining(null);
         setIsAppleOnlyUser(false);
       }
@@ -758,6 +765,7 @@ function TestWorkflowContent() {
         setIsAuthenticated(false);
         setHasAccess(false);
         setIsTrialExpired(false);
+        setIsTrialing(false);
         setTrialDaysRemaining(null);
       }
     });
@@ -1241,7 +1249,7 @@ function TestWorkflowContent() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push('/checkout');
+                        router.push(CHECKOUT_ROUTE);
                       }}
                       className="w-full py-2 px-3 bg-emerald-600 text-white rounded-lg font-medium text-xs hover:bg-emerald-700 transition-colors"
                     >
@@ -1372,7 +1380,7 @@ function TestWorkflowContent() {
                               {isAuthenticated && isTrialExpired ? (
                                 <>
                                   <button
-                                    onClick={() => router.push('/checkout')}
+                                    onClick={() => router.push(CHECKOUT_ROUTE)}
                                     className="w-full py-2.5 px-4 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors"
                                   >
                                     Upgrade to continue
@@ -1473,8 +1481,8 @@ function TestWorkflowContent() {
 
             <div className="space-y-2">
               {isAuthenticated ? (
-                hasAccess ? (
-                  /* Authenticated + Active subscription/trial */
+                hasAccess && !isTrialing ? (
+                  /* Authenticated + Paid subscriber (not trial) */
                   <>
                     <button
                       onClick={() => {
@@ -1519,13 +1527,59 @@ function TestWorkflowContent() {
                       </div>
                     </button>
                   </>
+                ) : hasAccess && isTrialing ? (
+                  /* Authenticated + Active trial (not yet subscribed) */
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push('/alerts');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell size={20} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Court Alerts</p>
+                        <p className="text-sm text-gray-500">Get notified of openings</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push(CHECKOUT_ROUTE);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition-colors text-left border border-emerald-200"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Zap size={20} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Upgrade</p>
+                        <p className="text-sm text-gray-500">{trialDaysRemaining} day{trialDaysRemaining === 1 ? '' : 's'} left in trial</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <LogOut size={20} className="text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Sign Out</p>
+                        <p className="text-sm text-gray-500">See you next time</p>
+                      </div>
+                    </button>
+                  </>
                 ) : (
                   /* Authenticated but expired trial or canceled */
                   <>
                     <button
                       onClick={() => {
                         setShowMenuModal(false);
-                        router.push('/checkout');
+                        router.push(CHECKOUT_ROUTE);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
                     >
