@@ -12,7 +12,6 @@ import { ExternalLink, AlertTriangle, X } from 'lucide-react';
 
 import TennisCourtList from '../tennis-courts/components/TennisCourtList';
 import { Button } from '@/components/ui/button';
-import ReAuthModal from '@/app/components/ReAuthModal';
 import AppleMigrationBanner, { useAppleMigrationBanner } from '@/app/components/AppleMigrationBanner';
 
 /* ---------- tiny fetcher hits the server-side API, not Supabase ---------- */
@@ -40,7 +39,6 @@ export default function MembersPage() {
   const [loadingPortal, setLP]      = useState(false);
   const [userEmail, setUserEmail]   = useState<string | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [showReAuthModal, setShowReAuthModal] = useState(false);
   const [authProvider, setAuthProvider] = useState<'apple' | 'google' | 'email' | null>(null);
   const { dismissed: appleBannerDismissed, dismiss: dismissAppleBanner } = useAppleMigrationBanner();
 
@@ -129,15 +127,8 @@ export default function MembersPage() {
   /* ---------------- customer-portal handler ------------------ */
   function manageSub() {
     if (!token) { setError('No session'); return; }
-    // Show re-auth modal before allowing access to billing
-    setShowReAuthModal(true);
-  }
-
-  function handleReAuthSuccess() {
-    setShowReAuthModal(false);
-    if (token) {
-      openBillingPortal(token);
-    }
+    // Go directly to billing portal - user is already authenticated
+    openBillingPortal(token);
   }
 
   /* ---------------------------- UI --------------------------- */
@@ -242,15 +233,6 @@ export default function MembersPage() {
         </Button>
       </div>
     </div>
-
-    {/* Re-authentication modal for billing actions */}
-    <ReAuthModal
-      open={showReAuthModal}
-      onClose={() => setShowReAuthModal(false)}
-      onSuccess={handleReAuthSuccess}
-      userEmail={userEmail || ''}
-      authProvider={authProvider}
-    />
     </>
   );
 }

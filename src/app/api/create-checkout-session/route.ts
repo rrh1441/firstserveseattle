@@ -74,6 +74,7 @@ export async function POST(request: Request) {
       payment_method_collection: "always", // Always require card entry
       payment_method_types: ["card"], // Only allow card payments (disables Link auto-fill)
       client_reference_id: userId ?? undefined,
+      automatic_tax: { enabled: true }, // Collect sales tax (WA 10.25%)
       metadata: {
         plan: selectedPlan,
         offerId: offerId ?? "default",
