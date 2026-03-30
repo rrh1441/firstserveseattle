@@ -25,13 +25,13 @@ export default async function MaintenanceModal() {
 
   return (
     <Dialog open={true}>
-      <DialogContent className="sm:max-w-md border-orange-200 bg-orange-50">
+      <DialogContent className="sm:max-w-md border-emerald-200 bg-emerald-50">
         <DialogHeader>
-          <DialogTitle className="text-orange-800">
-            Data Temporarily Unavailable
+          <DialogTitle className="text-emerald-800">
+            We&apos;re building a new experience!
           </DialogTitle>
-          <DialogDescription className="text-orange-700">
-            Our court availability data is being refreshed. Please check back in a few hours for updated information.
+          <DialogDescription className="text-emerald-700">
+            Check back tomorrow to see available courts.
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
