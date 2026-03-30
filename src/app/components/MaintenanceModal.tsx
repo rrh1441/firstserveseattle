@@ -1,11 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from './ui/dialog';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,22 +12,20 @@ export default async function MaintenanceModal() {
     .eq('key', 'maintenance_mode')
     .single();
 
-  const isStale = data?.value?.enabled ?? false;
+  const isEnabled = data?.value?.enabled ?? false;
 
-  if (!isStale) return null;
+  if (!isEnabled) return null;
 
   return (
-    <Dialog open={true}>
-      <DialogContent className="sm:max-w-md border-emerald-200 bg-emerald-50">
-        <DialogHeader>
-          <DialogTitle className="text-emerald-800">
-            We&apos;re building a new experience!
-          </DialogTitle>
-          <DialogDescription className="text-emerald-700">
-            Check back tomorrow to see available courts.
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="mx-4 max-w-sm rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-lg">
+        <h2 className="text-lg font-semibold text-emerald-800">
+          We&apos;re building a new experience!
+        </h2>
+        <p className="mt-2 text-emerald-700">
+          Check back tomorrow to see available courts.
+        </p>
+      </div>
+    </div>
   );
 }
