@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
             status: 'trialing',
             trial_end: trialEndEpoch,
             has_card: false,
+            plan: 'trial', // Required field - will be updated to 'monthly' or 'annual' on checkout
           }
           if (appleProviderId) {
             insertData.apple_provider_id = appleProviderId
