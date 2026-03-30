@@ -547,6 +547,17 @@ export async function GET() {
 
   // Collect alerts (traffic is info-only, not a warning)
   if (courtData.status.status !== 'healthy') alerts.push(`Court Data: ${courtData.status.message}`);
+
+  // Update maintenance mode flag based on court data staleness
+  const isDataStale = courtData.status.status === 'error';
+  await supabaseAdmin
+    .from('site_config')
+    .upsert({
+      key: 'maintenance_mode',
+      value: { enabled: isDataStale, reason: isDataStale ? courtData.status.message : null },
+      updated_at: new Date().toISOString(),
+    })
+    .eq('key', 'maintenance_mode');
   if (emailAlerts.status.status === 'error') alerts.push(`Email Alerts: ${emailAlerts.status.message}`);
   for (const s of stripeMetrics) {
     if (s.failedPayments24h > 0) alerts.push(`Stripe (${s.accountName}): ${s.failedPayments24h} failed payments`);
