@@ -795,7 +795,8 @@ export const emailTemplates = {
     daysRemaining: number,
     preferencesUrl: string,
     unsubscribeUrl: string,
-    email?: string
+    email?: string,
+    isPaidMember: boolean = false
   ) => {
     return {
       subject: courts.length === 1
@@ -850,13 +851,15 @@ export const emailTemplates = {
                         </table>
                       `).join('')}
 
-                      <!-- Trial reminder -->
+                      <!-- Trial reminder (only show for non-paid members) -->
+                      ${!isPaidMember ? `
                       <p style="color: #6b7280 !important; font-size: 17px; line-height: 1.5; margin: 24px 0 16px 0; background-color: #ffffff !important;">
                         ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left on your free trial.
                         <a href="https://firstserveseattle.com/signup?plan=monthly${email ? `&email=${encodeURIComponent(email)}` : ''}" style="color: #0c372b !important; font-weight: 600; text-decoration: none;">
                           Subscribe for $8/mo
                         </a> to keep getting alerts.
                       </p>
+                      ` : ''}
 
                       <!-- Footer -->
                       <p style="color: #9ca3af !important; font-size: 15px; line-height: 1.5; margin: 32px 0 0 0; padding-top: 16px; border-top: 1px solid #e5e7eb; background-color: #ffffff !important;">

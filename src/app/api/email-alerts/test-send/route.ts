@@ -97,6 +97,17 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     console.log(`[test-send] Sending test alert to ${email} for date ${targetDateStr}`);
 
+    // Check if user is a paid subscriber
+    const { data: paidSubscriber } = await supabaseAdmin
+      .from('subscribers')
+      .select('status')
+      .eq('email', email)
+      .eq('status', 'paid')
+      .single();
+
+    const isPaidMember = !!paidSubscriber;
+    console.log(`[test-send] User ${email} isPaidMember: ${isPaidMember}`);
+
     // Get all court data
     const { data: allCourts, error: courtsError } = await supabaseAdmin
       .from('tennis_courts')
@@ -173,7 +184,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       daysRemaining,
       preferencesUrl,
       unsubscribeUrl,
-      subscriber.email
+      subscriber.email,
+      isPaidMember
     );
 
     // Modify subject to indicate it's a test
@@ -214,6 +226,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       date_checked: targetDateStr,
       courts_with_availability: availableCourts.length,
       total_slots: availableCourts.reduce((sum, c) => sum + c.slots.length, 0),
+      is_paid_member: isPaidMember,
       resend_id: emailResult?.id,
     });
 

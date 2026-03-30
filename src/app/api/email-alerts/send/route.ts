@@ -132,6 +132,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     const alreadySentSet = new Set(alreadySentLogs?.map(log => log.subscriber_id) || []);
     console.log(`[send-alerts] ${alreadySentSet.size} subscribers already received emails today`);
 
+    // Batch check: Get all paid subscribers to avoid N+1 query
+    const subscriberEmails = (subscribers as Subscriber[]).map(s => s.email);
+    const { data: paidSubscribers } = await supabaseAdmin
+      .from('subscribers')
+      .select('email')
+      .eq('status', 'paid')
+      .in('email', subscriberEmails);
+
+    const paidEmailsSet = new Set(paidSubscribers?.map(s => s.email) || []);
+    console.log(`[send-alerts] ${paidEmailsSet.size} subscribers are paid members`);
+
     let sent = 0;
     let skipped = 0;
 
@@ -182,13 +193,17 @@ export async function POST(request: Request): Promise<NextResponse> {
       const preferencesUrl = `${baseUrl}/alerts?token=${subscriber.unsubscribe_token}`;
       const unsubscribeUrl = `${baseUrl}/api/email-alerts/unsubscribe?token=${subscriber.unsubscribe_token}`;
 
+      // Check if this subscriber is a paid member
+      const isPaidMember = paidEmailsSet.has(subscriber.email);
+
       // Generate email
       const emailContent = emailTemplates.dailyCourtAlert(
         availableCourts,
         daysRemaining,
         preferencesUrl,
         unsubscribeUrl,
-        subscriber.email
+        subscriber.email,
+        isPaidMember
       );
 
       try {
