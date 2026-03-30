@@ -61,7 +61,7 @@ export default async function BillingRedirectPage() {
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/testworkflow`,
     });
     portalUrl = session.url;
-  } catch (err) {
+  } catch {
     console.log('[billing] Primary account failed, trying alternate...');
 
     try {
