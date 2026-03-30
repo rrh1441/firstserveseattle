@@ -37,7 +37,7 @@ export default function AboutPage() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <Link
-            href="/testworkflow"
+            href="/"
             className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="Back to courts"
           >
@@ -178,7 +178,7 @@ export default function AboutPage() {
         {/* CTA */}
         <section className="text-center py-8">
           <Link
-            href="/testworkflow"
+            href="/"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200"
           >
             <MapPin size={18} />

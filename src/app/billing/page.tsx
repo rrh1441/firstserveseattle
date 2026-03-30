@@ -31,7 +31,7 @@ export default async function BillingRedirectPage() {
 
   if (authError || !user) {
     console.error('[billing] No authenticated user:', authError);
-    redirect('/testworkflow?error=not_authenticated');
+    redirect('/?error=not_authenticated');
   }
 
   // Get the subscriber's Stripe customer ID
@@ -43,7 +43,7 @@ export default async function BillingRedirectPage() {
 
   if (subError || !subscriber?.stripe_customer_id) {
     console.error('[billing] No Stripe customer found:', subError);
-    redirect('/testworkflow?error=no_subscription');
+    redirect('/?error=no_subscription');
   }
 
   // Determine which Stripe account to use
@@ -58,7 +58,7 @@ export default async function BillingRedirectPage() {
     const stripe = isNewAccount ? stripeNew : stripeOld;
     const session = await stripe.billingPortal.sessions.create({
       customer: subscriber.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/testworkflow`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/`,
     });
     portalUrl = session.url;
   } catch {
@@ -69,7 +69,7 @@ export default async function BillingRedirectPage() {
       const altStripe = isNewAccount ? stripeOld : stripeNew;
       const session = await altStripe.billingPortal.sessions.create({
         customer: subscriber.stripe_customer_id,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/testworkflow`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/`,
       });
       portalUrl = session.url;
     } catch (altErr) {
@@ -80,6 +80,6 @@ export default async function BillingRedirectPage() {
   if (portalUrl) {
     redirect(portalUrl);
   } else {
-    redirect('/testworkflow?error=billing_unavailable');
+    redirect('/?error=billing_unavailable');
   }
 }

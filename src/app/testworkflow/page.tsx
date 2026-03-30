@@ -8,8 +8,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN; // test deploy
 
-// Checkout route configuration - change to '/checkout' when ready for production
-const CHECKOUT_ROUTE = '/checkout-test';
+// Checkout route configuration
+const CHECKOUT_ROUTE = '/checkout';
 
 // Seattle center coordinates
 const SEATTLE_CENTER = {
@@ -255,7 +255,7 @@ function AuthModal({
     localStorage.setItem('last_login_method', 'google');
 
     // Redirect back to testworkflow after auth - shows TODAY's data
-    const finalRedirect = '/testworkflow';
+    const finalRedirect = '/';
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -279,7 +279,7 @@ function AuthModal({
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/testworkflow&mode=signin`,
+        redirectTo: `${window.location.origin}/auth/callback?redirect_to=/&mode=signin`,
       },
     });
 
@@ -309,7 +309,7 @@ function AuthModal({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/members-new&mode=signup`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect_to=/&mode=signup`,
         },
       });
 
@@ -693,7 +693,7 @@ function TestWorkflowContent() {
     if (welcome === 'true') {
       setShowWelcomeModal(true);
       // Clean up URL without reload
-      window.history.replaceState({}, '', '/testworkflow');
+      window.history.replaceState({}, '', '/');
     }
   }, [searchParams]);
 

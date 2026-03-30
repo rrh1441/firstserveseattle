@@ -214,7 +214,7 @@ function AlertsPageContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="max-w-md text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Link href="/testworkflow" className="text-blue-600 hover:underline">
+          <Link href="/" className="text-blue-600 hover:underline">
             Return to courts
           </Link>
         </div>
@@ -228,7 +228,7 @@ function AlertsPageContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/testworkflow"
+            href="/"
             className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />

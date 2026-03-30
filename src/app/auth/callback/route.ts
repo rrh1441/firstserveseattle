@@ -12,7 +12,7 @@ const supabaseAdmin = createClient(
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const redirectTo = requestUrl.searchParams.get('redirect_to') || '/members'
+  const redirectTo = requestUrl.searchParams.get('redirect_to') || '/'
   const mode = requestUrl.searchParams.get('mode') || 'login'
 
   console.log('🔄 OAuth callback received:', { code: !!code, redirectTo, mode })
@@ -108,14 +108,14 @@ export async function GET(request: NextRequest) {
             if (upsertError) {
               console.error('❌ Upsert also failed:', upsertError)
               const errorMsg = encodeURIComponent(upsertError.message || insertError.message || 'unknown')
-              return NextResponse.redirect(new URL(`/testworkflow?error=trial_creation_failed&details=${errorMsg}`, requestUrl.origin))
+              return NextResponse.redirect(new URL(`/?error=trial_creation_failed&details=${errorMsg}`, requestUrl.origin))
             }
           }
 
           console.log('✅ Trial created for user:', data.user.email, 'expires:', trialEndDate.toISOString())
 
           // Redirect to testworkflow with welcome flag - user now has 5-day trial access
-          return NextResponse.redirect(new URL('/testworkflow?welcome=true', requestUrl.origin))
+          return NextResponse.redirect(new URL('/?welcome=true', requestUrl.origin))
         } else {
           // Existing user - update provider IDs and user_id if needed
           const updateData: Record<string, unknown> = {
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
             .eq('email', userEmail)
 
           console.log('✅ Existing subscriber found, redirecting to app')
-          return NextResponse.redirect(new URL('/testworkflow', requestUrl.origin))
+          return NextResponse.redirect(new URL('/', requestUrl.origin))
         }
       }
 

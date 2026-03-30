@@ -28,7 +28,7 @@ export default function CheckoutPage() {
 
       if (!authUser || !authUser.email) {
         // Not authenticated, redirect to courts page
-        router.push("/testworkflow");
+        router.push("/");
         return;
       }
 
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/testworkflow");
+    router.push("/");
   };
 
   if (checkingAuth) {

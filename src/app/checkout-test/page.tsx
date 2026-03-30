@@ -36,7 +36,7 @@ export default function CheckoutTestPage() {
 
       if (!authUser || !authUser.email) {
         // Not authenticated, redirect to testworkflow (they need to sign up/in first)
-        router.push("/testworkflow");
+        router.push("/");
         return;
       }
 
@@ -116,11 +116,11 @@ export default function CheckoutTestPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/testworkflow");
+    router.push("/");
   };
 
   const handleBack = () => {
-    router.push("/testworkflow");
+    router.push("/");
   };
 
   // Determine page title and messaging based on subscriber status
@@ -215,7 +215,7 @@ export default function CheckoutTestPage() {
             You have full access to today&apos;s court availability.
           </p>
           <button
-            onClick={() => router.push("/testworkflow")}
+            onClick={() => router.push("/")}
             className="w-full py-4 px-6 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
           >
             View Courts
