@@ -1525,37 +1525,11 @@ function TestWorkflowContent() {
                         <p className="text-sm text-gray-500">Manage subscription</p>
                       </div>
                     </button>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <LogOut size={20} className="text-gray-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Sign Out</p>
-                        <p className="text-sm text-gray-500">See you next time</p>
-                      </div>
-                    </button>
                   </>
                 ) : hasAccess && isTrialing ? (
                   /* Authenticated + Active trial (not yet subscribed) */
+                  /* Order: Upgrade, Alerts (Ball Machine & About are after conditional, Sign Out at very end) */
                   <>
-                    <button
-                      onClick={() => {
-                        setShowMenuModal(false);
-                        router.push('/alerts');
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Bell size={20} className="text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Court Alerts</p>
-                        <p className="text-sm text-gray-500">Get notified of openings</p>
-                      </div>
-                    </button>
                     <button
                       onClick={() => {
                         setShowMenuModal(false);
@@ -1572,15 +1546,18 @@ function TestWorkflowContent() {
                       </div>
                     </button>
                     <button
-                      onClick={handleSignOut}
+                      onClick={() => {
+                        setShowMenuModal(false);
+                        router.push('/alerts');
+                      }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
                     >
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <LogOut size={20} className="text-gray-600" />
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Bell size={20} className="text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">Sign Out</p>
-                        <p className="text-sm text-gray-500">See you next time</p>
+                        <p className="font-semibold text-gray-900">Court Alerts</p>
+                        <p className="text-sm text-gray-500">Get notified of openings</p>
                       </div>
                     </button>
                   </>
@@ -1600,18 +1577,6 @@ function TestWorkflowContent() {
                       <div>
                         <p className="font-semibold text-gray-900">Upgrade</p>
                         <p className="text-sm text-gray-500">Your trial has ended</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <LogOut size={20} className="text-gray-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">Sign Out</p>
-                        <p className="text-sm text-gray-500">See you next time</p>
                       </div>
                     </button>
                   </>
@@ -1671,6 +1636,22 @@ function TestWorkflowContent() {
                   <p className="text-sm text-gray-500">Learn more about us</p>
                 </div>
               </button>
+
+              {/* Sign Out - only for authenticated users, always at bottom */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <LogOut size={20} className="text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Sign Out</p>
+                    <p className="text-sm text-gray-500">See you next time</p>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
