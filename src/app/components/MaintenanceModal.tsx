@@ -25,6 +25,12 @@ export default async function MaintenanceModal() {
         <p className="mt-2 text-emerald-700">
           Check back tomorrow to see available courts.
         </p>
+        <p className="mt-4 text-sm text-gray-600">
+          Need help? Email{' '}
+          <a href="mailto:support@firstserveseattle.com" className="text-emerald-600 underline">
+            support@firstserveseattle.com
+          </a>
+        </p>
       </div>
     </div>
   );
