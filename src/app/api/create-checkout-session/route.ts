@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       mode: "subscription",
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
-      payment_method_collection: "if_required",
+      payment_method_collection: "always", // Always require card entry
       client_reference_id: userId ?? undefined,
       metadata: {
         plan: selectedPlan,
