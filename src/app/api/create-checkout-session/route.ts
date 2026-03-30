@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     console.log('API received:', { email, plan, offerId, isDiscountOffer });
     
     
-    // Create checkout session with discount instead of trial
+    // Create checkout session
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       success_url: SUCCESS_URL,
       cancel_url: CANCEL_URL,
       payment_method_collection: "always", // Always require card entry
+      payment_method_types: ["card"], // Only allow card payments (disables Link auto-fill)
       client_reference_id: userId ?? undefined,
       metadata: {
         plan: selectedPlan,
@@ -82,13 +83,10 @@ export async function POST(request: Request) {
       },
     };
 
-    // If trialEnd is provided (user is subscribing during trial), honor remaining trial
-    // Stripe will collect payment info but won't charge until trial_end
-    if (trialEnd && trialEnd > Math.floor(Date.now() / 1000)) {
-      sessionConfig.subscription_data = {
-        trial_end: trialEnd,
-      };
-      console.log('📅 Setting trial_end for subscription:', new Date(trialEnd * 1000).toISOString());
+    // NOTE: Removed trial_end logic - was causing Stripe to skip payment collection
+    // Users pay immediately; trial benefit is handled via our app's access logic
+    if (trialEnd) {
+      console.log('📅 Trial end provided but NOT passing to Stripe (user pays now):', new Date(trialEnd * 1000).toISOString());
     }
 
     // Apply 50% discount for first month if applicable (monthly plans only)
