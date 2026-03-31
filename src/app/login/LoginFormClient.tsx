@@ -76,8 +76,22 @@ export default function LoginFormClient({
       return;
     }
 
-    console.log('✅ Login successful, redirecting to:', redirectTo);
+    console.log('✅ Login successful, linking subscriber...');
     localStorage.setItem('last_login_method', 'email');
+
+    // Link user_id to subscriber record (or handle missing subscriber)
+    try {
+      await fetch('/api/link-subscriber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'signin' })
+      });
+    } catch (linkError) {
+      console.error('Failed to link subscriber:', linkError);
+      // Continue anyway - user is authenticated
+    }
+
+    console.log('✅ Redirecting to:', redirectTo);
     router.push(redirectTo);
   };
 

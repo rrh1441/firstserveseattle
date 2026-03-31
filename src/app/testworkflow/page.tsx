@@ -323,8 +323,18 @@ function AuthModal({
         // Email confirmation required
         setMagicLinkSent(true);
       } else if (data.session) {
-        // Auto-confirmed, user is logged in - close modal
-        onClose();
+        // Auto-confirmed, user is logged in - create trial and redirect
+        try {
+          await fetch('/api/link-subscriber', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'signup' })
+          });
+        } catch (linkError) {
+          console.error('Failed to create trial:', linkError);
+        }
+        // Redirect to home with welcome flag
+        window.location.href = '/?welcome=true';
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -355,6 +365,18 @@ function AuthModal({
       );
       setLoading(false);
       return;
+    }
+
+    // Link user_id to subscriber record (or handle missing subscriber)
+    try {
+      await fetch('/api/link-subscriber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'signin' })
+      });
+    } catch (linkError) {
+      console.error('Failed to link subscriber:', linkError);
+      // Continue anyway - user is authenticated
     }
 
     // Success - reload page to refresh auth state (matches OAuth flow behavior)
