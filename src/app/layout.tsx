@@ -13,7 +13,6 @@ import { GeistSans } from 'geist/font/sans';
 import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
-import MaintenanceModal from './components/MaintenanceModal';
 import { Toaster } from 'sonner';
 
 import './globals.css';
@@ -72,7 +71,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* ---------- client boot-straps ---------------------------------- */}
         <ClientIdsInit />
         <ClientStorageInit />
-        <MaintenanceModal />
 
         {/* ---------- 3rd-party analytics -------------------------------- */}
         <Script
