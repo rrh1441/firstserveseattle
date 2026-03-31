@@ -1293,6 +1293,22 @@ function TestWorkflowContent() {
                 )}
               </div>
 
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-gray-500 pt-2 border-t border-gray-100 mt-2">
+                <div className="flex items-center gap-1">
+                  <div className="h-2.5 w-2.5 rounded bg-emerald-500" />
+                  <span>Open</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-2.5 w-2.5 rounded bg-orange-400" />
+                  <span>Partial</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-2.5 w-2.5 rounded bg-gray-200" />
+                  <span>Booked</span>
+                </div>
+              </div>
+
               {/* Contextual CTA based on auth state */}
               {!hasAccess && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
@@ -1338,13 +1354,19 @@ function TestWorkflowContent() {
                 </div>
               )}
 
-              {/* Trial status for authenticated users */}
+              {/* Trial status for authenticated users - clickable to upgrade */}
               {hasAccess && trialDaysRemaining !== null && (
-                <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(CHECKOUT_ROUTE);
+                  }}
+                  className="mt-2 w-full bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center hover:bg-emerald-100 transition-colors cursor-pointer"
+                >
                   <div className="text-emerald-700 text-xs font-medium">
-                    Trial: {trialDaysRemaining} days left
+                    Trial: {trialDaysRemaining} days left → Upgrade
                   </div>
-                </div>
+                </button>
               )}
             </div>
           </Popup>
