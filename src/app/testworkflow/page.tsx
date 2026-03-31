@@ -357,9 +357,8 @@ function AuthModal({
       return;
     }
 
-    // Success - close modal (auth state listener will update the UI)
-    setLoading(false);
-    onClose();
+    // Success - reload page to refresh auth state (matches OAuth flow behavior)
+    window.location.href = '/';
   };
 
   const handleClose = () => {
