@@ -34,12 +34,33 @@ export default function CheckoutPage() {
 
       setUser({ id: authUser.id, email: authUser.email });
 
-      // Check if user has a trial
+      // Check if user has a subscriber record
       const { data: subscriber } = await supabase
         .from("subscribers")
         .select("trial_end, status")
         .eq("user_id", authUser.id)
         .single();
+
+      // If no subscriber record exists, create one via link-subscriber API
+      if (!subscriber) {
+        console.log('No subscriber record found, creating one...');
+        try {
+          const session = await supabase.auth.getSession();
+          await fetch('/api/link-subscriber', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mode: 'signup',
+              accessToken: session.data.session?.access_token
+            })
+          });
+          // Reload to pick up the new subscriber record
+          window.location.reload();
+          return;
+        } catch (err) {
+          console.error('Failed to create subscriber:', err);
+        }
+      }
 
       if (subscriber?.trial_end) {
         setTrialEnd(subscriber.trial_end);

@@ -325,11 +325,16 @@ function AuthModal({
       } else if (data.session) {
         // Auto-confirmed, user is logged in - create trial and redirect
         try {
-          await fetch('/api/link-subscriber', {
+          const response = await fetch('/api/link-subscriber', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: 'signup' })
+            body: JSON.stringify({
+              mode: 'signup',
+              accessToken: data.session.access_token
+            })
           });
+          const result = await response.json();
+          console.log('link-subscriber response:', result);
         } catch (linkError) {
           console.error('Failed to create trial:', linkError);
         }

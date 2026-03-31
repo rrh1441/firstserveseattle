@@ -11,14 +11,31 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { mode } = await request.json() as { mode: 'signin' | 'signup' }
+    const { mode, accessToken } = await request.json() as { mode: 'signin' | 'signup', accessToken?: string }
 
-    // Get the authenticated user from session
-    const supabase = createRouteHandlerClient({ cookies })
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    let user = null
 
-    if (userError || !user) {
-      console.error('❌ link-subscriber: No authenticated user', userError)
+    // Try to get user from access token first (for fresh signups where cookies aren't set yet)
+    if (accessToken) {
+      const { data: { user: tokenUser }, error: tokenError } = await supabaseAdmin.auth.getUser(accessToken)
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+        console.log('🔄 link-subscriber: Got user from access token')
+      }
+    }
+
+    // Fall back to cookie-based session
+    if (!user) {
+      const supabase = createRouteHandlerClient({ cookies })
+      const { data: { user: cookieUser }, error: userError } = await supabase.auth.getUser()
+      if (!userError && cookieUser) {
+        user = cookieUser
+        console.log('🔄 link-subscriber: Got user from cookies')
+      }
+    }
+
+    if (!user) {
+      console.error('❌ link-subscriber: No authenticated user')
       return NextResponse.json(
         { success: false, error: 'Not authenticated' },
         { status: 401 }
