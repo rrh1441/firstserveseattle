@@ -353,8 +353,13 @@ function AuthModal({
           ? "Incorrect email or password."
           : signInError.message
       );
+      setLoading(false);
+      return;
     }
+
+    // Success - close modal (auth state listener will update the UI)
     setLoading(false);
+    onClose();
   };
 
   const handleClose = () => {

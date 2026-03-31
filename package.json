@@ -110,5 +110,13 @@
   "bugs": {
     "url": "https://github.com/rrh1441/firstserveseattle/issues"
   },
-  "homepage": "https://github.com/rrh1441/firstserveseattle#readme"
+  "homepage": "https://github.com/rrh1441/firstserveseattle#readme",
+  "pnpm": {
+    "overrides": {
+      "axios": "1.9.0"
+    }
+  },
+  "overrides": {
+    "axios": "1.9.0"
+  }
 }
