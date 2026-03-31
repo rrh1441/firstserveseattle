@@ -631,6 +631,15 @@ function AuthModal({
                 Sign Up
               </button>
             </p>
+            <p className="text-sm text-gray-500 text-center mt-3">
+              Need help?{" "}
+              <a
+                href="mailto:support@firstserveseattle.com"
+                className="text-emerald-600 hover:underline"
+              >
+                support@firstserveseattle.com
+              </a>
+            </p>
           </div>
         )}
         </div>
