@@ -139,9 +139,48 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // For login mode (not signup), update provider IDs if present
-      if (appleProviderId || googleProviderId) {
-        console.log('🔄 Storing provider IDs for login')
+      // For login mode (not signup), check if subscriber exists and create trial if not
+      const { data: loginSubscriber } = await supabaseAdmin
+        .from('subscribers')
+        .select('id, status, user_id, trial_end')
+        .eq('email', userEmail)
+        .maybeSingle()
+
+      if (!loginSubscriber) {
+        // No subscriber record - create a trial (same as signup)
+        console.log('🆕 Login with no subscriber - creating 5-day trial')
+
+        const trialEndDate = new Date()
+        trialEndDate.setDate(trialEndDate.getDate() + 5)
+        const trialEndEpoch = Math.floor(trialEndDate.getTime() / 1000)
+
+        const insertData: Record<string, unknown> = {
+          user_id: data.user.id,
+          email: userEmail,
+          status: 'trialing',
+          trial_end: trialEndEpoch,
+          has_card: false,
+          plan: 'trial',
+        }
+        if (appleProviderId) insertData.apple_provider_id = appleProviderId
+        if (googleProviderId) insertData.google_provider_id = googleProviderId
+
+        const { error: insertError } = await supabaseAdmin
+          .from('subscribers')
+          .insert(insertData)
+
+        if (insertError) {
+          console.error('❌ Insert failed, trying upsert:', insertError)
+          await supabaseAdmin
+            .from('subscribers')
+            .upsert(insertData, { onConflict: 'email' })
+        }
+
+        console.log('✅ Trial created for login user:', userEmail)
+        return NextResponse.redirect(new URL('/?welcome=true', requestUrl.origin))
+      } else {
+        // Existing subscriber - update provider IDs and user_id
+        console.log('🔄 Updating existing subscriber with provider info')
         const updateData: Record<string, unknown> = { user_id: data.user.id }
         if (appleProviderId) updateData.apple_provider_id = appleProviderId
         if (googleProviderId) updateData.google_provider_id = googleProviderId
@@ -150,6 +189,16 @@ export async function GET(request: NextRequest) {
           .from('subscribers')
           .update(updateData)
           .eq('email', userEmail)
+
+        // Check if trial is expired - redirect to upgrade
+        const isPaid = ['active', 'paid'].includes(loginSubscriber.status)
+        if (!isPaid && loginSubscriber.trial_end) {
+          const trialEndDate = new Date(loginSubscriber.trial_end * 1000)
+          if (trialEndDate <= new Date()) {
+            console.log('⏰ Trial expired, redirecting to upgrade')
+            return NextResponse.redirect(new URL('/checkout', requestUrl.origin))
+          }
+        }
       }
     }
 
