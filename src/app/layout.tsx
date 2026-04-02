@@ -14,6 +14,7 @@ import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
 import { Toaster } from 'sonner';
+import MaintenanceModal from './components/MaintenanceModal';
 
 import './globals.css';
 
@@ -68,6 +69,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
 
       <body className="flex min-h-screen flex-col">
+        {/* ---------- Maintenance modal ----------------------------------- */}
+        <MaintenanceModal />
+
         {/* ---------- client boot-straps ---------------------------------- */}
         <ClientIdsInit />
         <ClientStorageInit />
