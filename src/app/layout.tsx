@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
       <body className="flex min-h-screen flex-col">
         {/* ---------- Maintenance modal ----------------------------------- */}
-        <MaintenanceModal />
+        {/* <MaintenanceModal /> */}
 
         {/* ---------- client boot-straps ---------------------------------- */}
         <ClientIdsInit />
