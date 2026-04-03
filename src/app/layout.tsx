@@ -14,7 +14,7 @@ import SiteFooter from '../components/SiteFooter';
 import ClientIdsInit from '../components/ClientIdsInit';
 import ClientStorageInit from '../components/ClientStorageInit';
 import { Toaster } from 'sonner';
-import MaintenanceModal from './components/MaintenanceModal';
+// import MaintenanceModal from './components/MaintenanceModal';
 
 import './globals.css';
 
