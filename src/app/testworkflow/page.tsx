@@ -700,6 +700,7 @@ function TestWorkflowContent() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [showAllCourts, setShowAllCourts] = useState(false);
   const [viewState, setViewState] = useState(SEATTLE_CENTER);
   const [deepLinkHandled, setDeepLinkHandled] = useState(false);
   const [search, setSearch] = useState("");
@@ -933,6 +934,7 @@ function TestWorkflowContent() {
 
   const handleMarkerClick = useCallback((facility: Facility) => {
     setSelectedFacility(facility);
+    setShowAllCourts(false);
     // Offset the center north so marker is in lower half, giving popup room above
     setViewState((prev) => ({
       ...prev,
@@ -1187,7 +1189,7 @@ function TestWorkflowContent() {
           <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
-        onClick={() => setSelectedFacility(null)}
+        onClick={() => { setSelectedFacility(null); setShowAllCourts(false); }}
         mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={MAPBOX_TOKEN}
         style={{ width: "100%", height: "100%" }}
@@ -1237,7 +1239,7 @@ function TestWorkflowContent() {
             anchor="bottom"
             offset={25}
             closeOnClick={false}
-            onClose={() => setSelectedFacility(null)}
+            onClose={() => { setSelectedFacility(null); setShowAllCourts(false); }}
             maxWidth="340px"
             className="facility-popup"
           >
@@ -1270,7 +1272,7 @@ function TestWorkflowContent() {
 
               {/* Court timelines - scrollable area */}
               <div className="max-h-[35vh] overflow-y-auto space-y-2">
-                {selectedFacility.courts.slice(0, 4).map((court) => (
+                {(showAllCourts ? selectedFacility.courts : selectedFacility.courts.slice(0, 4)).map((court) => (
                   <div key={court.id} className="border-t pt-2 first:border-t-0 first:pt-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs text-gray-700 font-medium truncate">
@@ -1287,9 +1289,22 @@ function TestWorkflowContent() {
                   </div>
                 ))}
                 {selectedFacility.courts.length > 4 && (
-                  <div className="text-xs text-gray-500 text-center py-1">
-                    +{selectedFacility.courts.length - 4} more courts
-                  </div>
+                  <button
+                    onClick={() => setShowAllCourts(!showAllCourts)}
+                    className="w-full flex items-center justify-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 py-1.5 transition-colors"
+                  >
+                    {showAllCourts ? (
+                      <>
+                        <ChevronUp size={14} />
+                        Show fewer courts
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown size={14} />
+                        +{selectedFacility.courts.length - 4} more courts
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
 
