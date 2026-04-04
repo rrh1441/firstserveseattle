@@ -1319,11 +1319,10 @@ function TestWorkflowContent() {
                   href={mapsUrl(selectedFacility)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-[10px] font-medium text-gray-600"
+                  className="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
                   title="Get directions"
                 >
-                  <MapPin size={12} />
-                  Directions
+                  <MapPin size={14} className="text-gray-600" />
                 </a>
               </div>
 
