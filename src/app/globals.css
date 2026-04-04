@@ -68,3 +68,21 @@ h1 {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+/* Mapbox popup close button - make it bigger and easier to tap */
+.mapboxgl-popup-close-button {
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  line-height: 28px;
+  padding: 0;
+  color: #6b7280;
+  right: 4px;
+  top: 4px;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  color: #374151;
+}

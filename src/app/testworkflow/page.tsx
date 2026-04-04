@@ -1244,7 +1244,7 @@ function TestWorkflowContent() {
             className="facility-popup"
           >
             <div>
-              {/* Header - date badge, availability, directions icon */}
+              {/* Header - date badge, availability */}
               <div className="flex items-center gap-2 mb-2">
                 <div
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
@@ -1259,15 +1259,6 @@ function TestWorkflowContent() {
                 <span className="text-[10px] text-gray-500 flex-1">
                   {selectedFacility.availableCount}/{selectedFacility.totalCount} available
                 </span>
-                <a
-                  href={mapsUrl(selectedFacility)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                  title="Get directions"
-                >
-                  <ExternalLink size={14} className="text-gray-600" />
-                </a>
               </div>
 
               {/* Court timelines - scrollable area */}
@@ -1308,20 +1299,32 @@ function TestWorkflowContent() {
                 )}
               </div>
 
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-3 text-[10px] font-medium text-gray-500 pt-2 border-t border-gray-100 mt-2">
-                <div className="flex items-center gap-1">
-                  <div className="h-2.5 w-2.5 rounded bg-emerald-500" />
-                  <span>Open</span>
+              {/* Legend and directions */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
+                <div className="flex items-center gap-3 text-[10px] font-medium text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <div className="h-2.5 w-2.5 rounded bg-emerald-500" />
+                    <span>Open</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2.5 w-2.5 rounded bg-orange-400" />
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2.5 w-2.5 rounded bg-gray-200" />
+                    <span>Booked</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-2.5 w-2.5 rounded bg-orange-400" />
-                  <span>Partial</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-2.5 w-2.5 rounded bg-gray-200" />
-                  <span>Booked</span>
-                </div>
+                <a
+                  href={mapsUrl(selectedFacility)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors text-[10px] font-medium text-gray-600"
+                  title="Get directions"
+                >
+                  <MapPin size={12} />
+                  Directions
+                </a>
               </div>
 
               {/* Contextual CTA based on auth state */}
