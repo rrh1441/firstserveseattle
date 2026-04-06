@@ -1577,7 +1577,7 @@ function TestWorkflowContent() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">First Serve Seattle</h2>
-                <p className="text-sm text-gray-500">The only place to see today&apos;s open courts</p>
+                <p className="text-sm text-gray-500">Save $25 every time you play by finding open courts</p>
               </div>
               <button
                 onClick={() => setShowMenuModal(false)}
@@ -1733,6 +1733,21 @@ function TestWorkflowContent() {
                   <p className="text-sm text-gray-500">Learn more about us</p>
                 </div>
               </button>
+
+              {/* Need Help - always shown */}
+              <a
+                href="mailto:support@firstserveseattle.com"
+                onClick={() => setShowMenuModal(false)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Mail size={20} className="text-gray-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">Need Help?</p>
+                  <p className="text-sm text-gray-500">support@firstserveseattle.com</p>
+                </div>
+              </a>
 
               {/* Sign Out - only for authenticated users, always at bottom */}
               {isAuthenticated && (
