@@ -294,11 +294,16 @@ export async function POST(req: NextRequest) {
         const customer = (await stripe.customers.retrieve(custId)) as Stripe.Customer;
         const customerEmail = customer.email ?? '';
 
+        // Get subscription status (not invoice status!) to update the subscriber
+        const subscriptionStatus = subId
+          ? (await stripe.subscriptions.retrieve(subId)).status
+          : undefined;
+
         await upsertSubscriber({
           stripeCustomerId:     custId,
           stripeSubscriptionId: subId ?? undefined,
           email:                customerEmail,
-          status:               inv.status as Stripe.Subscription.Status,
+          status:               subscriptionStatus,
         });
 
         // Send payment success email (skip for first payment as welcome email handles it)
@@ -319,11 +324,16 @@ export async function POST(req: NextRequest) {
         const customer = (await stripe.customers.retrieve(custId)) as Stripe.Customer;
         const customerEmail = customer.email ?? '';
 
+        // Get subscription status (not invoice status!) to update the subscriber
+        const subscriptionStatus = subId
+          ? (await stripe.subscriptions.retrieve(subId)).status
+          : undefined;
+
         await upsertSubscriber({
           stripeCustomerId:     custId,
           stripeSubscriptionId: subId ?? undefined,
           email:                customerEmail,
-          status:               inv.status as Stripe.Subscription.Status,
+          status:               subscriptionStatus,
         });
 
         // Send payment failed email
