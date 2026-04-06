@@ -698,7 +698,7 @@ export const emailTemplates = {
   // ============================================================================
 
   alertTrialWelcome: (email: string, preferencesUrl: string, expiresAt: Date) => ({
-    subject: 'Your 7-day court alerts are active!',
+    subject: 'Your 5-day court alerts are active!',
     html: `
       <!DOCTYPE html>
       <html>
@@ -731,7 +731,7 @@ export const emailTemplates = {
                   <tr>
                     <td style="padding: 32px;">
                       <h2 style="color: #111827; font-size: 24px; margin: 0 0 16px 0;">
-                        You're all set for 7 days of free court alerts!
+                        You're all set for 5 days of free court alerts!
                       </h2>
 
                       <p style="color: #374151; font-size: 16px; line-height: 24px; margin: 0 0 24px 0;">
@@ -915,7 +915,7 @@ export const emailTemplates = {
                       </h2>
 
                       <p style="color: #374151; font-size: 16px; line-height: 24px; margin: 0 0 24px 0;">
-                        Your 7-day trial ends tomorrow. Don't lose access to court availability!
+                        Your 5-day trial ends tomorrow. Don't lose access to court availability!
                       </p>
 
                       <!-- Savings callout -->
@@ -937,7 +937,7 @@ export const emailTemplates = {
                         <tr>
                           <td bgcolor="#0c372b" style="border-radius: 8px;">
                             <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
-                              Subscribe Now - 50% Off First Month
+                              Subscribe Now
                             </a>
                           </td>
                         </tr>

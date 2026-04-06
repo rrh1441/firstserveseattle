@@ -44,11 +44,17 @@ interface StripeMetrics {
   monthlyMRR: number;
   annualMRR: number;
   totalMRR: number;
-  newCustomers24h: number;
+  newSubscribers24h: number;
+  newSubscribers7d: number;
   failedPayments24h: number;
   cancellations24h: number;
   trialConversions24h: number;
   trialUsersWithoutCards: number;
+  // One-time payments (ball machine rentals, etc.)
+  oneTimeRevenue24h: number;
+  oneTimeRevenue7d: number;
+  oneTimePayments24h: number;
+  oneTimePayments7d: number;
 }
 
 interface EmailAlertHealth {
@@ -248,13 +254,14 @@ async function checkVisitorAnalytics(): Promise<VisitorAnalytics> {
 async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<StripeMetrics> {
   try {
     const yesterday = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+    const weekAgo = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
 
-    const [activeSubs, trialingSubs, canceledSubs, recentCustomers, recentCharges] = await Promise.all([
+    const [activeSubs, trialingSubs, canceledSubs, recentCharges24h, recentCharges7d] = await Promise.all([
       stripe.subscriptions.list({ status: 'active', limit: 100 }),
       stripe.subscriptions.list({ status: 'trialing', limit: 100 }),
       stripe.subscriptions.list({ status: 'canceled', limit: 100 }),
-      stripe.customers.list({ created: { gte: yesterday }, limit: 100 }),
       stripe.charges.list({ created: { gte: yesterday }, limit: 100 }),
+      stripe.charges.list({ created: { gte: weekAgo }, limit: 100 }),
     ]);
 
     let monthlyMRR = 0;
@@ -267,7 +274,7 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       else if (interval === 'year') annualMRR += (amount / 100) / 12;
     });
 
-    const failedPayments24h = recentCharges.data.filter(c => c.status === 'failed').length;
+    const failedPayments24h = recentCharges24h.data.filter(c => c.status === 'failed').length;
 
     // Cancellations in last 24h
     const cancellations24h = canceledSubs.data.filter(sub =>
@@ -280,6 +287,22 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       const trialEnd = sub.trial_end;
       return trialEnd && trialEnd >= yesterday && trialEnd <= Math.floor(Date.now() / 1000);
     }).length;
+
+    // New subscribers (subscriptions created in timeframe)
+    const newSubscribers24h = activeSubs.data.filter(sub => sub.created >= yesterday).length +
+                              trialingSubs.data.filter(sub => sub.created >= yesterday).length;
+    const newSubscribers7d = activeSubs.data.filter(sub => sub.created >= weekAgo).length +
+                             trialingSubs.data.filter(sub => sub.created >= weekAgo).length;
+
+    // One-time payments (ball machine rentals, etc.) - successful charges NOT linked to subscriptions
+    const oneTimeCharges24h = recentCharges24h.data.filter(c =>
+      c.status === 'succeeded' && !c.invoice // No invoice means not subscription-related
+    );
+    const oneTimeCharges7d = recentCharges7d.data.filter(c =>
+      c.status === 'succeeded' && !c.invoice
+    );
+    const oneTimeRevenue24h = oneTimeCharges24h.reduce((sum, c) => sum + (c.amount / 100), 0);
+    const oneTimeRevenue7d = oneTimeCharges7d.reduce((sum, c) => sum + (c.amount / 100), 0);
 
     // Check trial users without cards
     let trialUsersWithoutCards = 0;
@@ -298,19 +321,27 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       activeSubscriptions: activeSubs.data.length,
       trialingSubscriptions: trialingSubs.data.length,
       monthlyMRR, annualMRR, totalMRR: monthlyMRR + annualMRR,
-      newCustomers24h: recentCustomers.data.length,
+      newSubscribers24h,
+      newSubscribers7d,
       failedPayments24h,
       cancellations24h,
       trialConversions24h,
       trialUsersWithoutCards,
+      oneTimeRevenue24h,
+      oneTimeRevenue7d,
+      oneTimePayments24h: oneTimeCharges24h.length,
+      oneTimePayments7d: oneTimeCharges7d.length,
     };
   } catch (error) {
     console.error(`Stripe error (${accountName}):`, error);
     return {
       accountName, activeSubscriptions: 0, trialingSubscriptions: 0,
       monthlyMRR: 0, annualMRR: 0, totalMRR: 0,
-      newCustomers24h: 0, failedPayments24h: 0, cancellations24h: 0,
+      newSubscribers24h: 0, newSubscribers7d: 0,
+      failedPayments24h: 0, cancellations24h: 0,
       trialConversions24h: 0, trialUsersWithoutCards: 0,
+      oneTimeRevenue24h: 0, oneTimeRevenue7d: 0,
+      oneTimePayments24h: 0, oneTimePayments7d: 0,
     };
   }
 }
@@ -339,12 +370,11 @@ async function checkEmailAlertHealth(): Promise<EmailAlertHealth> {
     const emailsSent24h = sent24h || 0;
     const totalEmailsSent = totalSent || 0;
 
-    let status: HealthStatus;
-    if (activeSubscribers === 0) {
-      status = { status: 'warning', message: 'No active subscribers' };
-    } else {
-      status = { status: 'healthy', message: `${emailsSent24h} emails to ${activeSubscribers} subs` };
-    }
+    // Status is healthy as long as there are no errors
+    // 0 subscribers is informational, not a warning
+    const status: HealthStatus = activeSubscribers === 0
+      ? { status: 'healthy', message: 'No active subscribers' }
+      : { status: 'healthy', message: `${emailsSent24h} emails to ${activeSubscribers} subs` };
 
     return { status, activeSubscribers, emailsSent24h, totalEmailsSent };
   } catch (error) {
@@ -470,15 +500,23 @@ function generateHtmlReport(report: HealthReport): string {
   ${report.stripeMetrics.map(s => `
   <div class="section">
     <div class="section-title">Stripe: ${s.accountName}</div>
+    <p style="font-size:12px;color:#6b7280;margin:0 0 16px 0;font-weight:bold;">SUBSCRIPTIONS (MRR)</p>
     <div class="grid">
       <div class="metric"><p class="metric-label">Active</p><p class="metric-value">${s.activeSubscriptions}</p></div>
       <div class="metric"><p class="metric-label">Trialing</p><p class="metric-value">${s.trialingSubscriptions}</p>${s.trialUsersWithoutCards > 0 ? `<p class="metric-sub" style="color:#f59e0b;">${s.trialUsersWithoutCards} no card</p>` : ''}</div>
       <div class="metric"><p class="metric-label">MRR</p><p class="metric-value" style="color:#059669;">$${s.totalMRR.toFixed(2)}</p></div>
-      <div class="metric"><p class="metric-label">New (24h)</p><p class="metric-value">${s.newCustomers24h}</p></div>
+      <div class="metric"><p class="metric-label">New Subs (24h / 7d)</p><p class="metric-value">${s.newSubscribers24h} / ${s.newSubscribers7d}</p></div>
       <div class="metric"><p class="metric-label">Conversions (24h)</p><p class="metric-value" style="color:#059669;">${s.trialConversions24h}</p></div>
       <div class="metric"><p class="metric-label">Cancellations (24h)</p><p class="metric-value" style="color:${s.cancellations24h > 0 ? '#ef4444' : '#111827'};">${s.cancellations24h}</p></div>
       <div class="metric"><p class="metric-label">Failed Payments (24h)</p><p class="metric-value" style="color:${s.failedPayments24h > 0 ? '#ef4444' : '#111827'};">${s.failedPayments24h}</p></div>
     </div>
+    ${(s.oneTimePayments24h > 0 || s.oneTimePayments7d > 0) ? `
+    <p style="font-size:12px;color:#6b7280;margin:24px 0 16px 0;font-weight:bold;">ONE-TIME PAYMENTS (Ball Machine Rentals, etc.)</p>
+    <div class="grid">
+      <div class="metric"><p class="metric-label">Revenue (24h)</p><p class="metric-value" style="color:#059669;">$${s.oneTimeRevenue24h.toFixed(2)}</p><p class="metric-sub">${s.oneTimePayments24h} payment${s.oneTimePayments24h !== 1 ? 's' : ''}</p></div>
+      <div class="metric"><p class="metric-label">Revenue (7d)</p><p class="metric-value" style="color:#059669;">$${s.oneTimeRevenue7d.toFixed(2)}</p><p class="metric-sub">${s.oneTimePayments7d} payment${s.oneTimePayments7d !== 1 ? 's' : ''}</p></div>
+    </div>
+    ` : ''}
   </div>
   `).join('')}
 
@@ -607,9 +645,15 @@ export async function GET() {
       mrr: s.totalMRR,
       active: s.activeSubscriptions,
       trialing: s.trialingSubscriptions,
+      newSubscribers24h: s.newSubscribers24h,
+      newSubscribers7d: s.newSubscribers7d,
       conversions24h: s.trialConversions24h,
       cancellations24h: s.cancellations24h,
       failedPayments24h: s.failedPayments24h,
+      oneTimeRevenue24h: s.oneTimeRevenue24h,
+      oneTimeRevenue7d: s.oneTimeRevenue7d,
+      oneTimePayments24h: s.oneTimePayments24h,
+      oneTimePayments7d: s.oneTimePayments7d,
     })),
     emailAlerts: { subscribers: emailAlerts.activeSubscribers, sent24h: emailAlerts.emailsSent24h },
     qrScans: {

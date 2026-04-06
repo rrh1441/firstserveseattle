@@ -174,8 +174,8 @@ describe('GmailEmailService', () => {
       expect(mockSendEmail).toHaveBeenCalledWith({
         from: 'First Serve Seattle <ryan@firstserveseattle.com>',
         to: 'test@example.com',
-        subject: 'Your 7-day court alerts are active!',
-        html: expect.stringContaining('7 days of free court alerts'),
+        subject: 'Your 5-day court alerts are active!',
+        html: expect.stringContaining('5 days of free court alerts'),
       })
     })
 

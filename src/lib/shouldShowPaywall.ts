@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------- *
    shouldShowPaywall()
    --------------------------------------------------------------------------
-   • First checks for email extension (7-day trial from email capture)
+   • First checks for email extension (5-day trial from email capture)
    • Cohort assignment: each anonymous browser is randomly locked to 3 free-use
      days. Stored once in localStorage (key = "fss_gate").
    • Visitor counter: every new calendar day adds one element to the "fss_days"

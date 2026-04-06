@@ -170,7 +170,7 @@ describe('emailTemplates', () => {
         'https://example.com/preferences',
         mockDate
       )
-      expect(result.subject).toBe('Your 7-day court alerts are active!')
+      expect(result.subject).toBe('Your 5-day court alerts are active!')
     })
 
     it('should include preferences URL', () => {
@@ -383,14 +383,14 @@ describe('emailTemplates', () => {
       expect(result.html).toContain('Last Day of Free Alerts')
     })
 
-    it('should mention 7-day trial ending', () => {
+    it('should mention 5-day trial ending', () => {
       const result = emailTemplates.alertTrialExpiring('https://example.com/subscribe')
-      expect(result.html).toContain('7-day trial ends tomorrow')
+      expect(result.html).toContain('5-day trial ends tomorrow')
     })
 
-    it('should include 50% off promotion', () => {
+    it('should include subscribe CTA', () => {
       const result = emailTemplates.alertTrialExpiring('https://example.com/subscribe')
-      expect(result.html).toContain('50% Off First Month')
+      expect(result.html).toContain('Subscribe Now')
     })
 
     it('should include savings callout', () => {

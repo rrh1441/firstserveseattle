@@ -138,9 +138,9 @@ export async function POST(request: Request): Promise<NextResponse<SubscribeResp
       );
     }
 
-    // Calculate extension expiration (7 days from now)
+    // Calculate extension expiration (5 days from now)
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
 
     // Check if email already has an alert subscription
     const { data: existingAlert } = await supabaseAdmin

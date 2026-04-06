@@ -252,10 +252,124 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     console.log(`[send-alerts] Complete: ${sent} sent, ${skipped} skipped`);
-    return NextResponse.json({ sent, skipped });
+
+    // Send trial expiring emails to subscribers whose trial ends tomorrow
+    const expiringEmailsSent = await sendTrialExpiringEmails(now);
+
+    return NextResponse.json({ sent, skipped, expiringEmailsSent });
 
   } catch (error) {
     console.error('[send-alerts] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Send trial expiring emails to subscribers whose trial ends within 24 hours
+async function sendTrialExpiringEmails(now: Date): Promise<number> {
+  try {
+    // Find subscribers whose trial expires within the next 24-36 hours
+    // (send once per day, so we check a window)
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    const { data: expiringSubscribers, error: expError } = await supabaseAdmin
+      .from('email_alert_subscribers')
+      .select('id, email, unsubscribe_token, extension_expires_at')
+      .eq('alerts_enabled', true)
+      .is('unsubscribed_at', null)
+      .gt('extension_expires_at', tomorrow.toISOString())
+      .lt('extension_expires_at', dayAfter.toISOString());
+
+    if (expError) {
+      console.error('[send-alerts] Error fetching expiring subscribers:', expError);
+      return 0;
+    }
+
+    if (!expiringSubscribers || expiringSubscribers.length === 0) {
+      console.log('[send-alerts] No subscribers with trials expiring tomorrow');
+      return 0;
+    }
+
+    console.log(`[send-alerts] Found ${expiringSubscribers.length} subscribers with trials expiring tomorrow`);
+
+    // Check which ones already received expiration reminder
+    const subscriberIds = expiringSubscribers.map(s => s.id);
+    const { data: alreadySentReminders } = await supabaseAdmin
+      .from('email_alert_logs')
+      .select('subscriber_id')
+      .eq('email_type', 'expiration_reminder')
+      .in('subscriber_id', subscriberIds);
+
+    const alreadySentSet = new Set(alreadySentReminders?.map(log => log.subscriber_id) || []);
+
+    // Check which ones are already paid subscribers
+    const subscriberEmails = expiringSubscribers.map(s => s.email);
+    const { data: paidSubscribers } = await supabaseAdmin
+      .from('subscribers')
+      .select('email')
+      .eq('status', 'paid')
+      .in('email', subscriberEmails);
+
+    const paidEmailsSet = new Set(paidSubscribers?.map(s => s.email) || []);
+
+    let sent = 0;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com';
+
+    for (const subscriber of expiringSubscribers) {
+      // Skip if already sent expiration reminder
+      if (alreadySentSet.has(subscriber.id)) {
+        console.log(`[send-alerts] Skipping expiration email to ${subscriber.email} - already sent`);
+        continue;
+      }
+
+      // Skip if already a paid subscriber
+      if (paidEmailsSet.has(subscriber.email)) {
+        console.log(`[send-alerts] Skipping expiration email to ${subscriber.email} - already paid`);
+        continue;
+      }
+
+      const subscribeUrl = `${baseUrl}/signup`;
+      const emailContent = emailTemplates.alertTrialExpiring(subscribeUrl);
+
+      try {
+        if (!resend) {
+          console.error('[send-alerts] Resend client not configured');
+          continue;
+        }
+
+        const { data: emailResult, error: emailError } = await resend.emails.send({
+          from: FROM_EMAIL,
+          to: subscriber.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+
+        if (emailError) {
+          console.error(`[send-alerts] Resend error for expiration email to ${subscriber.email}:`, emailError);
+          continue;
+        }
+
+        // Log the send
+        await supabaseAdmin.from('email_alert_logs').insert({
+          subscriber_id: subscriber.id,
+          email: subscriber.email,
+          courts_included: [],
+          slots_included: 0,
+          email_type: 'expiration_reminder',
+          resend_message_id: emailResult?.id || null,
+        });
+
+        console.log(`[send-alerts] Sent expiration reminder to ${subscriber.email}`);
+        sent++;
+      } catch (err) {
+        console.error(`[send-alerts] Error sending expiration email to ${subscriber.email}:`, err);
+      }
+    }
+
+    console.log(`[send-alerts] Sent ${sent} trial expiration emails`);
+    return sent;
+  } catch (error) {
+    console.error('[send-alerts] Error in sendTrialExpiringEmails:', error);
+    return 0;
   }
 }
