@@ -1717,22 +1717,24 @@ function TestWorkflowContent() {
                 </div>
               </a>
 
-              {/* About - always shown */}
-              <button
-                onClick={() => {
-                  setShowMenuModal(false);
-                  router.push('/about');
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Info size={20} className="text-gray-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">About</p>
-                  <p className="text-sm text-gray-500">Learn more about us</p>
-                </div>
-              </button>
+              {/* About - only shown for non-authenticated users */}
+              {!isAuthenticated && (
+                <button
+                  onClick={() => {
+                    setShowMenuModal(false);
+                    router.push('/about');
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Info size={20} className="text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">About</p>
+                    <p className="text-sm text-gray-500">Learn more about us</p>
+                  </div>
+                </button>
+              )}
 
               {/* Need Help - always shown */}
               <a
