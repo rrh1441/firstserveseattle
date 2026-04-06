@@ -1742,12 +1742,12 @@ function TestWorkflowContent() {
                 onClick={() => setShowMenuModal(false)}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
               >
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
                   <Mail size={20} className="text-gray-600" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-gray-900">Need Help?</p>
-                  <p className="text-sm text-gray-500">support@firstserveseattle.com</p>
+                  <p className="text-sm text-gray-500 truncate">support@firstserveseattle.com</p>
                 </div>
               </a>
 
