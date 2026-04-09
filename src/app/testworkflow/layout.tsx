@@ -1,23 +1,14 @@
-'use client';
+import type { ReactNode } from "react";
+import type { Metadata } from "next";
+import { TestWorkflowLayoutClient } from "./layout-client";
 
-import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function TestWorkflowLayout({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    // Hide footer and fix main height for full-screen map
-    const footer = document.querySelector('footer');
-    const main = document.querySelector('main');
-
-    if (footer) footer.style.display = 'none';
-    if (main) main.style.flexGrow = '0';
-
-    return () => {
-      // Restore on unmount
-      if (footer) footer.style.display = '';
-      if (main) main.style.flexGrow = '';
-    };
-  }, []);
-
-  return <>{children}</>;
+  return <TestWorkflowLayoutClient>{children}</TestWorkflowLayoutClient>;
 }

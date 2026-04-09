@@ -8,12 +8,13 @@ export async function GET() {
       return { ...facility, slug };
     })
   );
-  const baseUrl = 'https://firstserveseattle.com';
-  
+  const baseUrl = 'https://www.firstserveseattle.com';
+
   // Get current date for lastmod
   const currentDate = new Date().toISOString().split('T')[0];
-  
-  // Static pages
+
+  // Static pages - only include public, indexable pages
+  // Excludes: test pages, auth pages, checkout pages, redirect pages
   const staticPages = [
     {
       url: `${baseUrl}/`,
@@ -26,6 +27,48 @@ export async function GET() {
       lastmod: currentDate,
       changefreq: 'daily',
       priority: '0.9',
+    },
+    {
+      url: `${baseUrl}/free-tennis-courts-seattle`,
+      lastmod: currentDate,
+      changefreq: 'weekly',
+      priority: '0.9',
+    },
+    {
+      url: `${baseUrl}/pickleball`,
+      lastmod: currentDate,
+      changefreq: 'weekly',
+      priority: '0.8',
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastmod: currentDate,
+      changefreq: 'monthly',
+      priority: '0.6',
+    },
+    {
+      url: `${baseUrl}/faq`,
+      lastmod: currentDate,
+      changefreq: 'monthly',
+      priority: '0.6',
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastmod: currentDate,
+      changefreq: 'monthly',
+      priority: '0.5',
+    },
+    {
+      url: `${baseUrl}/privacy-policy`,
+      lastmod: currentDate,
+      changefreq: 'yearly',
+      priority: '0.3',
+    },
+    {
+      url: `${baseUrl}/terms-of-service`,
+      lastmod: currentDate,
+      changefreq: 'yearly',
+      priority: '0.3',
     },
   ];
   
