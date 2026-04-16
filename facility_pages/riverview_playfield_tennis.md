@@ -11,7 +11,7 @@ neighborhood: "Riverview / West Seattle"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=7226+12th+Ave+SW%2C+Seattle%2C+WA+98106"
 slug: "riverview-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/riverview-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/riverview-playfield-tennis"
 og_title: "Riverview Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Riverview Playfield Tennis in Riverview / West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/riverview-playfield-tennis-social.jpg"

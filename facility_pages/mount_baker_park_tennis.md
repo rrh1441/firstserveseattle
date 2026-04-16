@@ -11,7 +11,7 @@ neighborhood: "Mount Baker"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=2521+Lake+Park+Dr+S%2C+Seattle%2C+WA+98144"
 slug: "mount-baker-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/mount-baker-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/mount-baker-park-tennis"
 og_title: "Mount Baker Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Mount Baker Park Tennis in Mount Baker. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/mount-baker-park-tennis-social.jpg"

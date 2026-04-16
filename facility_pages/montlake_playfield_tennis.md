@@ -11,7 +11,7 @@ neighborhood: "Montlake"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=1618+E+Calhoun+St%2C+Seattle%2C+WA+98112"
 slug: "montlake-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/montlake-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/montlake-playfield-tennis"
 og_title: "Montlake Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Montlake Playfield Tennis in Montlake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/montlake-playfield-tennis-social.jpg"

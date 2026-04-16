@@ -11,7 +11,7 @@ neighborhood: "Seward Park"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=5898+Lake+Washington+Blvd+S%2C+Seattle%2C+WA+98118"
 slug: "seward-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/seward-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/seward-park-tennis"
 og_title: "Seward Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Seward Park Tennis in Seward Park. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/seward-park-tennis-social.jpg"

@@ -11,7 +11,7 @@ neighborhood: "Ballard"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=923+NW+54th+St%2C+Seattle%2C+WA+98107"
 slug: "gilman-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/gilman-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/gilman-playfield-tennis"
 og_title: "Gilman Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Gilman Playfield Tennis in Ballard. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/gilman-playfield-tennis-social.jpg"

@@ -11,7 +11,7 @@ neighborhood: "Capitol Hill"
 court_count: 4
 google_map_url: "https://www.google.com/maps/search/?api=1&query=1247+15th+Ave+E%2C+Seattle%2C+WA+98112"
 slug: "volunteer-park-court-01-"
-canonical_url: "https://firstserveseattle.com/courts/volunteer-park-court-01-"
+canonical_url: "https://www.firstserveseattle.com/courts/volunteer-park-court-01-"
 og_title: "Volunteer Park Court 01 - | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Volunteer Park Court 01 - in Capitol Hill. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/volunteer-park-court-01--social.jpg"

@@ -201,7 +201,7 @@ export async function POST(request: Request): Promise<NextResponse<SubscribeResp
     }
 
     // Build preferences URL with token
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com';
     const preferencesUrl = `${baseUrl}/alerts?token=${unsubscribeToken}`;
 
     // Log successful signup attempt (don't block response)

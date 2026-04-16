@@ -20,6 +20,11 @@ export default function SiteFooter() {
         </Link>
         <span aria-hidden="true">|</span>
 
+        <Link href="/free-tennis-courts-seattle" className="underline hover:text-gray-500">
+          Free Courts
+        </Link>
+        <span aria-hidden="true">|</span>
+
         <Link href="/faq" className="underline hover:text-gray-500">
           FAQ
         </Link>

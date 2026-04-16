@@ -11,7 +11,7 @@ neighborhood: "Central District"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=2323+E+Cherry+St%2C+Seattle%2C+WA+98122"
 slug: "garfield-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/garfield-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/garfield-playfield-tennis"
 og_title: "Garfield Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Garfield Playfield Tennis in Central District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/garfield-playfield-tennis-social.jpg"

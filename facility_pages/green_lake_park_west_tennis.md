@@ -11,7 +11,7 @@ neighborhood: "Green Lake"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=7201+E+Green+Lake+Dr+N%2C+Seattle%2C+WA+98115"
 slug: "green-lake-park-west-tennis"
-canonical_url: "https://firstserveseattle.com/courts/green-lake-park-west-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/green-lake-park-west-tennis"
 og_title: "Green Lake Park West Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Green Lake Park West Tennis in Green Lake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/green-lake-park-west-tennis-social.jpg"

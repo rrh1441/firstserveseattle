@@ -11,7 +11,7 @@ neighborhood: "Laurelhurst"
 court_count: 4
 google_map_url: "https://www.google.com/maps/search/?api=1&query=4544+NE+41st+St%2C+Seattle%2C+WA+98105"
 slug: "laurelhurst-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/laurelhurst-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/laurelhurst-playfield-tennis"
 og_title: "Laurelhurst Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Laurelhurst Playfield Tennis in Laurelhurst. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/laurelhurst-playfield-tennis-social.jpg"

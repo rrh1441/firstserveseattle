@@ -11,7 +11,7 @@ neighborhood: "Meadowbrook / Northeast Seattle"
 court_count: 6
 google_map_url: "https://www.google.com/maps/search/?api=1&query=10533+35th+Ave+NE%2C+Seattle%2C+WA+98125"
 slug: "meadowbrook-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/meadowbrook-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/meadowbrook-playfield-tennis"
 og_title: "Meadowbrook Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Meadowbrook Playfield Tennis in Meadowbrook / Northeast Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/meadowbrook-playfield-tennis-social.jpg"

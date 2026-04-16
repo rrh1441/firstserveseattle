@@ -11,7 +11,7 @@ neighborhood: "Woodland / Green Lake"
 court_count: 10
 google_map_url: "https://www.google.com/maps/search/?api=1&query=5773+West+Green+Lake+Way+N%2C+Seattle%2C+WA+98103"
 slug: "lower-woodland-playfield"
-canonical_url: "https://firstserveseattle.com/courts/lower-woodland-playfield"
+canonical_url: "https://www.firstserveseattle.com/courts/lower-woodland-playfield"
 og_title: "Lower Woodland Playfield | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Lower Woodland Playfield in Woodland / Green Lake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/lower-woodland-playfield-social.jpg"

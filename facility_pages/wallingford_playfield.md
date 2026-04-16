@@ -11,7 +11,7 @@ neighborhood: "Wallingford"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=4219+Wallingford+Ave+N%2C+Seattle%2C+WA+98103"
 slug: "wallingford-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/wallingford-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/wallingford-playfield-tennis"
 og_title: "Wallingford Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Wallingford Playfield Tennis in Wallingford. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/wallingford-playfield-tennis-social.jpg"

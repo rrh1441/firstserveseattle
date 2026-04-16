@@ -19,12 +19,13 @@ import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata = {
+  metadataBase: new URL('https://www.firstserveseattle.com'),
   title: 'Seattle Tennis Court Availability – First Serve Seattle',
-  description: 'Daily list of every free Seattle tennis & pickleball court, updated daily by 5 AM. Try 3 free checks.',
-  keywords: 'Seattle tennis courts, pickleball courts Seattle, tennis court availability, open courts Seattle, walk-up tennis, Seattle recreation',
+  description: 'Find free tennis courts in Seattle. Real-time availability for 100+ free public tennis & pickleball courts, updated daily by 5 AM.',
+  keywords: 'free tennis courts seattle, Seattle tennis courts, free public tennis courts seattle, pickleball courts Seattle, tennis court availability, open courts Seattle, walk-up tennis, Seattle recreation',
   openGraph: {
     title: 'Seattle Tennis Court Availability – First Serve Seattle',
-    description: 'Daily list of every free Seattle tennis & pickleball court, updated daily by 5 AM. Try 3 free checks.',
+    description: 'Find free tennis courts in Seattle. Real-time availability for 100+ free public tennis & pickleball courts.',
     url: 'https://www.firstserveseattle.com',
     siteName: 'First Serve Seattle',
     type: 'website',
@@ -33,10 +34,10 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Seattle Tennis Court Availability – First Serve Seattle',
-    description: 'Daily list of every free Seattle tennis & pickleball court, updated daily by 5 AM. Try 3 free checks.',
+    description: 'Find free tennis courts in Seattle. Real-time availability for 100+ free public tennis & pickleball courts.',
   },
   alternates: {
-    canonical: 'https://www.firstserveseattle.com',
+    canonical: '/',
   },
 };
 

@@ -83,7 +83,7 @@ export default async function QRRedirect({ params }: QRProps) {
   }
 
   /* 4️⃣ Redirect with court name filter */
-  const baseUrl = 'https://firstserveseattle.com'
+  const baseUrl = 'https://www.firstserveseattle.com'
   
   if (facilityTitle) {
     // Redirect with court name as search parameter

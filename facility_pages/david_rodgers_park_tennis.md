@@ -11,7 +11,7 @@ neighborhood: "Queen Anne"
 court_count: 3
 google_map_url: "https://www.google.com/maps/search/?api=1&query=2800+1st+Ave+W%2C+Seattle%2C+WA+98119"
 slug: "david-rodgers-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/david-rodgers-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/david-rodgers-park-tennis"
 og_title: "David Rodgers Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to David Rodgers Park Tennis in Queen Anne. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/david-rodgers-park-tennis-social.jpg"

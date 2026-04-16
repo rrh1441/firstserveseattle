@@ -11,7 +11,7 @@ neighborhood: "Highland Park / West Seattle"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=6000+39th+Ave+S%2C+Seattle%2C+WA+98136"
 slug: "brighton-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/brighton-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/brighton-playfield-tennis"
 og_title: "Brighton Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Brighton Playfield Tennis in Highland Park / West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/brighton-playfield-tennis-social.jpg"

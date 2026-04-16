@@ -11,7 +11,7 @@ neighborhood: "Bryant / Ravenna"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=4103+NE+65th+St%2C+Seattle%2C+WA+98115"
 slug: "bryant-playground-tennis"
-canonical_url: "https://firstserveseattle.com/courts/bryant-playground-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/bryant-playground-tennis"
 og_title: "Bryant Playground Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Bryant Playground Tennis in Bryant / Ravenna. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/bryant-playground-tennis-social.jpg"

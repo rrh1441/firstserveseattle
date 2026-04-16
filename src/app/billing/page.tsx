@@ -58,7 +58,7 @@ export default async function BillingRedirectPage() {
     const stripe = isNewAccount ? stripeNew : stripeOld;
     const session = await stripe.billingPortal.sessions.create({
       customer: subscriber.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com'}/`,
     });
     portalUrl = session.url;
   } catch {
@@ -69,7 +69,7 @@ export default async function BillingRedirectPage() {
       const altStripe = isNewAccount ? stripeOld : stripeNew;
       const session = await altStripe.billingPortal.sessions.create({
         customer: subscriber.stripe_customer_id,
-        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com'}/`,
+        return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com'}/`,
       });
       portalUrl = session.url;
     } catch (altErr) {

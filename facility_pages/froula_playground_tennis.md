@@ -11,7 +11,7 @@ neighborhood: "Froula / Northeast Seattle"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=7200+12th+Ave+NE%2C+Seattle%2C+WA+98115"
 slug: "froula-playground-tennis"
-canonical_url: "https://firstserveseattle.com/courts/froula-playground-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/froula-playground-tennis"
 og_title: "Froula Playground Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Froula Playground Tennis in Froula / Northeast Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/froula-playground-tennis-social.jpg"

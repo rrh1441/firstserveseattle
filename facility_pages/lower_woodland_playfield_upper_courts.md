@@ -11,7 +11,7 @@ neighborhood: "Woodland / Green Lake"
 court_count: 4
 google_map_url: "https://www.google.com/maps/search/?api=1&query=1000+N+50th+St%2C+Seattle%2C+WA+98103"
 slug: "lower-woodland-playfield-upper-courts"
-canonical_url: "https://firstserveseattle.com/courts/lower-woodland-playfield-upper-courts"
+canonical_url: "https://www.firstserveseattle.com/courts/lower-woodland-playfield-upper-courts"
 og_title: "Lower Woodland Playfield Upper Courts | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Lower Woodland Playfield Upper Courts in Woodland / Green Lake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/lower-woodland-playfield-upper-courts-social.jpg"

@@ -11,7 +11,7 @@ neighborhood: "Magnolia"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=461+Magnolia+Blvd+W%2C+Seattle%2C+WA+98199"
 slug: "magnolia-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/magnolia-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/magnolia-park-tennis"
 og_title: "Magnolia Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Magnolia Park Tennis in Magnolia. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/magnolia-park-tennis-social.jpg"

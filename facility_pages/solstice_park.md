@@ -11,7 +11,7 @@ neighborhood: "West Seattle"
 court_count: 6
 google_map_url: "https://www.google.com/maps/search/?api=1&query=7400+Fauntleroy+Way+SW%2C+Seattle%2C+WA+98136"
 slug: "solstice-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/solstice-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/solstice-park-tennis"
 og_title: "Solstice Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Solstice Park Tennis in West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/solstice-park-tennis-social.jpg"

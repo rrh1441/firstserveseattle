@@ -11,7 +11,7 @@ neighborhood: "Beacon Hill / Central District"
 court_count: 6
 google_map_url: "https://www.google.com/maps/search/?api=1&query=2000+Martin+Luther+King+Jr+Way+S%2C+Seattle%2C+WA+98144"
 slug: "aytc-outdoor-tennis"
-canonical_url: "https://firstserveseattle.com/courts/aytc-outdoor-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/aytc-outdoor-tennis"
 og_title: "Aytc Outdoor Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Aytc Outdoor Tennis in Beacon Hill / Central District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/aytc-outdoor-tennis-social.jpg"

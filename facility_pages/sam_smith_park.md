@@ -11,7 +11,7 @@ neighborhood: "International District"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=1400+Martin+Luther+King+Jr+Way+S%2C+Seattle%2C+WA+98144"
 slug: "sam-smith-i90-lid-park-tennis"
-canonical_url: "https://firstserveseattle.com/courts/sam-smith-i90-lid-park-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/sam-smith-i90-lid-park-tennis"
 og_title: "Sam Smith (I90 Lid) Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Sam Smith (I90 Lid) Park Tennis in International District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/sam-smith-i90-lid-park-tennis-social.jpg"

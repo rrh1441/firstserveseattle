@@ -11,7 +11,7 @@ neighborhood: "Beacon Hill / International District"
 court_count: 4
 google_map_url: "https://www.google.com/maps/search/?api=1&query=3901+Beacon+Ave+S%2C+Seattle%2C+WA+98108"
 slug: "jefferson-park-lid-tennis-court"
-canonical_url: "https://firstserveseattle.com/courts/jefferson-park-lid-tennis-court"
+canonical_url: "https://www.firstserveseattle.com/courts/jefferson-park-lid-tennis-court"
 og_title: "Jefferson Park Lid Tennis Court | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Jefferson Park Lid Tennis Court in Beacon Hill / International District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/jefferson-park-lid-tennis-court-social.jpg"

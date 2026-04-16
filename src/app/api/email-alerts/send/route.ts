@@ -189,7 +189,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
       // Build URLs
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com';
       const preferencesUrl = `${baseUrl}/alerts?token=${subscriber.unsubscribe_token}`;
       const unsubscribeUrl = `${baseUrl}/api/email-alerts/unsubscribe?token=${subscriber.unsubscribe_token}`;
 
@@ -313,7 +313,7 @@ async function sendTrialExpiringEmails(now: Date): Promise<number> {
     const paidEmailsSet = new Set(paidSubscribers?.map(s => s.email) || []);
 
     let sent = 0;
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://firstserveseattle.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com';
 
     for (const subscriber of expiringSubscribers) {
       // Skip if already sent expiration reminder

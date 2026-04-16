@@ -11,7 +11,7 @@ neighborhood: "Capitol Hill"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=300+19th+Ave+E%2C+Seattle%2C+WA+98112"
 slug: "miller-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/miller-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/miller-playfield-tennis"
 og_title: "Miller Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Miller Playfield Tennis in Capitol Hill. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/miller-playfield-tennis-social.jpg"

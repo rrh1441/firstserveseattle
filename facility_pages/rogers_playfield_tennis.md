@@ -11,7 +11,7 @@ neighborhood: "Eastlake"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=2568+Eastlake+Ave+E%2C+Seattle%2C+WA+98102"
 slug: "rogers-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/rogers-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/rogers-playfield-tennis"
 og_title: "Rogers Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Rogers Playfield Tennis in Eastlake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/rogers-playfield-tennis-social.jpg"

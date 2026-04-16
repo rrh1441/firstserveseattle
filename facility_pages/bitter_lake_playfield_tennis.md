@@ -11,7 +11,7 @@ neighborhood: "Bitter Lake"
 court_count: 4
 google_map_url: "https://www.google.com/maps/search/?api=1&query=13035+Linden+Ave+N%2C+Seattle%2C+WA+98133"
 slug: "bitter-lake-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/bitter-lake-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/bitter-lake-playfield-tennis"
 og_title: "Bitter Lake Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Bitter Lake Playfield Tennis in Bitter Lake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/bitter-lake-playfield-tennis-social.jpg"

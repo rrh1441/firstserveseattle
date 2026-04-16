@@ -11,7 +11,7 @@ neighborhood: "Beacon Hill"
 court_count: 2
 google_map_url: "https://www.google.com/maps/search/?api=1&query=1902+13th+Ave+S%2C+Seattle%2C+WA+98144"
 slug: "beacon-hill-playfield-tennis"
-canonical_url: "https://firstserveseattle.com/courts/beacon-hill-playfield-tennis"
+canonical_url: "https://www.firstserveseattle.com/courts/beacon-hill-playfield-tennis"
 og_title: "Beacon Hill Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Beacon Hill Playfield Tennis in Beacon Hill. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/beacon-hill-playfield-tennis-social.jpg"
