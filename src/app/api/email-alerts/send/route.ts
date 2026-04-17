@@ -132,16 +132,26 @@ export async function POST(request: Request): Promise<NextResponse> {
     const alreadySentSet = new Set(alreadySentLogs?.map(log => log.subscriber_id) || []);
     console.log(`[send-alerts] ${alreadySentSet.size} subscribers already received emails today`);
 
-    // Batch check: Get all paid subscribers to avoid N+1 query
+    // Batch check: Get all valid subscribers (paid, active, or valid trial) to avoid N+1 query
     const subscriberEmails = (subscribers as Subscriber[]).map(s => s.email);
-    const { data: paidSubscribers } = await supabaseAdmin
+    const nowEpoch = Math.floor(Date.now() / 1000);
+    const { data: mainSubscribers } = await supabaseAdmin
       .from('subscribers')
-      .select('email')
-      .eq('status', 'paid')
+      .select('email, status, trial_end')
       .in('email', subscriberEmails);
 
-    const paidEmailsSet = new Set(paidSubscribers?.map(s => s.email) || []);
-    console.log(`[send-alerts] ${paidEmailsSet.size} subscribers are paid members`);
+    // Build set of emails with valid subscriptions
+    const validSubscriptionEmails = new Set<string>();
+    const paidEmailsSet = new Set<string>();
+    for (const sub of mainSubscribers || []) {
+      const isPaid = sub.status === 'paid' || sub.status === 'active';
+      const isValidTrial = sub.status === 'trialing' && sub.trial_end && sub.trial_end > nowEpoch;
+      if (isPaid || isValidTrial) {
+        validSubscriptionEmails.add(sub.email);
+        if (isPaid) paidEmailsSet.add(sub.email);
+      }
+    }
+    console.log(`[send-alerts] ${validSubscriptionEmails.size} subscribers have valid subscriptions (${paidEmailsSet.size} paid)`);
 
     let sent = 0;
     let skipped = 0;
@@ -150,6 +160,13 @@ export async function POST(request: Request): Promise<NextResponse> {
       // Check if already sent today (using pre-fetched Set instead of N+1 query)
       if (alreadySentSet.has(subscriber.id)) {
         console.log(`[send-alerts] Skipping ${subscriber.email} - already sent today`);
+        skipped++;
+        continue;
+      }
+
+      // Check if subscriber has valid main subscription (skip expired trials)
+      if (!validSubscriptionEmails.has(subscriber.email)) {
+        console.log(`[send-alerts] Skipping ${subscriber.email} - no valid subscription (trial expired)`);
         skipped++;
         continue;
       }
@@ -302,15 +319,22 @@ async function sendTrialExpiringEmails(now: Date): Promise<number> {
 
     const alreadySentSet = new Set(alreadySentReminders?.map(log => log.subscriber_id) || []);
 
-    // Check which ones are already paid subscribers
+    // Check which ones have valid main subscriptions (paid, active, or valid trial)
     const subscriberEmails = expiringSubscribers.map(s => s.email);
-    const { data: paidSubscribers } = await supabaseAdmin
+    const nowEpoch = Math.floor(Date.now() / 1000);
+    const { data: mainSubscribers } = await supabaseAdmin
       .from('subscribers')
-      .select('email')
-      .eq('status', 'paid')
+      .select('email, status, trial_end')
       .in('email', subscriberEmails);
 
-    const paidEmailsSet = new Set(paidSubscribers?.map(s => s.email) || []);
+    const validSubscriptionEmails = new Set<string>();
+    for (const sub of mainSubscribers || []) {
+      const isPaid = sub.status === 'paid' || sub.status === 'active';
+      const isValidTrial = sub.status === 'trialing' && sub.trial_end && sub.trial_end > nowEpoch;
+      if (isPaid || isValidTrial) {
+        validSubscriptionEmails.add(sub.email);
+      }
+    }
 
     let sent = 0;
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.firstserveseattle.com';
@@ -322,9 +346,9 @@ async function sendTrialExpiringEmails(now: Date): Promise<number> {
         continue;
       }
 
-      // Skip if already a paid subscriber
-      if (paidEmailsSet.has(subscriber.email)) {
-        console.log(`[send-alerts] Skipping expiration email to ${subscriber.email} - already paid`);
+      // Skip if has valid main subscription (paid, active, or valid trial)
+      if (validSubscriptionEmails.has(subscriber.email)) {
+        console.log(`[send-alerts] Skipping expiration email to ${subscriber.email} - has valid subscription`);
         continue;
       }
 
