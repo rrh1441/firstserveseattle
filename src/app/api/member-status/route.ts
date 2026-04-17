@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabase
     .from('subscribers')
-    .select('status')
+    .select('status, trial_end')
     .eq('email', email)
     .single()
 
@@ -27,6 +27,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ isMember: false }, { status: 500 })
   }
 
-  const isMember = data?.status === 'active' || data?.status === 'trialing' || data?.status === 'paid'
+  const now = Math.floor(Date.now() / 1000)
+  const isMember =
+    data?.status === 'active' ||
+    data?.status === 'paid' ||
+    (data?.status === 'trialing' && data?.trial_end && data.trial_end > now)
+
   return NextResponse.json({ isMember })
 }
