@@ -877,6 +877,93 @@ export const emailTemplates = {
     };
   },
 
+  trialExpiredReengagement: (email: string) => {
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+    // Subject lines
+    const subjects = [
+      "Ready to play? See which courts are open",
+      "Perfect tennis weather is back",
+      "Seattle courts are busy — know before you go",
+      "Sunny days ahead. Open courts too.",
+    ];
+
+    // Opening variations
+    const greetings = ["Hey,", "Hi,", ""];
+
+    // First paragraph variations
+    const openingLines = [
+      "Your First Serve Seattle trial ended, but the sunny weather is back and courts are filling up.",
+      "Your First Serve Seattle trial ended, but spring is here and courts are filling up.",
+      "Your First Serve Seattle trial ended, but the nice days are back and courts are filling up fast.",
+    ];
+
+    // Second paragraph variations
+    const problemStatements = [
+      "I built this to solve my own problem: showing which courts are open for first come, first serve play. Now I don't have to spend $24 every time I book a court or waste time driving to a packed park. I hope you join me.",
+      "I built this because I was tired of showing up to packed courts or paying $24 to book one. Now I can see which courts are open for first come, first serve play. I hope you join me.",
+      "I got tired of driving to packed parks or spending $24 to book a court. So I built this to show which courts are open for first come, first serve play. I hope you join me.",
+    ];
+
+    const subject = pick(subjects);
+    const greeting = pick(greetings);
+    const openingLine = pick(openingLines);
+    const problemStatement = pick(problemStatements);
+    const subscribeUrl = `https://www.firstserveseattle.com/checkout?plan=monthly&email=${encodeURIComponent(email)}`;
+
+    const greetingHtml = greeting ? `<p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  ${greeting}
+                </p>
+
+                ` : '';
+
+    return {
+      subject,
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #111827;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
+            <tr>
+              <td style="padding: 32px; max-width: 600px;">
+                ${greetingHtml}<p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  ${openingLine}
+                </p>
+
+                <p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 24px 0;">
+                  ${problemStatement}
+                </p>
+
+                <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
+                  <tr>
+                    <td bgcolor="#0c372b" style="border-radius: 6px;">
+                      <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                        See today's open courts
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  — Ryan
+                </p>
+
+                <p style="color: #9ca3af; font-size: 14px; margin: 0;">
+                  P.S. Cancel anytime.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `
+    };
+  },
+
   alertTrialExpiring: (subscribeUrl: string) => ({
     subject: 'Your free court alerts expire tomorrow!',
     html: `

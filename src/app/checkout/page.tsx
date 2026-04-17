@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Check, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -11,9 +11,13 @@ type PlanType = "monthly" | "annual";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
 
-  const [plan, setPlan] = useState<PlanType>("monthly");
+  const emailFromUrl = searchParams.get("email") || "";
+  const planFromUrl = searchParams.get("plan");
+
+  const [plan, setPlan] = useState<PlanType>(planFromUrl === "annual" ? "annual" : "monthly");
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
@@ -27,8 +31,8 @@ export default function CheckoutPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
 
       if (!authUser || !authUser.email) {
-        // Not authenticated, redirect to courts page
-        router.push("/");
+        // Not authenticated - allow checkout with email from URL
+        setCheckingAuth(false);
         return;
       }
 
@@ -81,8 +85,14 @@ export default function CheckoutPage() {
     checkAuth();
   }, [supabase, router]);
 
+  // Get the email to use for checkout (logged in user or URL param)
+  const checkoutEmail = user?.email || emailFromUrl;
+
   const handleCheckout = async () => {
-    if (!user) return;
+    if (!checkoutEmail) {
+      setError("Email is required. Please try again from the email link.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -92,9 +102,9 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
+          email: checkoutEmail,
           plan,
-          userId: user.id,
+          userId: user?.id || null,
           trialEnd: trialEnd, // Honor remaining trial if applicable
           // NO offerId - this allows promo codes via Stripe
         }),
@@ -273,18 +283,23 @@ export default function CheckoutPage() {
           Have a promo code? You can enter it at checkout.
         </p>
 
-        {/* Signed in as */}
-        <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-          <p className="text-sm text-gray-500">
-            Signed in as <span className="font-medium text-gray-700">{user?.email}</span>
-          </p>
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-gray-400 hover:text-gray-600 underline mt-1"
-          >
-            Not you? Sign out
-          </button>
-        </div>
+        {/* Signed in as / Email info */}
+        {checkoutEmail && (
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-sm text-gray-500">
+              {user ? "Signed in as" : "Checking out as"}{" "}
+              <span className="font-medium text-gray-700">{checkoutEmail}</span>
+            </p>
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="text-sm text-gray-400 hover:text-gray-600 underline mt-1"
+              >
+                Not you? Sign out
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
