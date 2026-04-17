@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Check, Loader2 } from "lucide-react";
@@ -9,7 +9,7 @@ import { FEATURES } from "@/lib/paywallCopy";
 
 type PlanType = "monthly" | "annual";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
@@ -302,5 +302,22 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mx-auto mb-4" />
+            <p className="text-gray-500">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }
