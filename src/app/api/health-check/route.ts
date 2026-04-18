@@ -49,7 +49,6 @@ interface StripeMetrics {
   failedPayments24h: number;
   cancellations24h: number;
   trialConversions24h: number;
-  trialUsersWithoutCards: number;
   // One-time payments (ball machine rentals, etc.)
   oneTimeRevenue24h: number;
   oneTimeRevenue7d: number;
@@ -313,18 +312,6 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     const oneTimeRevenue24h = oneTimeCharges24h.reduce((sum, c) => sum + (c.amount / 100), 0);
     const oneTimeRevenue7d = oneTimeCharges7d.reduce((sum, c) => sum + (c.amount / 100), 0);
 
-    // Check trial users without cards
-    let trialUsersWithoutCards = 0;
-    for (const sub of trialingSubs.data.slice(0, 10)) { // Limit to avoid rate limits
-      try {
-        const paymentMethods = await stripe.paymentMethods.list({
-          customer: sub.customer as string,
-          type: 'card',
-        });
-        if (paymentMethods.data.length === 0) trialUsersWithoutCards++;
-      } catch { /* ignore */ }
-    }
-
     return {
       accountName,
       activeSubscriptions: activeSubs.data.length,
@@ -335,7 +322,6 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       failedPayments24h,
       cancellations24h,
       trialConversions24h,
-      trialUsersWithoutCards,
       oneTimeRevenue24h,
       oneTimeRevenue7d,
       oneTimePayments24h: oneTimeCharges24h.length,
@@ -348,7 +334,7 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       monthlyMRR: 0, annualMRR: 0, totalMRR: 0,
       newSubscribers24h: 0, newSubscribers7d: 0,
       failedPayments24h: 0, cancellations24h: 0,
-      trialConversions24h: 0, trialUsersWithoutCards: 0,
+      trialConversions24h: 0,
       oneTimeRevenue24h: 0, oneTimeRevenue7d: 0,
       oneTimePayments24h: 0, oneTimePayments7d: 0,
     };
@@ -561,28 +547,26 @@ function generateHtmlReport(report: HealthReport): string {
     </div>
   </div>
 
-  ${report.stripeMetrics.map(s => `
+  ${report.stripeMetrics.map(s => {
+    const isLegacy = s.accountName === 'SimpleApps';
+    return `
   <div class="section">
-    <div class="section-title">Stripe: ${s.accountName}</div>
-    <p style="font-size:12px;color:#6b7280;margin:0 0 16px 0;font-weight:bold;">SUBSCRIPTIONS (MRR)</p>
+    <div class="section-title">Stripe: ${s.accountName}${isLegacy ? ' (Legacy)' : ''}</div>
     <div class="grid">
       <div class="metric"><p class="metric-label">Active</p><p class="metric-value">${s.activeSubscriptions}</p></div>
-      <div class="metric"><p class="metric-label">Trialing</p><p class="metric-value">${s.trialingSubscriptions}</p>${s.trialUsersWithoutCards > 0 ? `<p class="metric-sub" style="color:#f59e0b;">${s.trialUsersWithoutCards} no card</p>` : ''}</div>
       <div class="metric"><p class="metric-label">MRR</p><p class="metric-value" style="color:#059669;">$${s.totalMRR.toFixed(2)}</p></div>
-      <div class="metric"><p class="metric-label">New Subs (24h / 7d)</p><p class="metric-value">${s.newSubscribers24h} / ${s.newSubscribers7d}</p></div>
-      <div class="metric"><p class="metric-label">Conversions (24h)</p><p class="metric-value" style="color:#059669;">${s.trialConversions24h}</p></div>
+      ${!isLegacy ? `<div class="metric"><p class="metric-label">Conversions (24h)</p><p class="metric-value" style="color:#059669;">${s.trialConversions24h}</p></div>` : ''}
       <div class="metric"><p class="metric-label">Cancellations (24h)</p><p class="metric-value" style="color:${s.cancellations24h > 0 ? '#ef4444' : '#111827'};">${s.cancellations24h}</p></div>
-      <div class="metric"><p class="metric-label">Failed Payments (24h)</p><p class="metric-value" style="color:${s.failedPayments24h > 0 ? '#ef4444' : '#111827'};">${s.failedPayments24h}</p></div>
     </div>
-    ${(s.oneTimePayments24h > 0 || s.oneTimePayments7d > 0) ? `
-    <p style="font-size:12px;color:#6b7280;margin:24px 0 16px 0;font-weight:bold;">ONE-TIME PAYMENTS (Ball Machine Rentals, etc.)</p>
+    ${(!isLegacy && (s.oneTimePayments24h > 0 || s.oneTimePayments7d > 0)) ? `
+    <p style="font-size:12px;color:#6b7280;margin:24px 0 16px 0;font-weight:bold;">ONE-TIME PAYMENTS</p>
     <div class="grid">
       <div class="metric"><p class="metric-label">Revenue (24h)</p><p class="metric-value" style="color:#059669;">$${s.oneTimeRevenue24h.toFixed(2)}</p><p class="metric-sub">${s.oneTimePayments24h} payment${s.oneTimePayments24h !== 1 ? 's' : ''}</p></div>
       <div class="metric"><p class="metric-label">Revenue (7d)</p><p class="metric-value" style="color:#059669;">$${s.oneTimeRevenue7d.toFixed(2)}</p><p class="metric-sub">${s.oneTimePayments7d} payment${s.oneTimePayments7d !== 1 ? 's' : ''}</p></div>
     </div>
     ` : ''}
-  </div>
-  `).join('')}
+  </div>`;
+  }).join('')}
 
   <div class="section">
     <div class="section-title">Email Alerts ${badge(report.emailAlerts.status.status)}</div>
@@ -708,18 +692,10 @@ export async function GET() {
     },
     stripe: stripeMetrics.map(s => ({
       account: s.accountName,
-      mrr: s.totalMRR,
       active: s.activeSubscriptions,
-      trialing: s.trialingSubscriptions,
-      newSubscribers24h: s.newSubscribers24h,
-      newSubscribers7d: s.newSubscribers7d,
+      mrr: s.totalMRR,
       conversions24h: s.trialConversions24h,
       cancellations24h: s.cancellations24h,
-      failedPayments24h: s.failedPayments24h,
-      oneTimeRevenue24h: s.oneTimeRevenue24h,
-      oneTimeRevenue7d: s.oneTimeRevenue7d,
-      oneTimePayments24h: s.oneTimePayments24h,
-      oneTimePayments7d: s.oneTimePayments7d,
     })),
     emailAlerts: { subscribers: emailAlerts.activeSubscribers, sent24h: emailAlerts.emailsSent24h },
     subscribers: {
