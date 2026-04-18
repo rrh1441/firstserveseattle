@@ -16,7 +16,7 @@ og_title: "Froula Playground Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Froula Playground Tennis in Froula / Northeast Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/froula-playground-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Froula Playground Tennis Tennis Courts"
+twitter_title: "Froula Playground Tennis Courts"
 twitter_description: "Tennis court guide for Froula Playground Tennis in Froula / Northeast Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

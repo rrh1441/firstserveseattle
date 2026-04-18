@@ -16,7 +16,7 @@ og_title: "Bryant Playground Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Bryant Playground Tennis in Bryant / Ravenna. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/bryant-playground-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Bryant Playground Tennis Tennis Courts"
+twitter_title: "Bryant Playground Tennis Courts"
 twitter_description: "Tennis court guide for Bryant Playground Tennis in Bryant / Ravenna, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

@@ -16,7 +16,7 @@ og_title: "Solstice Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Solstice Park Tennis in West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/solstice-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Solstice Park Tennis Tennis Courts"
+twitter_title: "Solstice Park Tennis Courts"
 twitter_description: "Tennis court guide for Solstice Park Tennis in West Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

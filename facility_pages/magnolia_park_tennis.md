@@ -16,7 +16,7 @@ og_title: "Magnolia Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Magnolia Park Tennis in Magnolia. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/magnolia-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Magnolia Park Tennis Tennis Courts"
+twitter_title: "Magnolia Park Tennis Courts"
 twitter_description: "Tennis court guide for Magnolia Park Tennis in Magnolia, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

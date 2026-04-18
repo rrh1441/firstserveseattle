@@ -16,7 +16,7 @@ og_title: "Green Lake Park West Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Green Lake Park West Tennis in Green Lake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/green-lake-park-west-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Green Lake Park West Tennis Tennis Courts"
+twitter_title: "Green Lake Park West Tennis Courts"
 twitter_description: "Tennis court guide for Green Lake Park West Tennis in Green Lake, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

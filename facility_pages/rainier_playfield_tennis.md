@@ -16,7 +16,7 @@ og_title: "Rainier Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Rainier Playfield Tennis in Rainier Valley. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/rainier-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Rainier Playfield Tennis Tennis Courts"
+twitter_title: "Rainier Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Rainier Playfield Tennis in Rainier Valley, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

@@ -16,7 +16,7 @@ og_title: "Sam Smith (I90 Lid) Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Sam Smith (I90 Lid) Park Tennis in International District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/sam-smith-i90-lid-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Sam Smith (I90 Lid) Park Tennis Tennis Courts"
+twitter_title: "Sam Smith (I90 Lid) Park Tennis Courts"
 twitter_description: "Tennis court guide for Sam Smith (I90 Lid) Park Tennis in International District, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

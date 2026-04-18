@@ -16,7 +16,7 @@ og_title: "Dearborn Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Dearborn Park Tennis in Dearborn Park / West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/dearborn-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Dearborn Park Tennis Tennis Courts"
+twitter_title: "Dearborn Park Tennis Courts"
 twitter_description: "Tennis court guide for Dearborn Park Tennis in Dearborn Park / West Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

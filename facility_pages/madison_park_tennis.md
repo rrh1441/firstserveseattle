@@ -16,7 +16,7 @@ og_title: "Madison Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Madison Park Tennis in Madison Park. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/madison-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Madison Park Tennis Tennis Courts"
+twitter_title: "Madison Park Tennis Courts"
 twitter_description: "Tennis court guide for Madison Park Tennis in Madison Park, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

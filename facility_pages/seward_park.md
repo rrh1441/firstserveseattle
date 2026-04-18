@@ -16,7 +16,7 @@ og_title: "Seward Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Seward Park Tennis in Seward Park. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/seward-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Seward Park Tennis Tennis Courts"
+twitter_title: "Seward Park Tennis Courts"
 twitter_description: "Tennis court guide for Seward Park Tennis in Seward Park, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

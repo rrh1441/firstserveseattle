@@ -16,7 +16,7 @@ og_title: "Garfield Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Garfield Playfield Tennis in Central District. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/garfield-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Garfield Playfield Tennis Tennis Courts"
+twitter_title: "Garfield Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Garfield Playfield Tennis in Central District, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

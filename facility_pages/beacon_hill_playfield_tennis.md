@@ -16,7 +16,7 @@ og_title: "Beacon Hill Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Beacon Hill Playfield Tennis in Beacon Hill. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/beacon-hill-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Beacon Hill Playfield Tennis Tennis Courts"
+twitter_title: "Beacon Hill Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Beacon Hill Playfield Tennis in Beacon Hill, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

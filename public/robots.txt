@@ -7,7 +7,6 @@ Disallow: /testb
 Disallow: /testc
 Disallow: /testd
 Disallow: /testlogin
-Disallow: /testworkflow
 Disallow: /paywalltest
 Disallow: /lptest
 Disallow: /checkout-test

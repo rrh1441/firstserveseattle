@@ -16,7 +16,7 @@ og_title: "Mount Baker Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Mount Baker Park Tennis in Mount Baker. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/mount-baker-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Mount Baker Park Tennis Tennis Courts"
+twitter_title: "Mount Baker Park Tennis Courts"
 twitter_description: "Tennis court guide for Mount Baker Park Tennis in Mount Baker, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

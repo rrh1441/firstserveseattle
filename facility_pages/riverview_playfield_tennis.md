@@ -16,7 +16,7 @@ og_title: "Riverview Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Riverview Playfield Tennis in Riverview / West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/riverview-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Riverview Playfield Tennis Tennis Courts"
+twitter_title: "Riverview Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Riverview Playfield Tennis in Riverview / West Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

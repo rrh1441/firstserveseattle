@@ -16,7 +16,7 @@ og_title: "Soundview Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Soundview Playfield Tennis in Crown Hill / Ballard. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/soundview-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Soundview Playfield Tennis Tennis Courts"
+twitter_title: "Soundview Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Soundview Playfield Tennis in Crown Hill / Ballard, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

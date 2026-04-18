@@ -16,7 +16,7 @@ og_title: "Rainier Beach Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Rainier Beach Playfield Tennis in Rainier Beach. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/rainier-beach-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Rainier Beach Playfield Tennis Tennis Courts"
+twitter_title: "Rainier Beach Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Rainier Beach Playfield Tennis in Rainier Beach, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

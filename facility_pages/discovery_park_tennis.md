@@ -16,7 +16,7 @@ og_title: "Discovery Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Discovery Park Tennis in Discovery Park / Magnolia. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/discovery-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Discovery Park Tennis Tennis Courts"
+twitter_title: "Discovery Park Tennis Courts"
 twitter_description: "Tennis court guide for Discovery Park Tennis in Discovery Park / Magnolia, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

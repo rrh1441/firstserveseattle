@@ -16,7 +16,7 @@ og_title: "David Rodgers Park Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to David Rodgers Park Tennis in Queen Anne. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/david-rodgers-park-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "David Rodgers Park Tennis Tennis Courts"
+twitter_title: "David Rodgers Park Tennis Courts"
 twitter_description: "Tennis court guide for David Rodgers Park Tennis in Queen Anne, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

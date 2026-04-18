@@ -16,7 +16,7 @@ og_title: "Walt Hundley Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Walt Hundley Playfield Tennis in Highland Park / West Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/walt-hundley-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Walt Hundley Playfield Tennis Tennis Courts"
+twitter_title: "Walt Hundley Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Walt Hundley Playfield Tennis in Highland Park / West Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

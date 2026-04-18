@@ -16,7 +16,7 @@ og_title: "Montlake Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Montlake Playfield Tennis in Montlake. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/montlake-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Montlake Playfield Tennis Tennis Courts"
+twitter_title: "Montlake Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Montlake Playfield Tennis in Montlake, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

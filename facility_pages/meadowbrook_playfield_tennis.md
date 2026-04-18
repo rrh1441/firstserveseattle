@@ -16,7 +16,7 @@ og_title: "Meadowbrook Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Meadowbrook Playfield Tennis in Meadowbrook / Northeast Seattle. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/meadowbrook-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Meadowbrook Playfield Tennis Tennis Courts"
+twitter_title: "Meadowbrook Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Meadowbrook Playfield Tennis in Meadowbrook / Northeast Seattle, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

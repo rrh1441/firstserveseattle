@@ -16,7 +16,7 @@ og_title: "Observatory Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Observatory Tennis in Queen Anne. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/observatory-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Observatory Tennis Tennis Courts"
+twitter_title: "Observatory Tennis Courts"
 twitter_description: "Tennis court guide for Observatory Tennis in Queen Anne, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"

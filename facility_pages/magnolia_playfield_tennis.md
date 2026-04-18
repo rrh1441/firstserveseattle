@@ -16,7 +16,7 @@ og_title: "Magnolia Playfield Tennis | Seattle Tennis Court Guide"
 og_description: "Your complete guide to Magnolia Playfield Tennis in Magnolia. Court conditions, amenities, and local tennis insights."
 og_image: "/images/facilities/magnolia-playfield-tennis-social.jpg"
 twitter_card: "summary_large_image"
-twitter_title: "Magnolia Playfield Tennis Tennis Courts"
+twitter_title: "Magnolia Playfield Tennis Courts"
 twitter_description: "Tennis court guide for Magnolia Playfield Tennis in Magnolia, Seattle"
 local_business: true
 schema_type: "SportsActivityLocation"
