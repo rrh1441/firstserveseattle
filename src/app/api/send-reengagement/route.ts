@@ -90,14 +90,17 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         // Log the send to prevent duplicates
-        await supabaseAdmin.from('email_alert_logs').insert({
-          subscriber_id: subscriber.id,
+        const { error: logError } = await supabaseAdmin.from('email_alert_logs').insert({
           email: subscriber.email,
           courts_included: [],
           slots_included: 0,
           email_type: 'reengagement',
           resend_message_id: emailResult?.id || null,
         });
+
+        if (logError) {
+          console.error(`[reengagement] Failed to log send for ${subscriber.email}:`, logError);
+        }
 
         console.log(`[reengagement] Sent to ${subscriber.email}`);
         sent++;

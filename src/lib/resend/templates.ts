@@ -964,92 +964,97 @@ export const emailTemplates = {
     };
   },
 
-  alertTrialExpiring: (subscribeUrl: string) => ({
-    subject: 'Your free court alerts expire tomorrow!',
-    html: `
+  alertTrialExpiring: (email: string) => {
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+    // Subject line variations
+    const subjects = [
+      "Your trial ends tomorrow",
+      "Last day to lock in court access",
+      "Tomorrow your trial expires",
+    ];
+
+    // Greeting variations
+    const greetings = ["Hey,", "Hi,", ""];
+
+    // Opening line variations
+    const openingLines = [
+      "Just a heads up — your free trial ends tomorrow.",
+      "Quick reminder: your First Serve Seattle trial expires tomorrow.",
+      "Your 5-day trial wraps up tomorrow.",
+    ];
+
+    // Value prop variations
+    const valueProps = [
+      "I built this so I could see which courts are open for first come, first serve play — and skip paying $24 to book every time I want to hit.",
+      "Instead of showing up to packed courts or spending $24 to book, you can see exactly which courts are open for first come, first serve play.",
+      "With a membership, you'll always know which courts are open for walk-up play — no more wasted trips or $24 booking fees.",
+    ];
+
+    // CTA text variations
+    const ctaTexts = [
+      "Keep your court access",
+      "Subscribe for $8/mo",
+      "Stay in the loop",
+    ];
+
+    const subject = pick(subjects);
+    const greeting = pick(greetings);
+    const openingLine = pick(openingLines);
+    const valueProp = pick(valueProps);
+    const ctaText = pick(ctaTexts);
+    const subscribeUrl = `https://www.firstserveseattle.com/checkout?plan=monthly&email=${encodeURIComponent(email)}`;
+
+    const greetingHtml = greeting ? `<p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  ${greeting}
+                </p>
+
+                ` : '';
+
+    return {
+      subject,
+      html: `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-          <meta name="color-scheme" content="light only" />
-          <meta name="supported-color-schemes" content="light only" />
-          <title>Trial Expiring</title>
-          <style>
-            :root { color-scheme: light only; }
-          </style>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc; color: #111827;">
-          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f8fafc">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff; color: #111827;">
+          <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
             <tr>
-              <td align="center" style="padding: 20px 0;">
-                <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="border: 1px solid #e5e7eb; border-radius: 8px;">
+              <td style="padding: 32px; max-width: 600px;">
+                ${greetingHtml}<p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  ${openingLine}
+                </p>
 
-                  <!-- Header -->
+                <p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 24px 0;">
+                  ${valueProp}
+                </p>
+
+                <table cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
                   <tr>
-                    <td bgcolor="#0c372b" style="padding: 32px; border-radius: 8px 8px 0 0;">
-                      <h1 style="color: #ffffff !important; margin: 0; font-size: 24px; font-weight: bold;">
-                        First Serve Seattle
-                      </h1>
-                    </td>
-                  </tr>
-
-                  <!-- Main Content -->
-                  <tr>
-                    <td style="padding: 32px;">
-                      <h2 style="color: #111827; font-size: 24px; margin: 0 0 16px 0;">
-                        Last Day of Free Alerts
-                      </h2>
-
-                      <p style="color: #374151; font-size: 16px; line-height: 24px; margin: 0 0 24px 0;">
-                        Your 5-day trial ends tomorrow. Don't lose access to court availability!
-                      </p>
-
-                      <!-- Savings callout -->
-                      <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#dcfce7" style="border: 1px solid #bbf7d0; border-radius: 8px; margin: 0 0 24px 0;">
-                        <tr>
-                          <td style="padding: 16px;">
-                            <p style="color: #166534; font-size: 16px; font-weight: bold; margin: 0 0 4px 0;">
-                              Members save $24+ per session
-                            </p>
-                            <p style="color: #166534; font-size: 14px; margin: 0;">
-                              See all courts, any time, with instant availability updates.
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <!-- CTA -->
-                      <table cellpadding="0" cellspacing="0">
-                        <tr>
-                          <td bgcolor="#0c372b" style="border-radius: 8px;">
-                            <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
-                              Subscribe Now
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
-                        Questions? Reply to this email or contact support@firstserveseattle.com
-                      </p>
-                    </td>
-                  </tr>
-
-                  <!-- Footer -->
-                  <tr>
-                    <td bgcolor="#f9fafb" style="padding: 24px; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
-                      <p style="color: #6b7280; font-size: 12px; margin: 0;">
-                        First Serve Seattle
-                      </p>
+                    <td bgcolor="#0c372b" style="border-radius: 6px;">
+                      <a href="${subscribeUrl}" style="display: block; padding: 14px 28px; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px;">
+                        ${ctaText}
+                      </a>
                     </td>
                   </tr>
                 </table>
+
+                <p style="color: #374151; font-size: 16px; line-height: 26px; margin: 0 0 20px 0;">
+                  — Ryan
+                </p>
+
+                <p style="color: #9ca3af; font-size: 14px; margin: 0;">
+                  P.S. It's just $8/mo and you can cancel anytime.
+                </p>
               </td>
             </tr>
           </table>
         </body>
       </html>
     `
-  })
+    };
+  }
 }
