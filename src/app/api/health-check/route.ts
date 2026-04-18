@@ -64,6 +64,14 @@ interface EmailAlertHealth {
   totalEmailsSent: number;
 }
 
+interface SupabaseSubscriberMetrics {
+  activeSubscribers: number;
+  activeTrials: number;
+  expiredTrials: number;
+  newSignups24h: number;
+  newSignups7d: number;
+}
+
 interface QrScanMetrics {
   scans24h: number;
   scans7d: number;
@@ -76,6 +84,7 @@ interface HealthReport {
   overallStatus: 'healthy' | 'warning' | 'error';
   courtData: CourtDataHealth;
   visitorAnalytics: VisitorAnalytics;
+  subscriberMetrics: SupabaseSubscriberMetrics;
   stripeMetrics: StripeMetrics[];
   emailAlerts: EmailAlertHealth;
   qrScans: QrScanMetrics;
@@ -385,6 +394,51 @@ async function checkEmailAlertHealth(): Promise<EmailAlertHealth> {
   }
 }
 
+async function checkSupabaseSubscribers(): Promise<SupabaseSubscriberMetrics> {
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Get all subscribers
+    const { data: subscribers } = await supabaseAdmin
+      .from('subscribers')
+      .select('status, trial_end, created_at');
+
+    if (!subscribers) {
+      return { activeSubscribers: 0, activeTrials: 0, expiredTrials: 0, newSignups24h: 0, newSignups7d: 0 };
+    }
+
+    // Count active subscribers (status = 'active' or 'paid')
+    const activeSubscribers = subscribers.filter(s =>
+      s.status === 'active' || s.status === 'paid'
+    ).length;
+
+    // Count active trials (status = 'trialing' AND trial_end > now)
+    const activeTrials = subscribers.filter(s =>
+      s.status === 'trialing' && s.trial_end && s.trial_end > now
+    ).length;
+
+    // Count expired trials (status = 'trialing' AND trial_end <= now)
+    const expiredTrials = subscribers.filter(s =>
+      s.status === 'trialing' && s.trial_end && s.trial_end <= now
+    ).length;
+
+    // New signups in last 24h and 7d
+    const newSignups24h = subscribers.filter(s =>
+      s.created_at && new Date(s.created_at) >= new Date(yesterday)
+    ).length;
+    const newSignups7d = subscribers.filter(s =>
+      s.created_at && new Date(s.created_at) >= new Date(weekAgo)
+    ).length;
+
+    return { activeSubscribers, activeTrials, expiredTrials, newSignups24h, newSignups7d };
+  } catch (error) {
+    console.error('Supabase subscribers error:', error);
+    return { activeSubscribers: 0, activeTrials: 0, expiredTrials: 0, newSignups24h: 0, newSignups7d: 0 };
+  }
+}
+
 async function checkQrScans(): Promise<QrScanMetrics> {
   try {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -497,6 +551,16 @@ function generateHtmlReport(report: HealthReport): string {
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-title">Subscribers (Supabase)</div>
+    <div class="grid">
+      <div class="metric"><p class="metric-label">Active Subscribers</p><p class="metric-value" style="color:#059669;">${report.subscriberMetrics.activeSubscribers}</p></div>
+      <div class="metric"><p class="metric-label">Active Trials</p><p class="metric-value">${report.subscriberMetrics.activeTrials}</p></div>
+      <div class="metric"><p class="metric-label">Expired Trials</p><p class="metric-value" style="color:#f59e0b;">${report.subscriberMetrics.expiredTrials}</p></div>
+      <div class="metric"><p class="metric-label">New Signups (24h / 7d)</p><p class="metric-value">${report.subscriberMetrics.newSignups24h} / ${report.subscriberMetrics.newSignups7d}</p></div>
+    </div>
+  </div>
+
   ${report.stripeMetrics.map(s => `
   <div class="section">
     <div class="section-title">Stripe: ${s.accountName}</div>
@@ -571,11 +635,12 @@ export async function GET() {
   const alerts: string[] = [];
 
   // Run checks
-  const [courtData, visitorAnalytics, emailAlerts, qrScans] = await Promise.all([
+  const [courtData, visitorAnalytics, emailAlerts, qrScans, subscriberMetrics] = await Promise.all([
     checkCourtDataFreshness(),
     checkVisitorAnalytics(),
     checkEmailAlertHealth(),
     checkQrScans(),
+    checkSupabaseSubscribers(),
   ]);
 
   // Stripe checks
@@ -615,6 +680,7 @@ export async function GET() {
     overallStatus,
     courtData,
     visitorAnalytics,
+    subscriberMetrics,
     stripeMetrics,
     emailAlerts,
     qrScans,
@@ -656,6 +722,13 @@ export async function GET() {
       oneTimePayments7d: s.oneTimePayments7d,
     })),
     emailAlerts: { subscribers: emailAlerts.activeSubscribers, sent24h: emailAlerts.emailsSent24h },
+    subscribers: {
+      activeSubscribers: subscriberMetrics.activeSubscribers,
+      activeTrials: subscriberMetrics.activeTrials,
+      expiredTrials: subscriberMetrics.expiredTrials,
+      newSignups24h: subscriberMetrics.newSignups24h,
+      newSignups7d: subscriberMetrics.newSignups7d,
+    },
     qrScans: {
       scans24h: qrScans.scans24h,
       scans7d: qrScans.scans7d,

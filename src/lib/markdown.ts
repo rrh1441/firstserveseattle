@@ -38,9 +38,11 @@ export interface FacilityPage {
 /** Directory holding the 39 facility Markdown files */
 const FACILITY_DIR = path.join(process.cwd(), 'facility_pages');
 
-/** Load one facility by slug (e.g. "beacon_hill_playfield_tennis") */
+/** Load one facility by slug (e.g. "beacon-hill-playfield-tennis") */
 export async function loadFacility(slug: string): Promise<FacilityPage> {
-  const filePath = path.join(FACILITY_DIR, `${slug}.md`);
+  // Convert URL slugs (hyphens) to file names (underscores)
+  const fileName = slug.replace(/-/g, '_');
+  const filePath = path.join(FACILITY_DIR, `${fileName}.md`);
   
   try {
     const rawSrc = await fs.readFile(filePath, 'utf8');
@@ -64,5 +66,6 @@ export async function listFacilitySlugs(): Promise<string[]> {
   const entries = await fs.readdir(FACILITY_DIR);
   return entries
     .filter((f) => f.endsWith('.md'))
-    .map((f) => f.replace(/\.md$/, ''));
+    // Convert file names (underscores) to URL slugs (hyphens)
+    .map((f) => f.replace(/\.md$/, '').replace(/_/g, '-'));
 }
