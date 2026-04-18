@@ -11,6 +11,7 @@ const supabaseAdmin = createClient(
 const FROM_EMAIL = 'Ryan from First Serve Seattle <ryan@firstserveseattle.com>';
 
 // POST: Send re-engagement emails to expired trial users
+// Use ?limit=N to limit the number of emails sent
 export async function POST(request: Request): Promise<NextResponse> {
   // Verify cron secret or admin access
   const authHeader = request.headers.get('authorization');
@@ -21,6 +22,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+
     const now = Math.floor(Date.now() / 1000);
 
     // Get expired trial subscribers (created since March 1, 2026)
@@ -58,8 +63,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     let sent = 0;
     let skipped = 0;
+    const sentDetails: Array<{ email: string; subject: string }> = [];
 
     for (const subscriber of expiredTrials) {
+      // Stop if we've hit the limit
+      if (limit && sent >= limit) {
+        console.log(`[reengagement] Reached limit of ${limit}`);
+        break;
+      }
+
       // Skip if already sent re-engagement email
       if (alreadySentSet.has(subscriber.email)) {
         console.log(`[reengagement] Skipping ${subscriber.email} - already sent`);
@@ -102,7 +114,8 @@ export async function POST(request: Request): Promise<NextResponse> {
           console.error(`[reengagement] Failed to log send for ${subscriber.email}:`, logError);
         }
 
-        console.log(`[reengagement] Sent to ${subscriber.email}`);
+        console.log(`[reengagement] Sent to ${subscriber.email} - Subject: ${emailContent.subject}`);
+        sentDetails.push({ email: subscriber.email, subject: emailContent.subject });
         sent++;
       } catch (err) {
         console.error(`[reengagement] Error sending to ${subscriber.email}:`, err);
@@ -111,7 +124,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     console.log(`[reengagement] Complete: ${sent} sent, ${skipped} skipped`);
 
-    return NextResponse.json({ sent, skipped });
+    return NextResponse.json({ sent, skipped, emails: sentDetails });
 
   } catch (error) {
     console.error('[reengagement] Error:', error);
