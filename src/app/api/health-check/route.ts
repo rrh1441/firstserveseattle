@@ -40,12 +40,9 @@ interface VisitorAnalytics {
 interface StripeMetrics {
   accountName: string;
   activeSubscriptions: number;
-  trialingSubscriptions: number;
   monthlyMRR: number;
   annualMRR: number;
   totalMRR: number;
-  newSubscribers24h: number;
-  newSubscribers7d: number;
   failedPayments24h: number;
   cancellations24h: number;
   trialConversions24h: number;
@@ -264,9 +261,8 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     const yesterday = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
     const weekAgo = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
 
-    const [activeSubs, trialingSubs, canceledSubs, recentCharges24h, recentCharges7d] = await Promise.all([
+    const [activeSubs, canceledSubs, recentCharges24h, recentCharges7d] = await Promise.all([
       stripe.subscriptions.list({ status: 'active', limit: 100 }),
-      stripe.subscriptions.list({ status: 'trialing', limit: 100 }),
       stripe.subscriptions.list({ status: 'canceled', limit: 100 }),
       stripe.charges.list({ created: { gte: yesterday }, limit: 100 }),
       stripe.charges.list({ created: { gte: weekAgo }, limit: 100 }),
@@ -275,7 +271,7 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     let monthlyMRR = 0;
     let annualMRR = 0;
 
-    [...activeSubs.data, ...trialingSubs.data].forEach(sub => {
+    activeSubs.data.forEach(sub => {
       const amount = sub.items.data[0]?.price.unit_amount || 0;
       const interval = sub.items.data[0]?.price.recurring?.interval;
       if (interval === 'month') monthlyMRR += amount / 100;
@@ -289,18 +285,9 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
       sub.canceled_at && sub.canceled_at >= yesterday
     ).length;
 
-    // Trial conversions: active subs that started as trials and converted in last 24h
-    const trialConversions24h = activeSubs.data.filter(sub => {
-      // Had a trial and trial ended in last 24h (meaning they just converted)
-      const trialEnd = sub.trial_end;
-      return trialEnd && trialEnd >= yesterday && trialEnd <= Math.floor(Date.now() / 1000);
-    }).length;
-
-    // New subscribers (subscriptions created in timeframe)
-    const newSubscribers24h = activeSubs.data.filter(sub => sub.created >= yesterday).length +
-                              trialingSubs.data.filter(sub => sub.created >= yesterday).length;
-    const newSubscribers7d = activeSubs.data.filter(sub => sub.created >= weekAgo).length +
-                             trialingSubs.data.filter(sub => sub.created >= weekAgo).length;
+    // Trial conversions: active subs that were created from a completed checkout in last 24h
+    // (User had app-level trial, then converted to paid via Stripe)
+    const trialConversions24h = activeSubs.data.filter(sub => sub.created >= yesterday).length;
 
     // One-time payments (ball machine rentals, etc.) - successful charges NOT linked to subscriptions
     const oneTimeCharges24h = recentCharges24h.data.filter(c =>
@@ -315,10 +302,7 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
     return {
       accountName,
       activeSubscriptions: activeSubs.data.length,
-      trialingSubscriptions: trialingSubs.data.length,
       monthlyMRR, annualMRR, totalMRR: monthlyMRR + annualMRR,
-      newSubscribers24h,
-      newSubscribers7d,
       failedPayments24h,
       cancellations24h,
       trialConversions24h,
@@ -330,9 +314,8 @@ async function checkStripeMetrics(stripe: Stripe, accountName: string): Promise<
   } catch (error) {
     console.error(`Stripe error (${accountName}):`, error);
     return {
-      accountName, activeSubscriptions: 0, trialingSubscriptions: 0,
+      accountName, activeSubscriptions: 0,
       monthlyMRR: 0, annualMRR: 0, totalMRR: 0,
-      newSubscribers24h: 0, newSubscribers7d: 0,
       failedPayments24h: 0, cancellations24h: 0,
       trialConversions24h: 0,
       oneTimeRevenue24h: 0, oneTimeRevenue7d: 0,
