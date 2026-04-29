@@ -50,16 +50,16 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ sent: 0, skipped: 0, message: 'No expired trials found' });
     }
 
-    // Check which ones already received re-engagement email
+    // Check which ones already received re-engagement or trial_expiring email
     const subscriberEmails = expiredTrials.map(s => s.email);
     const { data: alreadySentLogs } = await supabaseAdmin
       .from('email_alert_logs')
-      .select('email')
-      .eq('email_type', 'reengagement')
+      .select('email, email_type')
+      .in('email_type', ['reengagement', 'trial_expiring'])
       .in('email', subscriberEmails);
 
     const alreadySentSet = new Set(alreadySentLogs?.map(log => log.email) || []);
-    console.log(`[reengagement] ${alreadySentSet.size} already received re-engagement email`);
+    console.log(`[reengagement] ${alreadySentSet.size} already received re-engagement or trial_expiring email`);
 
     let sent = 0;
     let skipped = 0;
@@ -158,17 +158,17 @@ export async function GET(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 });
     }
 
-    // Check which ones already received re-engagement email
+    // Check which ones already received re-engagement or trial_expiring email
     const subscriberEmails = expiredTrials?.map(s => s.email) || [];
     const { data: alreadySentLogs } = await supabaseAdmin
       .from('email_alert_logs')
-      .select('email')
-      .eq('email_type', 'reengagement')
+      .select('email, email_type')
+      .in('email_type', ['reengagement', 'trial_expiring'])
       .in('email', subscriberEmails);
 
     const alreadySentSet = new Set(alreadySentLogs?.map(log => log.email) || []);
 
-    // Filter to only those who haven't been sent
+    // Filter to only those who haven't been sent any email
     const pendingEmails = expiredTrials?.filter(s => !alreadySentSet.has(s.email)) || [];
 
     return NextResponse.json({
