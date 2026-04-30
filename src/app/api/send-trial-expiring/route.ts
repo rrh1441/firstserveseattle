@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 
 const FROM_EMAIL = 'Ryan from First Serve Seattle <ryan@firstserveseattle.com>';
 
-// POST: Send trial expiring emails to users whose trial ends in 24-48 hours
+// POST: Send trial expiring emails to users whose trial ends in the next 48 hours
 // Use ?test=email@example.com to send a test email to a specific address
 export async function POST(request: Request): Promise<NextResponse> {
   // Verify cron secret
@@ -56,16 +56,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const now = Math.floor(Date.now() / 1000);
-    const in24Hours = now + (24 * 60 * 60);
     const in48Hours = now + (48 * 60 * 60);
 
-    // Get trial subscribers whose trial ends between 24-48 hours from now
-    // This means their trial ends "tomorrow"
+    // Get trial subscribers whose trial ends in the next 48 hours
+    // Widened from 24-48 hours to catch trials that would slip through the daily cron window
     const { data: expiringTrials, error: fetchError } = await supabaseAdmin
       .from('subscribers')
       .select('id, email, status, trial_end')
       .eq('status', 'trialing')
-      .gte('trial_end', in24Hours)
+      .gte('trial_end', now)
       .lte('trial_end', in48Hours);
 
     if (fetchError) {
@@ -73,7 +72,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Failed to fetch subscribers' }, { status: 500 });
     }
 
-    console.log(`[trial-expiring] Found ${expiringTrials?.length || 0} trials expiring in 24-48 hours`);
+    console.log(`[trial-expiring] Found ${expiringTrials?.length || 0} trials expiring in next 48 hours`);
 
     if (!expiringTrials || expiringTrials.length === 0) {
       return NextResponse.json({ sent: 0, skipped: 0, message: 'No expiring trials found' });
@@ -165,15 +164,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const now = Math.floor(Date.now() / 1000);
-    const in24Hours = now + (24 * 60 * 60);
     const in48Hours = now + (48 * 60 * 60);
 
-    // Get trial subscribers whose trial ends between 24-48 hours from now
+    // Get trial subscribers whose trial ends in the next 48 hours
     const { data: expiringTrials, error: fetchError } = await supabaseAdmin
       .from('subscribers')
       .select('id, email, status, trial_end')
       .eq('status', 'trialing')
-      .gte('trial_end', in24Hours)
+      .gte('trial_end', now)
       .lte('trial_end', in48Hours);
 
     if (fetchError) {
