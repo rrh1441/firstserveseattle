@@ -50,7 +50,6 @@ export default function SignUpPage() {
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState(prefilledEmail);
   const [password, setPassword]   = useState("");
-  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number } } | null>(null);
   const [loading, setLoading]     = useState(false);
   const [errorMsg, setErrorMsg]   = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -100,14 +99,8 @@ export default function SignUpPage() {
     }
   }, [supabase.auth, supabase]);
 
-  useEffect(() => {
-    // Everyone gets the 50% off offer
-    const offer = { 
-      id: 'fifty_percent_off_first_month', 
-      discount: { percentage: 50 }
-    };
-    setAssignedOffer(offer);
-  }, []);
+  // No automatic offer assignment — new users start with a 5-day trial
+  // and choose a plan at /checkout when they're ready to pay.
 
   /* -------------------------------------------------------------------- */
   /*  Check if email user is already a subscriber                        */
@@ -172,10 +165,11 @@ export default function SignUpPage() {
       return;
     }
 
-    // For Apple users who are already authenticated, skip account creation
+    // For Apple users who are already authenticated, send them through the
+    // standard checkout page (mirrors the OAuth flow — no offer applied).
     if (currentUser && currentUser.email) {
-      console.log('🍎 Apple user proceeding directly to checkout');
-      await proceedToCheckout();
+      console.log('🍎 Apple user proceeding to /checkout');
+      window.location.href = `/checkout?plan=${plan}`;
       return;
     }
 
@@ -219,9 +213,22 @@ export default function SignUpPage() {
       }
 
       if (data.user) {
-        console.log("✅ Account created, proceeding to checkout");
-        
-        // Track successful signup with Vercel Analytics
+        console.log("✅ Account created, creating 5-day trial");
+
+        // Mirror the OAuth callback flow: create trial subscriber row, then
+        // redirect to the welcome page. Plan + payment happen later at /checkout.
+        const accessToken = data.session?.access_token;
+        const linkRes = await fetch('/api/link-subscriber', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'signup', accessToken }),
+        });
+
+        if (!linkRes.ok) {
+          const body = await linkRes.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to create trial');
+        }
+
         track('user_signup_completed', {
           plan_type: plan,
           signup_method: 'email',
@@ -229,8 +236,8 @@ export default function SignUpPage() {
           email_prefilled: !!prefilledEmail,
           is_apple_user: isAppleUser
         });
-        
-        await proceedToCheckout();
+
+        window.location.href = '/?welcome=true';
       }
     } catch (err: unknown) {
       console.error("Signup error:", err);
@@ -240,46 +247,6 @@ export default function SignUpPage() {
     }
   };
 
-  async function proceedToCheckout() {
-    try {
-      // Track checkout start with Vercel Analytics
-      track('checkout_initiated', {
-        plan_type: plan,
-        user_email: email,
-        offer_id: 'fifty_percent_off_first_month',
-        from_page: 'signup'
-      });
-      
-      const offerId = 'fifty_percent_off_first_month';
-      console.log('🎯 Signup page - offer ID:', offerId);
-      
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          plan,
-          offerId: offerId,
-          headlineGroup: headlineGroupParam,
-          userId: currentUser?.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const { url } = await response.json();
-      console.log("🔀 Redirecting to Stripe checkout");
-      window.location.href = url;
-
-      // Redirecting to checkout
-    } catch (err: unknown) {
-      console.error("Checkout error:", err);
-      setErrorMsg(err instanceof Error ? err.message : "Failed to create checkout session");
-      setLoading(false);
-    }
-  }
 
   /* -------------------------------------------------------------------- */
   /*  Render                                                              */
@@ -335,7 +302,6 @@ export default function SignUpPage() {
                 selectedPlan={plan}
                 onPlanSelect={handlePlanChange}
                 features={FEATURES}
-                assignedOffer={assignedOffer}
               />
             </div>
 
@@ -487,7 +453,7 @@ export default function SignUpPage() {
 
             {/* Action Button */}
             <button
-              onClick={currentUser ? proceedToCheckout : handleSubmit}
+              onClick={currentUser ? () => { window.location.href = `/checkout?plan=${plan}`; } : handleSubmit}
               disabled={loading || (!currentUser && (!plan || (!currentUser && (!fullName || !email || !allMet()))))}
               className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >

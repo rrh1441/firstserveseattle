@@ -28,7 +28,6 @@ const headlines = [
 
 export default function PaywallPage() {
   const [canShow, setCanShow] = useState<boolean | null>(null);
-  const [assignedOffer, setAssignedOffer] = useState<{ id: string; discount?: { percentage: number } } | null>(null);
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const [assignedHeadline, setAssignedHeadline] = useState<{
     group: string;
@@ -60,12 +59,6 @@ export default function PaywallPage() {
     });
   }, [canShow]);
 
-  useEffect(() => {
-    // Everyone gets the 50% off offer
-    const offer = { id: 'fifty_percent_off_first_month', discount: { percentage: 50 } };
-    setAssignedOffer(offer);
-  }, []);
-
   const handleSubscribeClick = () => {
     logEvent("click_subscribe_cta", {
       plan,
@@ -85,9 +78,7 @@ export default function PaywallPage() {
               : "You've reached your free limit"}
           </CardTitle>
           <CardDescription className="text-base text-gray-600">
-            {assignedOffer?.discount && plan === 'monthly' ? (
-              <>Get <span className="font-semibold">{assignedOffer.discount.percentage}% off your first month</span> when you subscribe</>
-            ) : plan === 'annual' ? (
+            {plan === 'annual' ? (
               <>Subscribe annually and <span className="font-semibold">save 33%</span> vs monthly billing</>
             ) : (
               <>Subscribe to see <span className="font-semibold">all court availability</span>.</>
@@ -100,13 +91,12 @@ export default function PaywallPage() {
             selectedPlan={plan}
             onPlanSelect={setPlan}
             features={features}
-            assignedOffer={assignedOffer}
           />
 
           <Link
             href={`/signup?plan=${plan}${
               assignedHeadline ? `&headline_group=${assignedHeadline.group}` : ""
-            }&offer_id=fifty_percent_off_first_month`}
+            }`}
             onClick={handleSubscribeClick}
             className="w-full block text-center bg-[#0c372b] text-white py-3 text-lg font-semibold rounded-md hover:bg-[#0c372b]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
           >

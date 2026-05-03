@@ -87,7 +87,7 @@ export default function PaywallPage(): JSX.Element | null {
   /* ---------------- dynamic content ----------------------------------- */
   const getCtaText = () => {
     return plan === 'monthly'
-      ? 'Subscribe – $4 First Month'
+      ? 'Subscribe – $8/month'
       : 'Subscribe – $64/year (Save 33%)';
   };
 
@@ -131,7 +131,7 @@ export default function PaywallPage(): JSX.Element | null {
           <div className="space-y-3">
             {/* Primary CTA - Subscribe */}
             <Link
-              href={`/signup?plan=${plan}&offer_id=fifty_percent_off_first_month`}
+              href={`/signup?plan=${plan}`}
               onClick={() => handleSubscribeClick(plan)}
               aria-label={getCtaText()}
               className="block w-full rounded-md bg-[#0c372b] py-3 text-center text-lg font-semibold text-white transition-colors hover:bg-[#0c372b]/90 focus:outline-none focus:ring-2 focus:ring-[#0c372b] focus:ring-offset-2"
