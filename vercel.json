@@ -8,6 +8,10 @@
     {
       "path": "/api/send-trial-expiring",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/send-reengagement",
+      "schedule": "30 14 * * *"
     }
   ]
 }

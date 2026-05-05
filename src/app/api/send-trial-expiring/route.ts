@@ -10,9 +10,10 @@ const supabaseAdmin = createClient(
 
 const FROM_EMAIL = 'Ryan from First Serve Seattle <ryan@firstserveseattle.com>';
 
-// POST: Send trial expiring emails to users whose trial ends in the next 48 hours
-// Use ?test=email@example.com to send a test email to a specific address
-export async function POST(request: Request): Promise<NextResponse> {
+// GET: Send trial expiring emails to users whose trial ends in the next 48 hours
+// Invoked by Vercel cron (cron jobs always GET) and authorized via Bearer CRON_SECRET.
+// Use ?test=email@example.com to send a test email to a specific address.
+export async function GET(request: Request): Promise<NextResponse> {
   // Verify cron secret
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -152,8 +153,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
-// GET: Preview list of expiring trials that would receive the email
-export async function GET(request: Request): Promise<NextResponse> {
+// POST: Preview list of expiring trials that would receive the email
+export async function POST(request: Request): Promise<NextResponse> {
   // Verify cron secret
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;

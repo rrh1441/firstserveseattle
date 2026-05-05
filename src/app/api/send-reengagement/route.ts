@@ -10,9 +10,10 @@ const supabaseAdmin = createClient(
 
 const FROM_EMAIL = 'Ryan from First Serve Seattle <ryan@firstserveseattle.com>';
 
-// POST: Send re-engagement emails to expired trial users
-// Use ?limit=N to limit the number of emails sent
-export async function POST(request: Request): Promise<NextResponse> {
+// GET: Send re-engagement emails to expired trial users
+// Invoked by Vercel cron (cron jobs always GET) and authorized via Bearer CRON_SECRET.
+// Use ?limit=N to limit the number of emails sent.
+export async function GET(request: Request): Promise<NextResponse> {
   // Verify cron secret or admin access
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -132,8 +133,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
-// GET: Preview list of expired trials that would receive the email
-export async function GET(request: Request): Promise<NextResponse> {
+// POST: Preview list of expired trials that would receive the email
+export async function POST(request: Request): Promise<NextResponse> {
   // Verify cron secret or admin access
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
